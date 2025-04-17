@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Calendar from "./pages/Calendar";
 import Documents from "./pages/Documents";
 import Teams from "./pages/Teams";
+import Exercises from "./pages/Exercises";
 
 const queryClient = new QueryClient();
 
@@ -72,7 +73,15 @@ const AppRoutes = () => {
           </AppLayout>
         </ProtectedRoute>
       } />
-      
+
+      <Route path="/exercises" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <Exercises />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
