@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +10,8 @@ import {
   Users, 
   Activity,
   X,
-  CalendarDays
+  CalendarDays,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -79,6 +79,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       label: 'Area Medica', 
       href: '/medical', 
       roles: ['medical'] 
+    },
+    { 
+      icon: Settings, 
+      label: 'Impostazioni Dev', 
+      href: '/dev-settings', 
+      roles: ['admin'] 
     },
   ];
 

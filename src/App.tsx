@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import Teams from "./pages/Teams";
 import Exercises from "./pages/Exercises";
 import UserProfile from "./pages/UserProfile";
 import TrainingPlanner from "./pages/TrainingPlanner";
+import DevSettings from "./pages/DevSettings";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +97,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <AppLayout>
             <TrainingPlanner />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/dev-settings" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <DevSettings />
           </AppLayout>
         </ProtectedRoute>
       } />

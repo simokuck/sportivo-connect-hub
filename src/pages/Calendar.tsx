@@ -25,7 +25,7 @@ const eventFormSchema = z.object({
   end: z.string(),
   type: z.enum(["training", "match", "medical", "meeting"]),
   location: z.string().optional(),
-  teamId: z.string().optional(),
+  teamId: z.string({ required_error: "Seleziona una squadra" }),
   requiresMedical: z.boolean().optional().default(false),
 });
 
@@ -58,11 +58,11 @@ const CalendarPage = () => {
     const filteredEvents = mockEvents.filter(event => {
       switch (user.role) {
         case 'player':
-          return event.teamId === user.teams?.[0]?.id;
+          return user.teams?.some(team => team.id === event.teamId);
         case 'coach':
           return user.teams?.some(team => team.id === event.teamId);
         case 'medical':
-          return event.requiresMedical;
+          return event.requiresMedical || user.teams?.some(team => team.id === event.teamId);
         case 'admin':
           return true;
         default:
@@ -195,16 +195,18 @@ const CalendarPage = () => {
               />
             </CardContent>
             <CardFooter>
-              <Button 
-                className="w-full" 
-                onClick={() => {
-                  setDialogAction('create');
-                  setSelectedEvent(null);
-                  setDialogOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Nuovo Evento
-              </Button>
+              {user?.role !== 'player' && (
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setDialogAction('create');
+                    setSelectedEvent(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Nuovo Evento
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </div>
@@ -365,20 +367,27 @@ const CalendarPage = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="teamId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Luogo</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Aggiungi un luogo (opzionale)" 
-                          {...field} 
-                          value={field.value || ''}
-                        />
-                      </FormControl>
+                      <FormLabel>Squadra</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleziona una squadra" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {user?.teams?.map((team) => (
+                            <SelectItem key={team.id} value={team.id}>
+                              {team.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
