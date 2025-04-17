@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
@@ -39,17 +38,15 @@ const ExercisesPage = () => {
       ...ex,
       playersNeeded: Math.floor(Math.random() * 10) + 4, // Random number between 4 and 13
       groupsNeeded: Math.floor(Math.random() * 3) + 1, // Random number between 1 and 3
-      videoUrl: ex.id % 3 === 0 ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : "", // Example video for some exercises
+      videoUrl: Math.floor(Math.random() * 3) === 0 ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : "", // Example video for some exercises
     }))
   );
   const [selectedExercise, setSelectedExercise] = useState<(TrainingExercise & { playersNeeded?: number; groupsNeeded?: number; videoUrl?: string }) | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Only coaches can access this page
   const canAccessExercises = user?.role === 'coach';
-  
-  // Initialize form
+
   const form = useForm<ExerciseFormValues>({
     resolver: zodResolver(exerciseFormSchema),
     defaultValues: {
@@ -64,7 +61,6 @@ const ExercisesPage = () => {
     },
   });
 
-  // Position options for the form
   const positionOptions = [
     "Portiere",
     "Difensore",
@@ -76,7 +72,6 @@ const ExercisesPage = () => {
     "Punta"
   ];
 
-  // Handle form submission
   const onSubmit = (data: ExerciseFormValues) => {
     const newExercise = {
       id: `exercise-${Date.now()}`,
@@ -101,7 +96,6 @@ const ExercisesPage = () => {
     });
   };
 
-  // Handle exercise deletion
   const handleDeleteExercise = (exerciseId: string) => {
     setExercises(exercises.filter(exercise => exercise.id !== exerciseId));
     setDrawerOpen(false);
@@ -113,13 +107,11 @@ const ExercisesPage = () => {
     });
   };
 
-  // Function to open exercise details drawer
   const openExerciseDetails = (exercise: TrainingExercise & { playersNeeded?: number; groupsNeeded?: number; videoUrl?: string }) => {
     setSelectedExercise(exercise);
     setDrawerOpen(true);
   };
 
-  // Get category label
   const getCategoryLabel = (category: string) => {
     switch (category) {
       case 'technical': return 'Tecnica';
@@ -182,7 +174,6 @@ const ExercisesPage = () => {
         ))}
       </div>
 
-      {/* Dialog for creating new exercises */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -354,7 +345,6 @@ const ExercisesPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Drawer for exercise details */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerContent>
           <DrawerHeader className="text-left">
