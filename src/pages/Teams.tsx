@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +16,7 @@ const TeamsPage = () => {
   const { user } = useAuth();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [positionFilter, setPositionFilter] = useState<string>('');
+  const [positionFilter, setPositionFilter] = useState<string>('all');
   const [activeView, setActiveView] = useState<'teams' | 'team-details'>('teams');
 
   const filteredTeams = mockTeams.filter(team => {
@@ -49,7 +48,7 @@ const TeamsPage = () => {
   // Filter players based on search query and position filter
   const filteredPlayers = selectedTeam?.players?.filter(player => {
     const matchesName = player.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPosition = positionFilter ? player.position === positionFilter : true;
+    const matchesPosition = positionFilter === 'all' ? true : player.position === positionFilter;
     return matchesName && matchesPosition;
   }) || [];
 
@@ -190,7 +189,7 @@ const TeamsPage = () => {
                             <SelectValue placeholder="Filtra per ruolo" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Tutti i ruoli</SelectItem>
+                            <SelectItem value="all">Tutti i ruoli</SelectItem>
                             {uniquePositions.map(position => (
                               <SelectItem key={position} value={position}>
                                 {position}

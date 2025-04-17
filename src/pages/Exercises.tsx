@@ -380,18 +380,20 @@ const ExercisesPage = () => {
                 </div>
               </div>
 
-              {selectedExercise?.forPosition && selectedExercise.forPosition.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Ruoli Consigliati</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedExercise.forPosition.map((position) => (
+              <div>
+                <h3 className="text-sm font-medium mb-2">Ruoli Consigliati</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedExercise?.forPosition && selectedExercise.forPosition.length > 0 ? (
+                    selectedExercise.forPosition.map((position) => (
                       <Badge key={position} variant="secondary">
                         {position}
                       </Badge>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Nessun ruolo specifico</span>
+                  )}
                 </div>
-              )}
+              </div>
 
               {selectedExercise?.videoUrl && (
                 <div>
