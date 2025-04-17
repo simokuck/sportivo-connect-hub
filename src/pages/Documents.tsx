@@ -16,6 +16,10 @@ import { z } from 'zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+
+// Define document types as a TypeScript type for better type safety
+type DocumentType = 'contract' | 'medical' | 'admin' | 'training' | 'template';
 
 // Mock templates for document generation
 const documentTemplates: DocumentTemplate[] = [
@@ -37,9 +41,10 @@ const documentTemplates: DocumentTemplate[] = [
   }
 ];
 
+// Define schemas with proper types
 const uploadSchema = z.object({
   title: z.string().min(3, { message: 'Il titolo deve essere di almeno 3 caratteri' }),
-  type: z.enum(['contract', 'medical', 'admin', 'training']),
+  type: z.enum(['contract', 'medical', 'admin', 'training', 'template']),
   file: z.instanceof(FileList).refine(files => files.length === 1, {
     message: 'È necessario selezionare un file',
   }),
@@ -54,6 +59,10 @@ const templateSchema = z.object({
   additionalFields: z.record(z.string()).optional()
 });
 
+// Type definitions for the form data
+type UploadFormData = z.infer<typeof uploadSchema>;
+type TemplateFormData = z.infer<typeof templateSchema>;
+
 const DocumentsPage = () => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>(mockDocuments);
@@ -62,7 +71,7 @@ const DocumentsPage = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [previewContent, setPreviewContent] = useState<string>('');
 
-  const uploadForm = useForm({
+  const uploadForm = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       title: '',
@@ -70,7 +79,7 @@ const DocumentsPage = () => {
     }
   });
 
-  const templateForm = useForm({
+  const templateForm = useForm<TemplateFormData>({
     resolver: zodResolver(templateSchema),
     defaultValues: {
       templateId: '',
@@ -110,7 +119,7 @@ const DocumentsPage = () => {
     });
   };
 
-  const handleUploadSubmit = (data: z.infer<typeof uploadSchema>) => {
+  const handleUploadSubmit = (data: UploadFormData) => {
     const file = data.file[0];
     
     const newDocument: Document = {
@@ -146,7 +155,7 @@ const DocumentsPage = () => {
     }
   };
 
-  const handlePreviewTemplate = (data: z.infer<typeof templateSchema>) => {
+  const handlePreviewTemplate = (data: TemplateFormData) => {
     if (!selectedTemplate) return;
     
     let content = selectedTemplate.content;
@@ -165,18 +174,20 @@ const DocumentsPage = () => {
     // Replace additional fields from the form data
     if (data.additionalFields) {
       for (const [key, value] of Object.entries(data.additionalFields)) {
-        content = content.replace(`{${key}}`, value);
+        if (typeof value === 'string') {
+          content = content.replace(`{${key}}`, value);
+        }
       }
     }
     
-    if (data.season) {
+    if (data.season && typeof data.season === 'string') {
       content = content.replace('{season}', data.season);
     }
     
     setPreviewContent(content);
   };
 
-  const handleCreateFromTemplate = (data: z.infer<typeof templateSchema>) => {
+  const handleCreateFromTemplate = (data: TemplateFormData) => {
     if (!selectedTemplate) return;
     
     // Create a document from the template
@@ -190,9 +201,9 @@ const DocumentsPage = () => {
       url: '#', // In a real app, this would be a generated PDF URL
       isTemplate: true,
       templateData: {
-        ...data.additionalFields,
         templateId: selectedTemplate.id,
-        content: previewContent
+        content: previewContent,
+        additionalFields: data.additionalFields
       }
     };
     
@@ -317,6 +328,7 @@ const DocumentsPage = () => {
                         <SelectItem value="medical">Medico</SelectItem>
                         <SelectItem value="admin">Amministrativo</SelectItem>
                         <SelectItem value="training">Allenamento</SelectItem>
+                        <SelectItem value="template">Template</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -454,7 +466,11 @@ const DocumentsPage = () => {
                         <FormItem>
                           <FormLabel>Stagione Sportiva</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es: 2025-2026" {...field} value={field.value || ''} />
+                            <Input 
+                              placeholder="Es: 2025-2026" 
+                              {...field} 
+                              value={field.value || ''} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -470,7 +486,7 @@ const DocumentsPage = () => {
                       <FormField
                         key={field}
                         control={templateForm.control}
-                        name={`additionalFields.${field}`}
+                        name={`additionalFields.${field}` as any}
                         render={({ field: formField }) => (
                           <FormItem>
                             <FormLabel>{field.charAt(0).toUpperCase() + field.slice(1)}</FormLabel>
