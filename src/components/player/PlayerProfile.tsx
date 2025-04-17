@@ -56,7 +56,7 @@ const PlayerProfile = ({ player }: PlayerProfileProps) => {
             <span className="text-sm text-muted-foreground">Rossi</span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="warning">{player.stats.yellowCards}</Badge>
+            <Badge variant="secondary">{player.stats.yellowCards}</Badge>
             <span className="text-sm text-muted-foreground">Gialli</span>
           </div>
           <div className="flex items-center gap-2">
