@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -40,7 +39,6 @@ const CalendarPage = () => {
   const [dialogAction, setDialogAction] = useState<'create' | 'edit'>('create');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Initialize form
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
@@ -54,7 +52,6 @@ const CalendarPage = () => {
     },
   });
 
-  // Load events based on user role
   useEffect(() => {
     if (!user) return;
     
@@ -76,7 +73,6 @@ const CalendarPage = () => {
     setEvents(filteredEvents);
   }, [user]);
 
-  // Reset form when dialog opens for creation
   useEffect(() => {
     if (dialogAction === 'create' && dialogOpen) {
       form.reset({
@@ -91,7 +87,6 @@ const CalendarPage = () => {
     }
   }, [dialogAction, dialogOpen, date, form]);
 
-  // Set form values when editing an event
   useEffect(() => {
     if (selectedEvent && dialogAction === 'edit' && dialogOpen) {
       form.reset({
@@ -107,10 +102,8 @@ const CalendarPage = () => {
     }
   }, [selectedEvent, dialogAction, dialogOpen, form]);
 
-  // Handle form submission
   const onSubmit = (data: EventFormValues) => {
     if (dialogAction === 'create') {
-      // Create new event
       const newEvent: CalendarEvent = {
         id: `event-${Date.now()}`,
         title: data.title,
@@ -121,6 +114,7 @@ const CalendarPage = () => {
         location: data.location,
         teamId: user?.teams?.[0]?.id,
         requiresMedical: data.requiresMedical,
+        canEdit: user?.role !== 'player'
       };
       
       setEvents([...events, newEvent]);
@@ -129,10 +123,8 @@ const CalendarPage = () => {
         description: "L'evento è stato creato con successo",
       });
       
-      // Notify users (simulated)
       console.log(`Notifying users about new event: ${data.title}`);
     } else if (dialogAction === 'edit' && selectedEvent) {
-      // Update existing event
       const updatedEvents = events.map(event => 
         event.id === selectedEvent.id 
           ? { ...event, ...data } 
@@ -145,14 +137,12 @@ const CalendarPage = () => {
         description: "L'evento è stato aggiornato con successo",
       });
       
-      // Notify users (simulated)
       console.log(`Notifying users about updated event: ${data.title}`);
     }
     
     setDialogOpen(false);
   };
 
-  // Handle event deletion
   const handleDeleteEvent = () => {
     if (!selectedEvent) return;
     
@@ -164,18 +154,15 @@ const CalendarPage = () => {
       description: "L'evento è stato eliminato con successo",
     });
     
-    // Notify users (simulated)
     console.log(`Notifying users about deleted event: ${selectedEvent.title}`);
     
     setDialogOpen(false);
   };
 
-  // Get today's events
   const todaysEvents = events.filter(event => 
     date && isSameDay(new Date(event.start), date)
   );
 
-  // Get upcoming events (next 7 days, excluding today)
   const upcomingEvents = events.filter(event => {
     const eventDate = new Date(event.start);
     const today = new Date();
@@ -282,7 +269,6 @@ const CalendarPage = () => {
         </div>
       </div>
 
-      {/* Dialog for creating/editing events */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -421,7 +407,6 @@ const CalendarPage = () => {
   );
 };
 
-// Helper component for rendering event cards
 const EventCard = ({ 
   event, 
   onEdit 

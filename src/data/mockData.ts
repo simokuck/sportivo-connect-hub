@@ -157,7 +157,8 @@ export const mockEvents: CalendarEvent[] = [
     end: '2024-04-18T20:00:00',
     type: 'training',
     teamId: '1',
-    location: 'Campo Principale'
+    location: 'Campo Principale',
+    canEdit: true
   },
   {
     id: '2',
@@ -168,7 +169,8 @@ export const mockEvents: CalendarEvent[] = [
     type: 'match',
     teamId: '1',
     location: 'Stadio Comunale',
-    requiresMedical: true
+    requiresMedical: true,
+    canEdit: true
   },
   {
     id: '3',
@@ -179,7 +181,8 @@ export const mockEvents: CalendarEvent[] = [
     type: 'medical',
     teamId: '2',
     attendees: ['4', '5', '6'],
-    location: 'Centro Medico Sportivo'
+    location: 'Centro Medico Sportivo',
+    canEdit: true
   }
 ];
 
