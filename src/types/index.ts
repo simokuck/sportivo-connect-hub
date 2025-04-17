@@ -53,6 +53,9 @@ export interface TrainingExercise {
   duration: number;
   createdBy: string;
   forPosition?: string[];
+  playersNeeded?: number;
+  groupsNeeded?: number;
+  videoUrl?: string;
 }
 
 export interface CalendarEvent {
