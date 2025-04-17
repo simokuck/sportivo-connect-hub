@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -82,12 +81,6 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       label: 'Area Medica', 
       href: '/medical', 
       roles: ['medical'] 
-    },
-    { 
-      icon: Settings, 
-      label: 'Profilo Utente', 
-      href: '/profile', 
-      roles: ['player', 'coach', 'admin', 'medical'] 
     },
     { 
       icon: Wrench, 

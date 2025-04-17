@@ -398,7 +398,7 @@ const ExercisesPage = () => {
               {selectedExercise?.videoUrl && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Video Dimostrativo</h3>
-                  <AspectRatio ratio={16 / 9}>
+                  <AspectRatio ratio={16 / 9} className="max-w-[400px] mx-auto">
                     <iframe
                       src={selectedExercise.videoUrl}
                       className="h-full w-full rounded-md"
