@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format, isAfter, isBefore, isSameDay, addHours } from "date-fns";
@@ -17,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Calendar as CalendarIcon, Clock, MapPin, Users, X, Edit, Plus, AlertCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import LocationPicker from '@/components/map/LocationPicker';
 
 const eventFormSchema = z.object({
   title: z.string().min(3, { message: "Il titolo deve essere di almeno 3 caratteri" }),
@@ -25,8 +28,9 @@ const eventFormSchema = z.object({
   end: z.string(),
   type: z.enum(["training", "match", "medical", "meeting"]),
   location: z.string().optional(),
-  teamId: z.string({ required_error: "Seleziona una squadra" }),
+  teamId: z.string().optional(), // Made teamId optional for private events
   requiresMedical: z.boolean().optional().default(false),
+  isPrivate: z.boolean().optional().default(false),
 });
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
@@ -38,6 +42,7 @@ const CalendarPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [dialogAction, setDialogAction] = useState<'create' | 'edit'>('create');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [coordinates, setCoordinates] = useState<[number, number] | undefined>(undefined);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -49,13 +54,20 @@ const CalendarPage = () => {
       type: "training",
       location: "",
       requiresMedical: false,
+      isPrivate: false,
     },
   });
+
+  const isPrivate = form.watch("isPrivate");
 
   useEffect(() => {
     if (!user) return;
     
     const filteredEvents = mockEvents.filter(event => {
+      // Private events are only visible to their creator
+      if (event.userId === user.id) return true;
+      
+      // Filter events based on user role and team
       switch (user.role) {
         case 'player':
           return user.teams?.some(team => team.id === event.teamId);
@@ -83,9 +95,12 @@ const CalendarPage = () => {
         type: "training",
         location: "",
         requiresMedical: false,
+        isPrivate: false,
+        teamId: user?.teams && user.teams.length > 0 ? user.teams[0].id : undefined,
       });
+      setCoordinates(undefined);
     }
-  }, [dialogAction, dialogOpen, date, form]);
+  }, [dialogAction, dialogOpen, date, form, user]);
 
   useEffect(() => {
     if (selectedEvent && dialogAction === 'edit' && dialogOpen) {
@@ -98,6 +113,7 @@ const CalendarPage = () => {
         location: selectedEvent.location || '',
         teamId: selectedEvent.teamId,
         requiresMedical: selectedEvent.requiresMedical || false,
+        isPrivate: !selectedEvent.teamId, // Assume it's private if no teamId
       });
     }
   }, [selectedEvent, dialogAction, dialogOpen, form]);
@@ -112,9 +128,11 @@ const CalendarPage = () => {
         end: data.end,
         type: data.type,
         location: data.location,
-        teamId: user?.teams?.[0]?.id,
+        teamId: data.isPrivate ? undefined : data.teamId,
         requiresMedical: data.requiresMedical,
-        canEdit: user?.role !== 'player'
+        userId: user?.id, // Add userId for private events
+        canEdit: user?.role !== 'player',
+        coordinates: coordinates
       };
       
       setEvents([...events, newEvent]);
@@ -127,7 +145,12 @@ const CalendarPage = () => {
     } else if (dialogAction === 'edit' && selectedEvent) {
       const updatedEvents = events.map(event => 
         event.id === selectedEvent.id 
-          ? { ...event, ...data } 
+          ? { 
+              ...event, 
+              ...data, 
+              teamId: data.isPrivate ? undefined : data.teamId,
+              coordinates: coordinates || event.coordinates
+            } 
           : event
       );
       
@@ -159,6 +182,11 @@ const CalendarPage = () => {
     setDialogOpen(false);
   };
 
+  const handleLocationChange = (location: string, coords?: [number, number]) => {
+    form.setValue("location", location);
+    setCoordinates(coords);
+  };
+
   const todaysEvents = events.filter(event => 
     date && isSameDay(new Date(event.start), date)
   );
@@ -175,6 +203,9 @@ const CalendarPage = () => {
            isBefore(eventDate, nextWeek) && 
            !isSameDay(eventDate, date || today);
   }).sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+  // Check if user can create events
+  const canCreateEvents = user?.role !== 'player';
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -195,7 +226,7 @@ const CalendarPage = () => {
               />
             </CardContent>
             <CardFooter>
-              {user?.role !== 'player' && (
+              {canCreateEvents && (
                 <Button 
                   className="w-full" 
                   onClick={() => {
@@ -231,6 +262,7 @@ const CalendarPage = () => {
                         setSelectedEvent(event);
                         setDialogOpen(true);
                       }} 
+                      canEdit={event.canEdit && canCreateEvents}
                     />
                   ))}
                 </div>
@@ -258,6 +290,7 @@ const CalendarPage = () => {
                         setSelectedEvent(event);
                         setDialogOpen(true);
                       }} 
+                      canEdit={event.canEdit && canCreateEvents}
                     />
                   ))
                 ) : (
@@ -272,7 +305,7 @@ const CalendarPage = () => {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {dialogAction === 'create' ? 'Crea Nuovo Evento' : 'Modifica Evento'}
@@ -370,18 +403,42 @@ const CalendarPage = () => {
 
                 <FormField
                   control={form.control}
+                  name="isPrivate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Evento Privato</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {!isPrivate && user?.teams && user.teams.length > 0 && (
+                <FormField
+                  control={form.control}
                   name="teamId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Squadra</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seleziona una squadra" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {user?.teams?.map((team) => (
+                          {user.teams.map((team) => (
                             <SelectItem key={team.id} value={team.id}>
                               {team.name}
                             </SelectItem>
@@ -392,7 +449,44 @@ const CalendarPage = () => {
                     </FormItem>
                   )}
                 />
-              </div>
+              )}
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Posizione</FormLabel>
+                    <FormControl>
+                      <LocationPicker 
+                        value={field.value} 
+                        onChange={handleLocationChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {(form.watch('type') === 'training' || form.watch('type') === 'match') && (
+                <FormField
+                  control={form.control}
+                  name="requiresMedical"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Richiedi presenza medica</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <DialogFooter className="space-x-2">
                 {dialogAction === 'edit' && (
@@ -416,13 +510,13 @@ const CalendarPage = () => {
   );
 };
 
-const EventCard = ({ 
-  event, 
-  onEdit 
-}: { 
-  event: CalendarEvent, 
-  onEdit: () => void 
-}) => {
+interface EventCardProps {
+  event: CalendarEvent;
+  onEdit: () => void;
+  canEdit: boolean;
+}
+
+const EventCard = ({ event, onEdit, canEdit }: EventCardProps) => {
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'training': return 'bg-blue-100 text-blue-700';
@@ -451,6 +545,11 @@ const EventCard = ({
             <Badge className={getEventTypeColor(event.type)}>
               {getEventTypeLabel(event.type)}
             </Badge>
+            {!event.teamId && (
+              <Badge variant="outline" className="border-gray-300 text-gray-600">
+                Privato
+              </Badge>
+            )}
             {event.requiresMedical && (
               <Badge variant="outline" className="border-red-300 text-red-600">
                 <AlertCircle className="h-3 w-3 mr-1" /> Medico richiesto
@@ -462,9 +561,11 @@ const EventCard = ({
             <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          <Edit className="h-4 w-4" />
-        </Button>
+        {canEdit && (
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       
       <div className="mt-3 space-y-1 text-sm text-muted-foreground">

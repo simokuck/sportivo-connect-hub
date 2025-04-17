@@ -1,5 +1,4 @@
 
-
 export type UserRole = 'player' | 'coach' | 'admin' | 'medical';
 
 export interface User {
@@ -45,11 +44,13 @@ export interface PlayerStats {
 export interface Document {
   id: string;
   title: string;
-  type: 'contract' | 'medical' | 'admin' | 'training';
+  type: 'contract' | 'medical' | 'admin' | 'training' | 'template';
   uploadDate: string;
   userId: string;
   teamId?: string;
   url: string;
+  templateData?: Record<string, any>; // For template documents
+  isTemplate?: boolean;
 }
 
 export interface TrainingExercise {
@@ -84,8 +85,10 @@ export interface CalendarEvent {
   end: string;
   type: 'training' | 'match' | 'medical' | 'meeting';
   teamId?: string;
+  userId?: string; // Added for private events
   attendees?: string[];
   location?: string;
+  coordinates?: [number, number]; // Added for map integration
   requiresMedical?: boolean;
   canEdit: boolean;
 }
@@ -111,3 +114,11 @@ export interface MedicalInfo {
   doctorId?: string;
 }
 
+export interface DocumentTemplate {
+  id: string;
+  title: string;
+  type: 'contract' | 'medical' | 'admin' | 'training';
+  content: string;
+  fields: string[]; // Fields that can be filled
+  createdBy: string;
+}

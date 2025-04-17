@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
   BarChart3, 
@@ -11,7 +12,8 @@ import {
   Activity,
   X,
   CalendarDays,
-  Settings
+  Settings,
+  Wrench
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -30,6 +32,7 @@ interface NavItem {
 
 export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const { user } = useAuth();
+  const location = useLocation();
 
   const navItems: NavItem[] = [
     { 
@@ -72,7 +75,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: FileText, 
       label: 'Documenti', 
       href: '/documents', 
-      roles: ['admin', 'medical'] 
+      roles: ['admin', 'medical', 'player', 'coach'] 
     },
     { 
       icon: Activity, 
@@ -82,6 +85,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     },
     { 
       icon: Settings, 
+      label: 'Profilo Utente', 
+      href: '/profile', 
+      roles: ['player', 'coach', 'admin', 'medical'] 
+    },
+    { 
+      icon: Wrench, 
       label: 'Impostazioni Dev', 
       href: '/dev-settings', 
       roles: ['admin'] 
@@ -110,17 +119,24 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
       <div className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-2 px-3">
-          {filteredNavItems.map((item) => (
-            <li key={item.href}>
-              <Link
-                to={item.href}
-                className="flex items-center p-3 text-white hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
+          {filteredNavItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            
+            return (
+              <li key={item.href}>
+                <Link
+                  to={item.href}
+                  className={cn(
+                    "flex items-center p-3 text-white hover:bg-blue-700 rounded-lg transition-colors",
+                    isActive && "bg-blue-700"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 mr-3" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
