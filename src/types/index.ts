@@ -1,11 +1,18 @@
 
+
 export type UserRole = 'player' | 'coach' | 'admin' | 'medical';
 
 export interface User {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   avatar?: string;
+  birthDate?: string;
+  address?: string;
+  city?: string;
+  biometricEnabled?: boolean;
   role: UserRole;
   teams?: Team[];
 }
@@ -58,6 +65,17 @@ export interface TrainingExercise {
   videoUrl?: string;
 }
 
+export interface TrainingPlan {
+  id: string;
+  title: string;
+  description: string;
+  exercises: TrainingExercise[];
+  date: string;
+  totalDuration: number;
+  teamId?: string;
+  createdBy: string;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -69,6 +87,7 @@ export interface CalendarEvent {
   attendees?: string[];
   location?: string;
   requiresMedical?: boolean;
+  canEdit: boolean;
 }
 
 export interface Notification {
@@ -91,3 +110,4 @@ export interface MedicalInfo {
   conditions?: string[];
   doctorId?: string;
 }
+

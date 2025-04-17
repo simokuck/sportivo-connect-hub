@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Bell, Calendar, Menu, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,9 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Il mio account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profilo</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/profile">Profilo</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>Impostazioni</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>

@@ -10,7 +10,8 @@ import {
   Home, 
   Users, 
   Activity,
-  X 
+  X,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: ClipboardList, 
       label: 'Esercitazioni', 
       href: '/exercises', 
+      roles: ['coach'] 
+    },
+    { 
+      icon: CalendarDays, 
+      label: 'Pianifica Allenamenti', 
+      href: '/training-planner', 
       roles: ['coach'] 
     },
     { 

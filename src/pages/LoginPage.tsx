@@ -1,17 +1,37 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Fingerprint } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [biometricDialog, setBiometricDialog] = useState(false);
   const { login, loading } = useAuth();
   const { toast } = useToast();
+
+  // Check if biometric authentication is available in the browser
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      try {
+        // This is a basic check for PublicKeyCredential API which is required for biometrics
+        if (window.PublicKeyCredential) {
+          setBiometricSupported(true);
+        }
+      } catch (error) {
+        console.error("Error checking biometric support:", error);
+      }
+    };
+
+    checkBiometricSupport();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +64,24 @@ const LoginPage = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleBiometricLogin = async () => {
+    // Show biometric dialog
+    setBiometricDialog(true);
+    
+    // Simulate successful biometric authentication after 2 seconds
+    setTimeout(() => {
+      setBiometricDialog(false);
+      
+      // For demo, log in as player (Marco)
+      handleDemoLogin('marco@example.com');
+      
+      toast({
+        title: 'Login biometrico effettuato',
+        description: 'Benvenuto su Sportivo Connect Hub',
+      });
+    }, 2000);
   };
 
   return (
@@ -88,6 +126,18 @@ const LoginPage = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Accesso in corso...' : 'Accedi'}
               </Button>
+              
+              {biometricSupported && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleBiometricLogin}
+                >
+                  <Fingerprint className="mr-2 h-5 w-5" />
+                  Accedi con riconoscimento biometrico
+                </Button>
+              )}
 
               <div className="text-sm text-gray-500 mt-4">
                 <p className="mb-2">Demo: Scegli un ruolo per provare l'app</p>
@@ -129,6 +179,21 @@ const LoginPage = () => {
             </CardFooter>
           </form>
         </Card>
+
+        {/* Biometric authentication dialog */}
+        <Dialog open={biometricDialog} onOpenChange={setBiometricDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Riconoscimento biometrico</DialogTitle>
+              <DialogDescription>
+                Completa l'autenticazione biometrica sul tuo dispositivo
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-center p-6">
+              <Fingerprint className="h-16 w-16 text-sportivo-blue animate-pulse" />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
