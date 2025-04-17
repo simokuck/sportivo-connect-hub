@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,9 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import Statistics from "./pages/Statistics";
 import NotFound from "./pages/NotFound";
+import Calendar from "./pages/Calendar";
+import Documents from "./pages/Documents";
+import Teams from "./pages/Teams";
 
 const queryClient = new QueryClient();
 
@@ -46,8 +48,30 @@ const AppRoutes = () => {
           </AppLayout>
         </ProtectedRoute>
       } />
-      
-      {/* Add more routes as needed */}
+
+      <Route path="/calendar" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <Calendar />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/documents" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <Documents />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/teams" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <Teams />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
