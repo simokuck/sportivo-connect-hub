@@ -27,21 +27,21 @@ const mockEquipment: WarehouseItem[] = [
 
 const Warehouse = () => {
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Magazzino</h1>
+    <div className="container mx-auto p-2 sm:p-4 space-y-6 content-wrapper">
+      <h1 className="text-xl sm:text-2xl font-bold">Magazzino</h1>
 
       <Tabs defaultValue="kits" className="w-full">
-        <TabsList>
-          <TabsTrigger value="kits">Kit</TabsTrigger>
-          <TabsTrigger value="equipment">Materiale Tecnico</TabsTrigger>
+        <TabsList className="w-full sm:w-auto flex overflow-x-auto mobile-friendly-padding">
+          <TabsTrigger value="kits" className="flex-1 sm:flex-none">Kit</TabsTrigger>
+          <TabsTrigger value="equipment" className="flex-1 sm:flex-none">Materiale Tecnico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="kits">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {mockKits.map((item) => (
-              <Card key={item.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <Card key={item.id} className="h-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Shirt className="h-5 w-5" />
                     {item.name}
                   </CardTitle>
@@ -56,11 +56,11 @@ const Warehouse = () => {
         </TabsContent>
 
         <TabsContent value="equipment">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mockEquipment.map((item) => (
-              <Card key={item.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <Card key={item.id} className="h-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     {item.category === 'palloni' ? (
                       <Volleyball className="h-5 w-5" />
                     ) : (

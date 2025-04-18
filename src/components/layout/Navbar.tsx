@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Menu, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,18 @@ interface NavbarProps {
 
 export const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const { user, logout, setRole } = useAuth();
+  const navigate = useNavigate();
 
   const roleLabels: Record<UserRole, string> = {
     player: 'Giocatore',
     coach: 'Allenatore',
     admin: 'Amministrazione',
     medical: 'Staff Medico',
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   if (!user) return null;
@@ -83,7 +89,7 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
               </DropdownMenuItem>
               <DropdownMenuItem>Impostazioni</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

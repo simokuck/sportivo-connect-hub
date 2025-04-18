@@ -8,14 +8,23 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Fingerprint } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [biometricDialog, setBiometricDialog] = useState(false);
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   // Check if biometric authentication is available in the browser
   useEffect(() => {
@@ -41,6 +50,7 @@ const LoginPage = () => {
         title: 'Login effettuato',
         description: 'Benvenuto su Sportivo Connect Hub',
       });
+      navigate('/'); // Navigate to dashboard after successful login
     } catch (error) {
       toast({
         title: 'Errore di login',
@@ -57,6 +67,7 @@ const LoginPage = () => {
         title: 'Login demo effettuato',
         description: 'Accesso come ' + demoEmail,
       });
+      navigate('/'); // Navigate to dashboard after successful demo login
     } catch (error) {
       toast({
         title: 'Errore di login',
@@ -76,11 +87,6 @@ const LoginPage = () => {
       
       // For demo, log in as player (Marco)
       handleDemoLogin('marco@example.com');
-      
-      toast({
-        title: 'Login biometrico effettuato',
-        description: 'Benvenuto su Sportivo Connect Hub',
-      });
     }, 2000);
   };
 

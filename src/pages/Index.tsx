@@ -10,9 +10,9 @@ const Index = () => {
   useEffect(() => {
     // Redirect to dashboard if logged in, otherwise to login
     if (user) {
-      navigate('/');
+      navigate('/', { replace: true });
     } else {
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   }, [user, navigate]);
 

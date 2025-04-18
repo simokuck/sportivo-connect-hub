@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Palette } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const DevSettings = () => {
   const { toast } = useToast();
@@ -29,6 +30,9 @@ const DevSettings = () => {
     document.documentElement.style.setProperty('--primary', primaryColor);
     document.documentElement.style.setProperty('--secondary', secondaryColor);
     document.documentElement.style.setProperty('--accent', accentColor);
+    
+    // For the sidebar as well
+    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
 
     toast({
       title: "Tema aggiornato",
@@ -41,7 +45,8 @@ const DevSettings = () => {
     document.documentElement.style.setProperty('--primary', primaryColor);
     document.documentElement.style.setProperty('--secondary', secondaryColor);
     document.documentElement.style.setProperty('--accent', accentColor);
-  }, []);
+    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
+  }, [primaryColor, secondaryColor, accentColor]);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
