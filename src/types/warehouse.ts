@@ -18,6 +18,6 @@ export interface WarehouseItem {
   supplier?: string;
   color?: string;
   material?: string;
-  features?: string;
-  notes?: string;
+  features?: string[];
+  notes?: string[];
 }

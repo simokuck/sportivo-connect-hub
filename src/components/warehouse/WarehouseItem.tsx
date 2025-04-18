@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Shirt, Volleyball, Flag } from 'lucide-react';
-import { WarehouseItem as WarehouseItemType } from '@/types/warehouse';
+import { WarehouseItem as WarehouseItemType, ItemSize } from '@/types/warehouse';
 import { WarehouseItemDetail } from './WarehouseItemDetail';
 
 interface WarehouseItemProps {

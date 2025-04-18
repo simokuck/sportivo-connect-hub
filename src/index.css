@@ -1,86 +1,57 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --primary-color: #1976d2;
+  --primary-color-hover: #1565c0;
+}
 
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 160 84.1% 39.2%;
-    --secondary-foreground: 210 40% 98%;
-
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-
     --radius: 0.5rem;
-
-    --sidebar-background: 221.2 83.2% 53.3%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 221.2 83.2% 53.3%;
-    --sidebar-accent: 210 40% 98%;
-    --sidebar-accent-foreground: 221.2 83.2% 53.3%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 143.8 61.2% 20.2%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-
-    --sidebar-background: 221.2 83.2% 53.3%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 221.2 83.2% 53.3%;
-    --sidebar-accent: 210 40% 98%;
-    --sidebar-accent-foreground: 221.2 83.2% 53.3%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
   }
 }
 
@@ -88,103 +59,36 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-
-  .button-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90;
-  }
-
-  .button-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90;
-  }
 }
 
-/* Custom scrollbar for a more modern look */
-::-webkit-scrollbar {
-  width: 8px;
+.bg-sportivo-blue {
+  background-color: var(--primary-color);
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.text-sportivo-blue {
+  color: var(--primary-color);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
+.border-sportivo-blue {
+  border-color: var(--primary-color);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #999;
+.hover\:bg-sportivo-blue-dark:hover {
+  background-color: var(--primary-color-hover);
 }
 
-/* Responsive layouts */
-@layer utilities {
-  .responsive-grid {
-    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
-  }
-  
-  .responsive-card {
-    @apply w-full max-w-full sm:max-w-md md:max-w-lg mx-auto;
-  }
-
-  .mobile-friendly-padding {
-    @apply px-2 sm:px-4 md:px-6;
-  }
-  
-  .mobile-friendly-text {
-    @apply text-sm sm:text-base;
-  }
-  
-  .mobile-friendly-heading {
-    @apply text-xl sm:text-2xl md:text-3xl;
-  }
-
-  .mobile-friendly-flex {
-    @apply flex flex-col sm:flex-row;
-  }
+/* Update sidebar hover state */
+.bg-blue-700 {
+  background-color: var(--primary-color-hover);
 }
 
-/* Fix for videos to be responsive */
-.video-container {
-  max-width: 640px;
-  margin: 0 auto;
+.hover\:bg-blue-700:hover {
+  background-color: var(--primary-color-hover);
 }
 
-.video-container iframe,
-.video-container video {
-  max-height: 360px;
-}
-
-/* Fix for Warehouse section */
-.warehouse-grid {
-  @apply grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
-}
-
-/* Adjust content to prevent overflow on mobile */
-.content-wrapper {
-  @apply w-full max-w-full overflow-x-hidden px-2 sm:px-4;
-}
-
-/* Improve card layout for mobile */
-.card-mobile-friendly {
-  @apply px-3 py-2 sm:p-4 md:p-6;
-}
-
-/* Improved button visibility */
-button[class*="bg-primary"],
-.button-primary {
-  @apply text-white bg-primary hover:bg-primary/90;
-}
-
-button[class*="bg-secondary"],
-.button-secondary {
-  @apply text-white bg-secondary hover:bg-secondary/90;
-}
-
-button[class*="bg-destructive"],
-.button-destructive {
-  @apply text-white bg-destructive hover:bg-destructive/90;
+.border-blue-700 {
+  border-color: var(--primary-color-hover);
 }

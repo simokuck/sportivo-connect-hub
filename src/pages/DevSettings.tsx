@@ -1,223 +1,201 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { Palette } from 'lucide-react';
-import { ConfirmationModal } from "@/components/ui/confirmation-modal";
-import { useNotifications } from "@/context/NotificationContext";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Moon, Sun, Laptop } from "lucide-react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useTheme } from "@/context/ThemeContext";
+
+const themeSchema = z.object({
+  theme: z.enum(["light", "dark", "system"]),
+  primaryColor: z.string().regex(/^#([0-9A-F]{6})$/i, {
+    message: "Il colore deve essere in formato esadecimale (es. #1976D2)",
+  }),
+});
+
+type ThemeFormValues = z.infer<typeof themeSchema>;
 
 const DevSettings = () => {
-  const { showNotification } = useNotifications();
-  const [primaryColor, setPrimaryColor] = React.useState(() => 
-    localStorage.getItem('theme-primary-color') || "#646cff"
-  );
-  const [secondaryColor, setSecondaryColor] = React.useState(() => 
-    localStorage.getItem('theme-secondary-color') || "#535bf2"
-  );
-  const [accentColor, setAccentColor] = React.useState(() => 
-    localStorage.getItem('theme-accent-color') || "#747bff"
-  );
-  const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
+  const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme();
 
-  const hexToHSL = (hex: string) => {
-    hex = hex.replace(/^#/, '');
-    
-    let r = parseInt(hex.slice(0, 2), 16) / 255;
-    let g = parseInt(hex.slice(2, 4), 16) / 255;
-    let b = parseInt(hex.slice(4, 6), 16) / 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      
-      h = Math.round(h * 60);
-    }
-    
-    s = Math.round(s * 100);
-    l = Math.round(l * 100);
-    
-    return { h, s, l };
-  };
+  const form = useForm<ThemeFormValues>({
+    resolver: zodResolver(themeSchema),
+    defaultValues: {
+      theme,
+      primaryColor,
+    },
+  });
 
-  const applyColorsToDOM = (primary: string, secondary: string, accent: string) => {
-    const primaryHSL = hexToHSL(primary);
-    const secondaryHSL = hexToHSL(secondary);
-    const accentHSL = hexToHSL(accent);
-    
-    document.documentElement.style.setProperty('--primary', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
-    document.documentElement.style.setProperty('--primary-foreground', '0 0% 100%');
-    document.documentElement.style.setProperty('--secondary', `${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%`);
-    document.documentElement.style.setProperty('--secondary-foreground', '0 0% 100%');
-    document.documentElement.style.setProperty('--accent', `${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%`);
-    document.documentElement.style.setProperty('--accent-foreground', '0 0% 100%');
-    document.documentElement.style.setProperty('--sidebar-background', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
-  };
-
-  const clearColorCache = () => {
-    const colorKeys = Object.keys(localStorage).filter(key => 
-      key.includes('color') || key.includes('theme')
-    );
-    
-    colorKeys.forEach(key => {
-      if (!['theme-primary-color', 'theme-secondary-color', 'theme-accent-color'].includes(key)) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    document.documentElement.removeAttribute('style');
-    
-    applyColorsToDOM(primaryColor, secondaryColor, accentColor);
-  };
-
-  const handleColorChange = () => {
-    localStorage.setItem('theme-primary-color', primaryColor);
-    localStorage.setItem('theme-secondary-color', secondaryColor);
-    localStorage.setItem('theme-accent-color', accentColor);
-
-    clearColorCache();
-    
-    applyColorsToDOM(primaryColor, secondaryColor, accentColor);
-
-    showNotification('success', 'Tema aggiornato', {
-      description: "Le modifiche sono state salvate con successo e applicate all'interfaccia.",
-    });
-
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+  const handleSubmit = (data: ThemeFormValues) => {
+    setTheme(data.theme);
+    setPrimaryColor(data.primaryColor);
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold">Impostazioni Sviluppatore</h1>
+    <div className="container py-6">
+      <h1 className="text-3xl font-bold mb-6">Impostazioni Sviluppatore</h1>
 
-      <Tabs defaultValue="theme" className="w-full">
-        <TabsList>
-          <TabsTrigger value="theme">Tema</TabsTrigger>
-          <TabsTrigger value="config">Configurazione</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tema Applicazione</CardTitle>
+            <CardDescription>
+              Personalizza il tema e i colori dell'applicazione
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="theme"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Tema</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col gap-4 sm:flex-row"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="light" id="light" />
+                            <label
+                              htmlFor="light"
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Sun className="h-4 w-4" /> Chiaro
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="dark" id="dark" />
+                            <label
+                              htmlFor="dark"
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Moon className="h-4 w-4" /> Scuro
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="system" id="system" />
+                            <label
+                              htmlFor="system"
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Laptop className="h-4 w-4" /> Sistema
+                            </label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-        <TabsContent value="theme">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Palette Colori
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="primaryColor">Colore Primario</Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-[100px] h-10 p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-[120px]"
-                    />
-                    <div 
-                      className="w-10 h-10 rounded border"
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                  </div>
-                </div>
+                <Separator />
 
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="secondaryColor">Colore Secondario</Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      id="secondaryColor"
-                      type="color"
-                      value={secondaryColor}
-                      onChange={(e) => setSecondaryColor(e.target.value)}
-                      className="w-[100px] h-10 p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={secondaryColor}
-                      onChange={(e) => setSecondaryColor(e.target.value)}
-                      className="w-[120px]"
-                    />
-                    <div 
-                      className="w-10 h-10 rounded border"
-                      style={{ backgroundColor: secondaryColor }}
-                    />
-                  </div>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="primaryColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Colore Principale</FormLabel>
+                      <div className="flex items-center gap-3">
+                        <FormControl>
+                          <Input {...field} type="text" />
+                        </FormControl>
+                        <Input
+                          type="color"
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                          }}
+                          className="w-12 h-10 p-1"
+                        />
+                      </div>
+                      <FormDescription>
+                        Questo colore sarà utilizzato per la sidebar e gli elementi principali
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
 
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="accentColor">Colore Accent</Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      id="accentColor"
-                      type="color"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-[100px] h-10 p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-[120px]"
-                    />
-                    <div 
-                      className="w-10 h-10 rounded border"
-                      style={{ backgroundColor: accentColor }}
-                    />
-                  </div>
+                <Button type="submit" className="w-full">
+                  Salva Impostazioni
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Anteprima</CardTitle>
+            <CardDescription>
+              Visualizza un'anteprima delle impostazioni attuali
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Colore Principale:</p>
+                <div
+                  className="h-12 rounded-md"
+                  style={{ backgroundColor: form.watch("primaryColor") }}
+                />
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Pulsanti:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    style={{
+                      backgroundColor: form.watch("primaryColor"),
+                    }}
+                  >
+                    Pulsante Primario
+                  </Button>
+                  <Button variant="outline">Pulsante Outline</Button>
+                  <Button variant="secondary">Pulsante Secondario</Button>
                 </div>
               </div>
 
-              <Button 
-                onClick={() => setIsConfirmationOpen(true)}
-                className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Applica Modifiche
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Elementi UI:</p>
+                <div className="flex flex-wrap gap-2">
+                  <div
+                    className="p-3 rounded-md text-white"
+                    style={{ backgroundColor: form.watch("primaryColor") }}
+                  >
+                    Sidebar
+                  </div>
+                  <div className="p-3 border rounded-md">Card</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="config">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurazione Generale</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Add additional configuration options here */}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <ConfirmationModal
-        isOpen={isConfirmationOpen}
-        onClose={() => setIsConfirmationOpen(false)}
-        onConfirm={handleColorChange}
-        title="Conferma Modifiche"
-        description="Sei sicuro di voler applicare le modifiche? L'applicazione verrà riavviata per applicare tutte le modifiche al tema."
-      />
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Note per gli Sviluppatori</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>
+              Queste impostazioni sono pensate per il debug e lo sviluppo dell'applicazione.
+              Le modifiche qui applicate influenzeranno l'intera applicazione e saranno
+              salvate nel localStorage del browser.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

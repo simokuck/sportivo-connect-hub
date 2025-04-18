@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { z } from "zod";
 import { Calendar as CalendarIcon, Clock, MapPin, Users, X, Edit, Plus, AlertCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import LocationPicker from '@/components/map/LocationPicker';
+import { useNotifications } from '@/context/NotificationContext';
 
 const eventFormSchema = z.object({
   title: z.string().min(3, { message: "Il titolo deve essere di almeno 3 caratteri" }),
@@ -37,6 +37,7 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 
 const CalendarPage = () => {
   const { user } = useAuth();
+  const { showGroupNotification } = useNotifications();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -113,7 +114,7 @@ const CalendarPage = () => {
         location: selectedEvent.location || '',
         teamId: selectedEvent.teamId,
         requiresMedical: selectedEvent.requiresMedical || false,
-        isPrivate: !selectedEvent.teamId, // Assume it's private if no teamId
+        isPrivate: selectedEvent.teamId ? false : true, // Fix: Set isPrivate based on teamId
       });
     }
   }, [selectedEvent, dialogAction, dialogOpen, form]);
@@ -141,7 +142,22 @@ const CalendarPage = () => {
         description: "L'evento è stato creato con successo",
       });
       
-      console.log(`Notifying users about new event: ${data.title}`);
+      // Send group notification if this is a team event
+      if (!data.isPrivate && data.teamId && user?.teams) {
+        const team = user.teams.find(t => t.id === data.teamId);
+        if (team) {
+          showGroupNotification(
+            "info",
+            `Nuovo evento: ${data.title}`,
+            {
+              groupName: team.name,
+              description: `È stato creato un nuovo evento per la tua squadra: ${data.title}`,
+              eventId: newEvent.id,
+              priority: "normal"
+            }
+          );
+        }
+      }
     } else if (dialogAction === 'edit' && selectedEvent) {
       const updatedEvents = events.map(event => 
         event.id === selectedEvent.id 
@@ -160,7 +176,22 @@ const CalendarPage = () => {
         description: "L'evento è stato aggiornato con successo",
       });
       
-      console.log(`Notifying users about updated event: ${data.title}`);
+      // Notify team about updated event
+      if (!data.isPrivate && data.teamId && user?.teams) {
+        const team = user.teams.find(t => t.id === data.teamId);
+        if (team) {
+          showGroupNotification(
+            "info",
+            `Evento aggiornato: ${data.title}`,
+            {
+              groupName: team.name,
+              description: `Un evento della tua squadra è stato aggiornato: ${data.title}`,
+              eventId: selectedEvent.id,
+              priority: "normal"
+            }
+          );
+        }
+      }
     }
     
     setDialogOpen(false);
@@ -169,6 +200,23 @@ const CalendarPage = () => {
   const handleDeleteEvent = () => {
     if (!selectedEvent) return;
     
+    // Notify team about deleted event if it's a team event
+    if (selectedEvent.teamId && user?.teams) {
+      const team = user.teams.find(t => t.id === selectedEvent.teamId);
+      if (team) {
+        showGroupNotification(
+          "warning",
+          `Evento cancellato: ${selectedEvent.title}`,
+          {
+            groupName: team.name,
+            description: `Un evento della tua squadra è stato cancellato: ${selectedEvent.title}`,
+            eventId: selectedEvent.id,
+            priority: "high"
+          }
+        );
+      }
+    }
+    
     const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
     setEvents(updatedEvents);
     
@@ -176,8 +224,6 @@ const CalendarPage = () => {
       title: "Evento eliminato",
       description: "L'evento è stato eliminato con successo",
     });
-    
-    console.log(`Notifying users about deleted event: ${selectedEvent.title}`);
     
     setDialogOpen(false);
   };
@@ -407,12 +453,18 @@ const CalendarPage = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                       <div className="space-y-0.5">
-                        <FormLabel>Evento Privato</FormLabel>
+                        <FormLabel className="text-sm">Evento Privato</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            // Clear teamId if event is private
+                            if (checked) {
+                              form.setValue("teamId", undefined);
+                            }
+                          }}
                         />
                       </FormControl>
                     </FormItem>
@@ -429,8 +481,7 @@ const CalendarPage = () => {
                       <FormLabel>Squadra</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        value={field.value}
+                        value={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -475,7 +526,7 @@ const CalendarPage = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                       <div className="space-y-0.5">
-                        <FormLabel>Richiedi presenza medica</FormLabel>
+                        <FormLabel className="text-sm">Richiedi presenza medica</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
