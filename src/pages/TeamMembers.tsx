@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -130,23 +129,6 @@ const mockTeams = [
   { id: 'team-2', name: 'Juniores' },
   { id: 'team-3', name: 'Allievi' },
 ];
-
-type StatusType = 'complete' | 'incomplete' | 'pending';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar: string;
-  teamId: string;
-  position?: string;
-  status: {
-    documents: StatusType;
-    forms: StatusType;
-    payments: StatusType;
-  };
-}
 
 const TeamMembersPage = () => {
   const { user } = useAuth();
