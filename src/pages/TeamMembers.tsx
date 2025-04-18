@@ -35,8 +35,25 @@ import {
 } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
 
+type StatusType = 'complete' | 'incomplete' | 'pending';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string;
+  teamId: string;
+  position?: string;
+  status: {
+    documents: StatusType;
+    forms: StatusType;
+    payments: StatusType;
+  };
+}
+
 // Mock data for team members
-const mockTeamMembers = [
+const mockTeamMembers: TeamMember[] = [
   {
     id: '1',
     name: 'Marco Rossi',

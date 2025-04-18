@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Index from './pages/Index';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
-import AppLayout from './components/layout/AppLayout';
+import { AppLayout } from './components/layout/AppLayout';
 import NotFound from './pages/NotFound';
 import Statistics from './pages/Statistics';
 import Teams from './pages/Teams';
