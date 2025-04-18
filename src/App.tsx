@@ -26,17 +26,66 @@ const initializeTheme = () => {
   const secondaryColor = localStorage.getItem('theme-secondary-color');
   const accentColor = localStorage.getItem('theme-accent-color');
   
+  // Convert HEX to HSL for CSS variables
+  const hexToHSL = (hex: string) => {
+    if (!hex) return null;
+    
+    // Remove the # if present
+    hex = hex.replace(/^#/, '');
+    
+    // Parse the hex values
+    let r = parseInt(hex.slice(0, 2), 16) / 255;
+    let g = parseInt(hex.slice(2, 4), 16) / 255;
+    let b = parseInt(hex.slice(4, 6), 16) / 255;
+    
+    // Find the min and max values to calculate the lightness
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      
+      h = Math.round(h * 60);
+    }
+    
+    // Convert saturation and lightness to percentages
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return { h, s, l };
+  };
+  
   if (primaryColor) {
-    document.documentElement.style.setProperty('--primary', primaryColor);
-    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
+    const hsl = hexToHSL(primaryColor);
+    if (hsl) {
+      document.documentElement.style.setProperty('--primary', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+      document.documentElement.style.setProperty('--primary-foreground', '0 0% 100%');
+      document.documentElement.style.setProperty('--sidebar-background', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+    }
   }
   
   if (secondaryColor) {
-    document.documentElement.style.setProperty('--secondary', secondaryColor);
+    const hsl = hexToHSL(secondaryColor);
+    if (hsl) {
+      document.documentElement.style.setProperty('--secondary', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+      document.documentElement.style.setProperty('--secondary-foreground', '0 0% 100%');
+    }
   }
   
   if (accentColor) {
-    document.documentElement.style.setProperty('--accent', accentColor);
+    const hsl = hexToHSL(accentColor);
+    if (hsl) {
+      document.documentElement.style.setProperty('--accent', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+      document.documentElement.style.setProperty('--accent-foreground', '0 0% 100%');
+    }
   }
 };
 

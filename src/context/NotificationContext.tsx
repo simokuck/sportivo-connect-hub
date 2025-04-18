@@ -1,13 +1,13 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
-import { toast } from "sonner";
+import { toast, Toast } from "sonner";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
 interface NotificationOptions {
   description?: string;
   duration?: number;
-  icon?: React.ReactNode; // Changed from LucideIcon to ReactNode
+  icon?: ReactNode; // Changed from LucideIcon to ReactNode
   action?: {
     label: string;
     onClick: () => void;
@@ -86,12 +86,23 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     // 2. Store the notification in a database
     // 3. Broadcast the notification to all connected clients
     
-    // For this example, we'll just log the group notification
-    console.log(`Group notification sent to ${options?.groupName || 'group'}: ${message}`, {
-      recipients: options?.recipients,
+    const groupInfo = options?.groupName 
+      ? `${options.groupName}` 
+      : 'tutti i membri del gruppo';
+    
+    const priority = options?.priority || 'normal';
+    const recipients = options?.recipients || [];
+    
+    console.log(`[Notification] Inviando notifica di gruppo a ${groupInfo}`, {
+      type,
+      message,
+      recipients,
       eventId: options?.eventId,
-      priority: options?.priority || 'normal'
+      priority
     });
+    
+    // Here you would make the API call to send push notifications
+    // For now we're just logging it to the console
   };
 
   const dismissNotification = (toastId: string | number) => {

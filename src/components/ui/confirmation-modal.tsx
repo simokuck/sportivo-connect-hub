@@ -21,6 +21,11 @@ interface ConfirmationModalProps {
   cancelText?: string;
   toastMessage?: string;
   toastDescription?: string;
+  notifyGroup?: {
+    groupId?: string;
+    groupName?: string;
+    recipients?: string[];
+  };
 }
 
 export function ConfirmationModal({
@@ -33,15 +38,28 @@ export function ConfirmationModal({
   cancelText = "Annulla",
   toastMessage,
   toastDescription,
+  notifyGroup,
 }: ConfirmationModalProps) {
-  const { showNotification } = useNotifications();
+  const { showNotification, showGroupNotification } = useNotifications();
 
   const handleConfirm = () => {
     onConfirm();
+    
     if (toastMessage) {
-      showNotification("success", toastMessage, {
-        description: toastDescription,
-      });
+      if (notifyGroup && (notifyGroup.groupName || notifyGroup.recipients)) {
+        // Use group notification if a group is specified
+        showGroupNotification("success", toastMessage, {
+          description: toastDescription,
+          groupName: notifyGroup.groupName,
+          recipients: notifyGroup.recipients,
+          eventId: notifyGroup.groupId,
+        });
+      } else {
+        // Regular notification for the current user
+        showNotification("success", toastMessage, {
+          description: toastDescription,
+        });
+      }
     }
   };
 

@@ -21,102 +21,82 @@ const DevSettings = () => {
   );
   const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
 
-  const applyColorsToDOM = (primary: string, secondary: string, accent: string) => {
-    // Apply colors to CSS variables
-    document.documentElement.style.setProperty('--primary', primary);
-    document.documentElement.style.setProperty('--secondary', secondary);
-    document.documentElement.style.setProperty('--accent', accent);
-    document.documentElement.style.setProperty('--sidebar-background', primary);
-
-    // Convert HEX to HSL for Tailwind CSS variables
-    const hexToHSL = (hex: string) => {
-      // Remove the # if present
-      hex = hex.replace(/^#/, '');
+  const hexToHSL = (hex: string) => {
+    hex = hex.replace(/^#/, '');
+    
+    let r = parseInt(hex.slice(0, 2), 16) / 255;
+    let g = parseInt(hex.slice(2, 4), 16) / 255;
+    let b = parseInt(hex.slice(4, 6), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       
-      // Parse the hex values
-      let r = parseInt(hex.slice(0, 2), 16) / 255;
-      let g = parseInt(hex.slice(2, 4), 16) / 255;
-      let b = parseInt(hex.slice(4, 6), 16) / 255;
-      
-      // Find the min and max values to calculate the lightness
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h, s, l = (max + min) / 2;
-      
-      if (max === min) {
-        // Achromatic
-        h = s = 0;
-      } else {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-          default: h = 0;
-        }
-        
-        h = Math.round(h * 60);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
       }
       
-      // Convert saturation and lightness to percentages
-      s = Math.round(s * 100);
-      l = Math.round(l * 100);
-      
-      return { h, s, l };
-    };
+      h = Math.round(h * 60);
+    }
     
-    // Apply HSL values to CSS variables
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return { h, s, l };
+  };
+
+  const applyColorsToDOM = (primary: string, secondary: string, accent: string) => {
     const primaryHSL = hexToHSL(primary);
     const secondaryHSL = hexToHSL(secondary);
     const accentHSL = hexToHSL(accent);
     
     document.documentElement.style.setProperty('--primary', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
+    document.documentElement.style.setProperty('--primary-foreground', '0 0% 100%');
     document.documentElement.style.setProperty('--secondary', `${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%`);
+    document.documentElement.style.setProperty('--secondary-foreground', '0 0% 100%');
     document.documentElement.style.setProperty('--accent', `${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%`);
+    document.documentElement.style.setProperty('--accent-foreground', '0 0% 100%');
+    document.documentElement.style.setProperty('--sidebar-background', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
   };
 
   const clearColorCache = () => {
-    // Clear any cached color values in session/local storage
     const colorKeys = Object.keys(localStorage).filter(key => 
       key.includes('color') || key.includes('theme')
     );
     
-    // Keep the new values but clear any other cached colors
     colorKeys.forEach(key => {
       if (!['theme-primary-color', 'theme-secondary-color', 'theme-accent-color'].includes(key)) {
         localStorage.removeItem(key);
       }
     });
     
-    // Clear any CSS variables that might be cached in memory
     document.documentElement.removeAttribute('style');
     
-    // Re-apply the colors to ensure they take effect
     applyColorsToDOM(primaryColor, secondaryColor, accentColor);
   };
 
   const handleColorChange = () => {
-    // Save colors to localStorage
     localStorage.setItem('theme-primary-color', primaryColor);
     localStorage.setItem('theme-secondary-color', secondaryColor);
     localStorage.setItem('theme-accent-color', accentColor);
 
-    // Clear cache and apply new colors
     clearColorCache();
     
-    // Apply colors to CSS variables
     applyColorsToDOM(primaryColor, secondaryColor, accentColor);
 
     showNotification('success', 'Tema aggiornato', {
       description: "Le modifiche sono state salvate con successo e applicate all'interfaccia.",
     });
 
-    // Reload key UI components to ensure all elements get the new colors
     setTimeout(() => {
       window.location.reload();
-    }, 1500);
+    }, 1000);
   };
 
   return (
