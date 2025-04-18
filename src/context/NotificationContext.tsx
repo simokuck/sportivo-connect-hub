@@ -1,13 +1,12 @@
-
 import React, { createContext, useContext, ReactNode } from "react";
-import { toast, Toast } from "sonner";
+import { toast } from "sonner";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
 interface NotificationOptions {
   description?: string;
   duration?: number;
-  icon?: ReactNode; // Changed from LucideIcon to ReactNode
+  icon?: ReactNode;
   action?: {
     label: string;
     onClick: () => void;
@@ -15,10 +14,10 @@ interface NotificationOptions {
 }
 
 interface GroupNotificationOptions extends NotificationOptions {
-  recipients?: string[]; // User IDs or groups to receive the notification
-  groupName?: string; // Name of the group (e.g., "Team A")
-  eventId?: string; // ID of the event being notified about
-  priority?: "low" | "normal" | "high"; // Priority level of the notification
+  recipients?: string[];
+  groupName?: string;
+  eventId?: string;
+  priority?: "low" | "normal" | "high";
 }
 
 interface NotificationContextType {
@@ -78,14 +77,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     message: string,
     options?: GroupNotificationOptions
   ): void => {
-    // Show a notification to the current user
     showNotification(type, message, options);
 
-    // In a real application, here we would:
-    // 1. Make an API call to send push notifications to all members of the group
-    // 2. Store the notification in a database
-    // 3. Broadcast the notification to all connected clients
-    
     const groupInfo = options?.groupName 
       ? `${options.groupName}` 
       : 'tutti i membri del gruppo';
@@ -100,9 +93,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       eventId: options?.eventId,
       priority
     });
-    
-    // Here you would make the API call to send push notifications
-    // For now we're just logging it to the console
   };
 
   const dismissNotification = (toastId: string | number) => {
