@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -231,7 +230,6 @@ const Warehouse = () => {
     return matchesSearch && matchesCategory && matchesStatus && matchesLocation;
   });
 
-  // Raccogliamo tutte le categorie, stati e posizioni uniche per i filtri
   const allItems = [...kits, ...equipment];
   const categories = Array.from(new Set(allItems.map(item => item.category)));
   const statuses = Array.from(new Set(allItems.map(item => item.status).filter(Boolean)));
@@ -347,7 +345,7 @@ const Warehouse = () => {
                         </CardTitle>
                         <CardDescription className="flex flex-wrap gap-2 mt-1">
                           <Badge variant={
-                            item.status === 'low' ? "warning" : 
+                            item.status === 'low' ? "secondary" : 
                             item.status === 'out' ? "destructive" : 
                             "outline"
                           }>
@@ -427,7 +425,7 @@ const Warehouse = () => {
                         </CardTitle>
                         <CardDescription className="flex flex-wrap gap-2 mt-1">
                           <Badge variant={
-                            item.status === 'low' ? "warning" : 
+                            item.status === 'low' ? "secondary" : 
                             item.status === 'out' ? "destructive" : 
                             "outline"
                           }>
@@ -485,7 +483,6 @@ const Warehouse = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Input nascosto per l'upload di file */}
       <input
         type="file"
         ref={fileInputRef}
@@ -494,7 +491,6 @@ const Warehouse = () => {
         className="hidden"
       />
 
-      {/* Dialog per aggiungere articoli */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -603,7 +599,6 @@ const Warehouse = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog per modificare articoli */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -702,7 +697,6 @@ const Warehouse = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modale di conferma per eliminazione */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

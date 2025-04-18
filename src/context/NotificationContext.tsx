@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
-import { toast, ToastT } from "sonner";
+import { toast } from "sonner";
 import { LucideIcon } from "lucide-react";
 
 type NotificationType = "success" | "info" | "warning" | "error";
@@ -8,7 +8,7 @@ type NotificationType = "success" | "info" | "warning" | "error";
 interface NotificationOptions {
   description?: string;
   duration?: number;
-  icon?: LucideIcon;
+  icon?: React.ReactNode; // Changed from LucideIcon to ReactNode
   action?: {
     label: string;
     onClick: () => void;
@@ -20,7 +20,7 @@ interface NotificationContextType {
     type: NotificationType,
     message: string,
     options?: NotificationOptions
-  ) => ToastT;
+  ) => void;
   dismissNotification: (toastId: string | number) => void;
   clearNotifications: () => void;
 }
@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     type: NotificationType, 
     message: string, 
     options?: NotificationOptions
-  ): ToastT => {
+  ): void => {
     const toastOptions = {
       description: options?.description,
       duration: options?.duration || 5000,
@@ -45,15 +45,20 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
     switch (type) {
       case "success":
-        return toast.success(message, toastOptions);
+        toast.success(message, toastOptions);
+        break;
       case "info":
-        return toast.info(message, toastOptions);
+        toast.info(message, toastOptions);
+        break;
       case "warning": 
-        return toast.warning(message, toastOptions);
+        toast.warning(message, toastOptions);
+        break;
       case "error":
-        return toast.error(message, toastOptions);
+        toast.error(message, toastOptions);
+        break;
       default:
-        return toast(message, toastOptions);
+        toast(message, toastOptions);
+        break;
     }
   };
 
