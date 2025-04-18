@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Shirt, Volleyball, Flag } from 'lucide-react';
+import { Edit, Trash2, Shirt, Volleyball, Flag, Layers } from 'lucide-react';
 import { WarehouseItem as WarehouseItemType, ItemSize } from '@/types/warehouse';
 import { WarehouseItemDetail } from './WarehouseItemDetail';
 
@@ -70,6 +70,11 @@ export const WarehouseItemCard = ({ item, onEdit, onDelete }: WarehouseItemProps
               </Badge>
               <Badge variant="secondary">Tot. {getTotalQuantity()}</Badge>
               {item.color && <Badge variant="outline">{item.color}</Badge>}
+              {item.hasSizes && (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Layers className="h-3 w-3" /> Taglie
+                </Badge>
+              )}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -92,6 +97,23 @@ export const WarehouseItemCard = ({ item, onEdit, onDelete }: WarehouseItemProps
       </CardHeader>
       <CardContent>
         <WarehouseItemDetail item={item} />
+        
+        {/* Visualizzazione delle taglie */}
+        {item.sizes && item.sizes.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2">Taglie disponibili</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {item.sizes.map((size, index) => (
+                <div key={index} className="border rounded-md p-2 flex justify-between items-center">
+                  <span className="font-medium">{size.label}</span>
+                  <Badge variant={getStatusBadgeVariant(size.status)}>
+                    {size.quantity}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

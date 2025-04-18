@@ -52,6 +52,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    /* Migliorare i contrasti per il tema scuro */
+    --input-foreground: 210 40% 98%;
+    --select-background: 217.2 32.6% 17.5%;
+    --select-foreground: 210 40% 98%;
+    --button-background: 217.2 91.2% 59.8%;
+    --button-foreground: 222.2 47.4% 11.2%;
   }
 }
 
@@ -61,6 +67,25 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Migliore leggibilità in tema scuro per input e select */
+  .dark input, 
+  .dark select, 
+  .dark textarea {
+    @apply text-white border-gray-700 bg-gray-800;
+  }
+  
+  .dark .SelectTrigger {
+    @apply bg-gray-800 border-gray-700 text-white;
+  }
+  
+  .dark .SelectContent {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .dark .SelectItem {
+    @apply text-white hover:bg-gray-700;
   }
 }
 
