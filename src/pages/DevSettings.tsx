@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Palette } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 const DevSettings = () => {
   const { toast } = useToast();
@@ -19,6 +20,7 @@ const DevSettings = () => {
   const [accentColor, setAccentColor] = React.useState(() => 
     localStorage.getItem('theme-accent-color') || "#747bff"
   );
+  const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
 
   const handleColorChange = () => {
     // Save colors to localStorage
@@ -30,23 +32,18 @@ const DevSettings = () => {
     document.documentElement.style.setProperty('--primary', primaryColor);
     document.documentElement.style.setProperty('--secondary', secondaryColor);
     document.documentElement.style.setProperty('--accent', accentColor);
-    
-    // For the sidebar as well
     document.documentElement.style.setProperty('--sidebar-background', primaryColor);
 
     toast({
       title: "Tema aggiornato",
-      description: "Le modifiche sono state salvate con successo.",
+      description: "Le modifiche sono state salvate con successo. Riavvia l'applicazione per vedere tutte le modifiche.",
     });
-  };
 
-  // Apply saved colors on component mount
-  React.useEffect(() => {
-    document.documentElement.style.setProperty('--primary', primaryColor);
-    document.documentElement.style.setProperty('--secondary', secondaryColor);
-    document.documentElement.style.setProperty('--accent', accentColor);
-    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
-  }, [primaryColor, secondaryColor, accentColor]);
+    // Reload the page after a short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -138,8 +135,11 @@ const DevSettings = () => {
                 </div>
               </div>
 
-              <Button onClick={handleColorChange} className="mt-4">
-                Applica Colori
+              <Button 
+                onClick={() => setIsConfirmationOpen(true)}
+                className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Applica Modifiche
               </Button>
             </CardContent>
           </Card>
@@ -156,6 +156,14 @@ const DevSettings = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConfirmationModal
+        isOpen={isConfirmationOpen}
+        onClose={() => setIsConfirmationOpen(false)}
+        onConfirm={handleColorChange}
+        title="Conferma Modifiche"
+        description="Sei sicuro di voler applicare le modifiche? L'applicazione verrà riavviata per applicare le modifiche."
+      />
     </div>
   );
 };
