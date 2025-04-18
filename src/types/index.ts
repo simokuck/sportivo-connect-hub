@@ -1,4 +1,3 @@
-
 export type UserRole = 'player' | 'coach' | 'admin' | 'medical';
 
 export interface User {
@@ -29,6 +28,7 @@ export interface Player extends User {
   strongFoot: 'left' | 'right' | 'both';
   stats: PlayerStats;
   medicalInfo?: MedicalInfo;
+  isCompliant?: boolean;
 }
 
 export interface PlayerStats {
