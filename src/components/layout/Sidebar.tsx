@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +13,8 @@ import {
   CalendarDays,
   Settings,
   Wrench,
-  UserRound
+  UserRound,
+  Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -94,6 +94,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: Wrench, 
       label: 'Impostazioni Dev', 
       href: '/dev-settings', 
+      roles: ['admin'] 
+    },
+    { 
+      icon: Package, 
+      label: 'Magazzino', 
+      href: '/warehouse', 
       roles: ['admin'] 
     },
   ];

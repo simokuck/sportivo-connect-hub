@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
-import { Calendar, Clock, Users, FileText, Bell, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Users, FileText, Bell, BarChart3, AlertTriangle } from 'lucide-react';
 import { mockPlayers, mockEvents, mockNotifications } from '@/data/mockData';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -30,6 +31,11 @@ const Dashboard = () => {
     ? mockPlayers.find(player => player.id === user.id)?.stats 
     : mockPlayers[0].stats;
 
+  // Add non-compliant members check for admin
+  const nonCompliantMembers = mockPlayers.filter(player => 
+    !player.isCompliant
+  ).slice(0, 5);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -37,11 +43,10 @@ const Dashboard = () => {
         <span className="text-sm text-gray-500">Benvenuto, {user.name}</span>
       </div>
 
-      {/* Role-specific cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Player & Coach: Statistics */}
         {(user.role === 'player' || user.role === 'coach') && (
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/statistics')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <BarChart3 className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -76,7 +81,7 @@ const Dashboard = () => {
 
         {/* Coach & Admin: Teams */}
         {(user.role === 'coach' || user.role === 'admin') && (
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/teams')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <Users className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -107,7 +112,7 @@ const Dashboard = () => {
 
         {/* Admin & Medical: Documents */}
         {(user.role === 'admin' || user.role === 'medical') && (
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/documents')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <FileText className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -136,8 +141,33 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* Admin: Non-compliant Members Overview */}
+        {user.role === 'admin' && nonCompliantMembers.length > 0 && (
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/team-members')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center text-lg">
+                <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+                Membri Non in Regola
+              </CardTitle>
+              <CardDescription>
+                Richiede attenzione immediata
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {nonCompliantMembers.map((member) => (
+                  <li key={member.id} className="p-2 bg-red-50 rounded-md">
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-xs text-red-600">Documenti mancanti o scaduti</p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
         {/* All roles: Calendar Events */}
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/calendar')}>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center text-lg">
               <Calendar className="h-5 w-5 mr-2 text-sportivo-blue" />

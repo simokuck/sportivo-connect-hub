@@ -1,4 +1,3 @@
-
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Index from './pages/Index';
@@ -17,27 +16,31 @@ import DevSettings from './pages/DevSettings';
 import TeamMembers from './pages/TeamMembers';
 import './App.css';
 import { Toaster } from './components/ui/toaster';
+import Warehouse from './pages/Warehouse';
 
 const App = () => {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="statistics" element={<Statistics />} />
-          <Route path="teams" element={<Teams />} />
-          <Route path="team-members" element={<TeamMembers />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="exercises" element={<Exercises />} />
-          <Route path="documents" element={<Documents />} />
-          <Route path="training-planner" element={<TrainingPlanner />} />
-          <Route path="profile" element={<UserProfile />} />
-          <Route path="dev-settings" element={<DevSettings />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-      <Toaster />
+      <div className="min-h-screen w-full bg-background">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="statistics" element={<Statistics />} />
+            <Route path="teams" element={<Teams />} />
+            <Route path="team-members" element={<TeamMembers />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="exercises" element={<Exercises />} />
+            <Route path="documents" element={<Documents />} />
+            <Route path="training-planner" element={<TrainingPlanner />} />
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="dev-settings" element={<DevSettings />} />
+            <Route path="warehouse" element={<Warehouse />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+        <Toaster />
+      </div>
     </AuthProvider>
   );
 };

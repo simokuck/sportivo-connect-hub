@@ -1,26 +1,47 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Palette, Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Palette } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 const DevSettings = () => {
-  const [primaryColor, setPrimaryColor] = React.useState("#646cff");
-  const [secondaryColor, setSecondaryColor] = React.useState("#535bf2");
-  const [accentColor, setAccentColor] = React.useState("#747bff");
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
+  const { toast } = useToast();
+  const [primaryColor, setPrimaryColor] = React.useState(() => 
+    localStorage.getItem('theme-primary-color') || "#646cff"
+  );
+  const [secondaryColor, setSecondaryColor] = React.useState(() => 
+    localStorage.getItem('theme-secondary-color') || "#535bf2"
+  );
+  const [accentColor, setAccentColor] = React.useState(() => 
+    localStorage.getItem('theme-accent-color') || "#747bff"
+  );
 
   const handleColorChange = () => {
-    // In a real app, this would update the theme configuration
-    console.log('Colors updated:', { primaryColor, secondaryColor, accentColor });
+    // Save colors to localStorage
+    localStorage.setItem('theme-primary-color', primaryColor);
+    localStorage.setItem('theme-secondary-color', secondaryColor);
+    localStorage.setItem('theme-accent-color', accentColor);
+
+    // Apply colors to CSS variables
+    document.documentElement.style.setProperty('--primary', primaryColor);
+    document.documentElement.style.setProperty('--secondary', secondaryColor);
+    document.documentElement.style.setProperty('--accent', accentColor);
+
+    toast({
+      title: "Tema aggiornato",
+      description: "Le modifiche sono state salvate con successo.",
+    });
   };
+
+  // Apply saved colors on component mount
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--primary', primaryColor);
+    document.documentElement.style.setProperty('--secondary', secondaryColor);
+    document.documentElement.style.setProperty('--accent', accentColor);
+  }, []);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
