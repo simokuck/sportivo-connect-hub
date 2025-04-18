@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -12,7 +13,8 @@ import {
   X,
   CalendarDays,
   Settings,
-  Wrench
+  Wrench,
+  UserRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -68,6 +70,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: Users, 
       label: 'Squadre', 
       href: '/teams', 
+      roles: ['coach', 'admin'] 
+    },
+    { 
+      icon: UserRound, 
+      label: 'Membri', 
+      href: '/team-members', 
       roles: ['coach', 'admin'] 
     },
     { 

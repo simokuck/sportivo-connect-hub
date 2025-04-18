@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { mockExercises } from '@/data/mockData';
-import { Dumbbell, Timer, Tag, Users, Video, Plus, X } from 'lucide-react';
+import { Dumbbell, Timer, Tag, Users, Video, Plus, X, Edit } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -43,11 +44,26 @@ const ExercisesPage = () => {
   );
   const [selectedExercise, setSelectedExercise] = useState<(TrainingExercise & { playersNeeded?: number; groupsNeeded?: number; videoUrl?: string }) | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const canAccessExercises = user?.role === 'coach';
 
   const form = useForm<ExerciseFormValues>({
+    resolver: zodResolver(exerciseFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "technical",
+      duration: 15,
+      playersNeeded: 10,
+      groupsNeeded: 1,
+      videoUrl: "",
+      forPosition: [],
+    },
+  });
+
+  const editForm = useForm<ExerciseFormValues>({
     resolver: zodResolver(exerciseFormSchema),
     defaultValues: {
       title: "",
@@ -96,6 +112,36 @@ const ExercisesPage = () => {
     });
   };
 
+  const handleEditSubmit = (data: ExerciseFormValues) => {
+    if (!selectedExercise) return;
+    
+    const updatedExercises = exercises.map(ex => {
+      if (ex.id === selectedExercise.id) {
+        return {
+          ...ex,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          duration: data.duration,
+          playersNeeded: data.playersNeeded,
+          groupsNeeded: data.groupsNeeded,
+          videoUrl: data.videoUrl,
+          forPosition: data.forPosition,
+        };
+      }
+      return ex;
+    });
+    
+    setExercises(updatedExercises);
+    setEditDialogOpen(false);
+    setSelectedExercise(null);
+    
+    toast({
+      title: "Esercitazione Modificata",
+      description: "L'esercitazione è stata aggiornata con successo",
+    });
+  };
+
   const handleDeleteExercise = (exerciseId: string) => {
     setExercises(exercises.filter(exercise => exercise.id !== exerciseId));
     setDrawerOpen(false);
@@ -110,6 +156,22 @@ const ExercisesPage = () => {
   const openExerciseDetails = (exercise: TrainingExercise & { playersNeeded?: number; groupsNeeded?: number; videoUrl?: string }) => {
     setSelectedExercise(exercise);
     setDrawerOpen(true);
+  };
+
+  const openEditDialog = (exercise: TrainingExercise & { playersNeeded?: number; groupsNeeded?: number; videoUrl?: string }) => {
+    setSelectedExercise(exercise);
+    editForm.reset({
+      title: exercise.title,
+      description: exercise.description,
+      category: exercise.category as "technical" | "tactical" | "physical" | "mental",
+      duration: exercise.duration,
+      playersNeeded: exercise.playersNeeded,
+      groupsNeeded: exercise.groupsNeeded,
+      videoUrl: exercise.videoUrl || "",
+      forPosition: exercise.forPosition || [],
+    });
+    setEditDialogOpen(true);
+    setDrawerOpen(false);
   };
 
   const getCategoryLabel = (category: string) => {
@@ -174,6 +236,7 @@ const ExercisesPage = () => {
         ))}
       </div>
 
+      {/* Dialog for creating new exercise */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -187,7 +250,9 @@ const ExercisesPage = () => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Titolo</FormLabel>
+                    <FormLabel className="flex">
+                      Titolo<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Inserisci il titolo dell'esercitazione" {...field} />
                     </FormControl>
@@ -201,7 +266,9 @@ const ExercisesPage = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descrizione</FormLabel>
+                    <FormLabel className="flex">
+                      Descrizione<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Descrivi l'esercitazione in dettaglio" 
@@ -219,7 +286,9 @@ const ExercisesPage = () => {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Categoria</FormLabel>
+                      <FormLabel className="flex">
+                        Categoria<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -243,7 +312,9 @@ const ExercisesPage = () => {
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Durata (minuti)</FormLabel>
+                      <FormLabel className="flex">
+                        Durata (minuti)<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" min="5" {...field} />
                       </FormControl>
@@ -259,7 +330,9 @@ const ExercisesPage = () => {
                   name="playersNeeded"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Giocatori Necessari</FormLabel>
+                      <FormLabel className="flex">
+                        Giocatori Necessari<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" min="1" {...field} />
                       </FormControl>
@@ -273,7 +346,9 @@ const ExercisesPage = () => {
                   name="groupsNeeded"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gruppi Necessari</FormLabel>
+                      <FormLabel className="flex">
+                        Gruppi Necessari<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input type="number" min="1" {...field} />
                       </FormControl>
@@ -345,6 +420,190 @@ const ExercisesPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog for editing exercise */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Modifica Esercitazione</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      Titolo<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Inserisci il titolo dell'esercitazione" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      Descrizione<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Descrivi l'esercitazione in dettaglio" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Categoria<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleziona una categoria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="technical">Tecnica</SelectItem>
+                          <SelectItem value="tactical">Tattica</SelectItem>
+                          <SelectItem value="physical">Fisica</SelectItem>
+                          <SelectItem value="mental">Mentale</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Durata (minuti)<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min="5" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="playersNeeded"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Giocatori Necessari<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="groupsNeeded"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Gruppi Necessari<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={editForm.control}
+                name="videoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL Video Dimostrativo</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://www.youtube.com/embed/..." 
+                        {...field} 
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Inserisci l'URL embed di YouTube (opzionale)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="forPosition"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Ruoli Consigliati</FormLabel>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {positionOptions.map((position) => (
+                        <Badge
+                          key={position}
+                          variant={editForm.getValues("forPosition")?.includes(position) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => {
+                            const currentPositions = editForm.getValues("forPosition") || [];
+                            if (currentPositions.includes(position)) {
+                              editForm.setValue(
+                                "forPosition",
+                                currentPositions.filter((p) => p !== position)
+                              );
+                            } else {
+                              editForm.setValue("forPosition", [...currentPositions, position]);
+                            }
+                          }}
+                        >
+                          {position}
+                        </Badge>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="pt-4">
+                <Button type="submit">Salva Modifiche</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerContent>
           <DrawerHeader className="text-left">
@@ -401,8 +660,9 @@ const ExercisesPage = () => {
                   <AspectRatio ratio={16 / 9} className="max-w-[400px] mx-auto">
                     <iframe
                       src={selectedExercise.videoUrl}
-                      className="h-full w-full rounded-md"
+                      className="h-full w-full rounded-md max-h-[225px]"
                       allowFullScreen
+                      style={{ maxHeight: '225px' }}
                     />
                   </AspectRatio>
                 </div>
@@ -411,12 +671,20 @@ const ExercisesPage = () => {
           </div>
           <DrawerFooter className="flex-row justify-end space-x-2 pt-2">
             {canAccessExercises && selectedExercise && (
-              <Button 
-                variant="destructive" 
-                onClick={() => handleDeleteExercise(selectedExercise.id)}
-              >
-                <X className="mr-2 h-4 w-4" /> Elimina
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => openEditDialog(selectedExercise)}
+                >
+                  <Edit className="mr-2 h-4 w-4" /> Modifica
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => handleDeleteExercise(selectedExercise.id)}
+                >
+                  <X className="mr-2 h-4 w-4" /> Elimina
+                </Button>
+              </>
             )}
             <DrawerClose asChild>
               <Button variant="outline">Chiudi</Button>

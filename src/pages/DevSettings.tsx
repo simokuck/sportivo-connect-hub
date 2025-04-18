@@ -1,15 +1,21 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Palette } from 'lucide-react';
+import { Palette, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const DevSettings = () => {
   const [primaryColor, setPrimaryColor] = React.useState("#646cff");
   const [secondaryColor, setSecondaryColor] = React.useState("#535bf2");
   const [accentColor, setAccentColor] = React.useState("#747bff");
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
 
   const handleColorChange = () => {
     // In a real app, this would update the theme configuration
@@ -39,19 +45,29 @@ const DevSettings = () => {
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="primaryColor">Colore Primario</Label>
                   <div className="flex gap-2 items-center">
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-[100px] h-10 p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-[120px]"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[240px] justify-start text-left font-normal",
+                            !selectedDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedDate ? format(selectedDate, "dd/MM/yyyy") : <span>Seleziona una data</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <div 
                       className="w-10 h-10 rounded border"
                       style={{ backgroundColor: primaryColor }}
