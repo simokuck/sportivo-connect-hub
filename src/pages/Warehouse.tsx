@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Shirt, Football, Flag } from 'lucide-react';
+import { Package, Shirt, Volleyball, Flag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface WarehouseItem {
@@ -62,7 +62,7 @@ const Warehouse = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {item.category === 'palloni' ? (
-                      <Football className="h-5 w-5" />
+                      <Volleyball className="h-5 w-5" />
                     ) : (
                       <Flag className="h-5 w-5" />
                     )}
