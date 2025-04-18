@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { useNotifications } from "@/context/NotificationContext";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -34,10 +34,12 @@ export function ConfirmationModal({
   toastMessage,
   toastDescription,
 }: ConfirmationModalProps) {
+  const { showNotification } = useNotifications();
+
   const handleConfirm = () => {
     onConfirm();
     if (toastMessage) {
-      toast.success(toastMessage, {
+      showNotification("success", toastMessage, {
         description: toastDescription,
       });
     }

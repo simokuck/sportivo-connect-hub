@@ -20,6 +20,29 @@ import { Toaster } from './components/ui/sonner';
 import Warehouse from './pages/Warehouse';
 import { NotificationProvider } from './context/NotificationContext';
 
+// Initialize theme colors from localStorage if available
+const initializeTheme = () => {
+  const primaryColor = localStorage.getItem('theme-primary-color');
+  const secondaryColor = localStorage.getItem('theme-secondary-color');
+  const accentColor = localStorage.getItem('theme-accent-color');
+  
+  if (primaryColor) {
+    document.documentElement.style.setProperty('--primary', primaryColor);
+    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
+  }
+  
+  if (secondaryColor) {
+    document.documentElement.style.setProperty('--secondary', secondaryColor);
+  }
+  
+  if (accentColor) {
+    document.documentElement.style.setProperty('--accent', accentColor);
+  }
+};
+
+// Call the initialization function
+initializeTheme();
+
 const App = () => {
   return (
     <AuthProvider>

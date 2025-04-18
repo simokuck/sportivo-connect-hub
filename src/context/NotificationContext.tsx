@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
 import { toast } from "sonner";
-import { LucideIcon } from "lucide-react";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -15,11 +14,23 @@ interface NotificationOptions {
   };
 }
 
+interface GroupNotificationOptions extends NotificationOptions {
+  recipients?: string[]; // User IDs or groups to receive the notification
+  groupName?: string; // Name of the group (e.g., "Team A")
+  eventId?: string; // ID of the event being notified about
+  priority?: "low" | "normal" | "high"; // Priority level of the notification
+}
+
 interface NotificationContextType {
   showNotification: (
     type: NotificationType,
     message: string,
     options?: NotificationOptions
+  ) => void;
+  showGroupNotification: (
+    type: NotificationType,
+    message: string,
+    options?: GroupNotificationOptions
   ) => void;
   dismissNotification: (toastId: string | number) => void;
   clearNotifications: () => void;
@@ -62,6 +73,27 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const showGroupNotification = (
+    type: NotificationType,
+    message: string,
+    options?: GroupNotificationOptions
+  ): void => {
+    // Show a notification to the current user
+    showNotification(type, message, options);
+
+    // In a real application, here we would:
+    // 1. Make an API call to send push notifications to all members of the group
+    // 2. Store the notification in a database
+    // 3. Broadcast the notification to all connected clients
+    
+    // For this example, we'll just log the group notification
+    console.log(`Group notification sent to ${options?.groupName || 'group'}: ${message}`, {
+      recipients: options?.recipients,
+      eventId: options?.eventId,
+      priority: options?.priority || 'normal'
+    });
+  };
+
   const dismissNotification = (toastId: string | number) => {
     toast.dismiss(toastId);
   };
@@ -74,6 +106,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     <NotificationContext.Provider 
       value={{ 
         showNotification, 
+        showGroupNotification,
         dismissNotification, 
         clearNotifications 
       }}

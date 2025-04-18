@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Palette } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { useNotifications } from "@/context/NotificationContext";
 
 const DevSettings = () => {
-  const { toast } = useToast();
+  const { showNotification } = useNotifications();
   const [primaryColor, setPrimaryColor] = React.useState(() => 
     localStorage.getItem('theme-primary-color') || "#646cff"
   );
@@ -22,24 +21,99 @@ const DevSettings = () => {
   );
   const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
 
+  const applyColorsToDOM = (primary: string, secondary: string, accent: string) => {
+    // Apply colors to CSS variables
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--secondary', secondary);
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--sidebar-background', primary);
+
+    // Convert HEX to HSL for Tailwind CSS variables
+    const hexToHSL = (hex: string) => {
+      // Remove the # if present
+      hex = hex.replace(/^#/, '');
+      
+      // Parse the hex values
+      let r = parseInt(hex.slice(0, 2), 16) / 255;
+      let g = parseInt(hex.slice(2, 4), 16) / 255;
+      let b = parseInt(hex.slice(4, 6), 16) / 255;
+      
+      // Find the min and max values to calculate the lightness
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      
+      if (max === min) {
+        // Achromatic
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+          default: h = 0;
+        }
+        
+        h = Math.round(h * 60);
+      }
+      
+      // Convert saturation and lightness to percentages
+      s = Math.round(s * 100);
+      l = Math.round(l * 100);
+      
+      return { h, s, l };
+    };
+    
+    // Apply HSL values to CSS variables
+    const primaryHSL = hexToHSL(primary);
+    const secondaryHSL = hexToHSL(secondary);
+    const accentHSL = hexToHSL(accent);
+    
+    document.documentElement.style.setProperty('--primary', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
+    document.documentElement.style.setProperty('--secondary', `${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%`);
+    document.documentElement.style.setProperty('--accent', `${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%`);
+  };
+
+  const clearColorCache = () => {
+    // Clear any cached color values in session/local storage
+    const colorKeys = Object.keys(localStorage).filter(key => 
+      key.includes('color') || key.includes('theme')
+    );
+    
+    // Keep the new values but clear any other cached colors
+    colorKeys.forEach(key => {
+      if (!['theme-primary-color', 'theme-secondary-color', 'theme-accent-color'].includes(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Clear any CSS variables that might be cached in memory
+    document.documentElement.removeAttribute('style');
+    
+    // Re-apply the colors to ensure they take effect
+    applyColorsToDOM(primaryColor, secondaryColor, accentColor);
+  };
+
   const handleColorChange = () => {
     // Save colors to localStorage
     localStorage.setItem('theme-primary-color', primaryColor);
     localStorage.setItem('theme-secondary-color', secondaryColor);
     localStorage.setItem('theme-accent-color', accentColor);
 
+    // Clear cache and apply new colors
+    clearColorCache();
+    
     // Apply colors to CSS variables
-    document.documentElement.style.setProperty('--primary', primaryColor);
-    document.documentElement.style.setProperty('--secondary', secondaryColor);
-    document.documentElement.style.setProperty('--accent', accentColor);
-    document.documentElement.style.setProperty('--sidebar-background', primaryColor);
+    applyColorsToDOM(primaryColor, secondaryColor, accentColor);
 
-    toast({
-      title: "Tema aggiornato",
-      description: "Le modifiche sono state salvate con successo. Riavvia l'applicazione per vedere tutte le modifiche.",
+    showNotification('success', 'Tema aggiornato', {
+      description: "Le modifiche sono state salvate con successo e applicate all'interfaccia.",
     });
 
-    // Reload the page after a short delay
+    // Reload key UI components to ensure all elements get the new colors
     setTimeout(() => {
       window.location.reload();
     }, 1500);
@@ -162,7 +236,7 @@ const DevSettings = () => {
         onClose={() => setIsConfirmationOpen(false)}
         onConfirm={handleColorChange}
         title="Conferma Modifiche"
-        description="Sei sicuro di voler applicare le modifiche? L'applicazione verrà riavviata per applicare le modifiche."
+        description="Sei sicuro di voler applicare le modifiche? L'applicazione verrà riavviata per applicare tutte le modifiche al tema."
       />
     </div>
   );
