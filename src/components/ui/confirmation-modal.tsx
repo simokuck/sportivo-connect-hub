@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ interface ConfirmationModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
+  toastMessage?: string;
+  toastDescription?: string;
 }
 
 export function ConfirmationModal({
@@ -28,7 +31,18 @@ export function ConfirmationModal({
   description,
   confirmText = "Conferma",
   cancelText = "Annulla",
+  toastMessage,
+  toastDescription,
 }: ConfirmationModalProps) {
+  const handleConfirm = () => {
+    onConfirm();
+    if (toastMessage) {
+      toast.success(toastMessage, {
+        description: toastDescription,
+      });
+    }
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
@@ -38,7 +52,7 @@ export function ConfirmationModal({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
+          <AlertDialogAction onClick={handleConfirm}>{confirmText}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
