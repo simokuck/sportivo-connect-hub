@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,6 +51,24 @@ const getColorDescription = (hexColor: string): string => {
   return `Personalizzato (${hexColor})`;
 };
 
+// Helper function to determine if status is considered "low stock"
+const isLowStock = (status: string): boolean => {
+  return status === 'low' || status === 'low_stock';
+};
+
+// Helper function to determine if status is considered "out of stock"
+const isOutOfStock = (status: string): boolean => {
+  return status === 'out' || status === 'out_of_stock';
+};
+
+// Helper function to get status display text
+const getStatusDisplayText = (status: string): string => {
+  if (status === 'available') return 'Disponibile';
+  if (isLowStock(status)) return 'Scorta bassa';
+  if (isOutOfStock(status)) return 'Esaurito';
+  return status;
+};
+
 export function ItemVariantsList({ variants, onEdit, onDelete, onAddVariant }: ItemVariantsListProps) {
   return (
     <div>
@@ -95,12 +114,11 @@ export function ItemVariantsList({ variants, onEdit, onDelete, onAddVariant }: I
                     <Badge 
                       variant={variant.status === 'available' ? 'default' : 'outline'}
                       className={cn(
-                        (variant.status === 'low' || variant.status === 'low_stock') && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
-                        (variant.status === 'out' || variant.status === 'out_of_stock') && 'bg-red-100 text-red-800 hover:bg-red-100'
+                        isLowStock(variant.status) && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+                        isOutOfStock(variant.status) && 'bg-red-100 text-red-800 hover:bg-red-100'
                       )}
                     >
-                      {variant.status === 'available' ? 'Disponibile' : 
-                       (variant.status === 'low' || variant.status === 'low_stock') ? 'Scorta bassa' : 'Esaurito'}
+                      {getStatusDisplayText(variant.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
