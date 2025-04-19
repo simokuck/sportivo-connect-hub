@@ -111,7 +111,7 @@ export interface MedicalInfo {
   certificateExpiry: string;
   notes?: string;
   conditions?: string[];
-  doctorId?: string;
+  doctorIdId?: string;
 }
 
 export interface DocumentTemplate {

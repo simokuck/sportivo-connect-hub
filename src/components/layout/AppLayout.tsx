@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Navbar } from './Navbar';
 import { CollapsibleSidebar } from './CollapsibleSidebar';
+import { Navbar } from './Navbar';
 import { Toaster } from "@/components/ui/toaster";
 
-const AppLayout = () => {
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -19,7 +18,7 @@ const AppLayout = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto p-4">
-          <Outlet />
+          {children}
         </main>
         <Toaster />
       </div>

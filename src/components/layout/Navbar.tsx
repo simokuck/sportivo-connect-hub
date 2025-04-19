@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Menu, User } from 'lucide-react';
@@ -26,8 +25,9 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const roleLabels: Record<UserRole, string> = {
     player: 'Giocatore',
     coach: 'Allenatore',
-    admin: 'Amministrazione',
+    admin: 'Amministratore',
     medical: 'Staff Medico',
+    developer: 'Sviluppatore',
   };
 
   const handleLogout = () => {
@@ -60,8 +60,9 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setRole('player')}>Giocatore</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setRole('coach')}>Allenatore</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRole('admin')}>Amministrazione</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRole('admin')}>Amministratore</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setRole('medical')}>Staff Medico</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRole('developer')}>Sviluppatore</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
