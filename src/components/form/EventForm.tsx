@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,7 @@ interface EventFormProps {
   onSubmit: (data: any) => void;
   dialogAction: 'create' | 'edit';
   handleDeleteEvent?: () => void;
-  handleLocationChange: (location: string, coords?: [number, number]) => void;
+  handleLocationChange: (location: string, coords?: { lat: number; lng: number }) => void;
   teams?: Team[];
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -113,7 +112,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     
     placeMarker([lat, lon]);
     setSelectedLocation(result.display_name);
-    onChange(result.display_name, { lat, lon });
+    onChange(result.display_name, { lat, lng: lon });
     setSearchResults([]);
   };
 
