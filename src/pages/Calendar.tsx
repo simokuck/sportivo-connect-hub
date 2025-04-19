@@ -7,14 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Event } from '@/types';
 import EventForm from '@/components/form/EventForm';
@@ -23,7 +16,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { v4 as uuidv4 } from 'uuid';
-import { Team } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
 const eventSchema = z.object({
@@ -72,7 +64,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -110,11 +102,20 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   }, [events]);
 
   const handleCreateEvent = (data: z.infer<typeof eventSchema>) => {
+    // Make sure all required fields for Event type are provided
     const newEvent: Event = {
       id: uuidv4(),
-      ...data,
+      title: data.title, // Required field
+      description: data.description || "",
       start: new Date(data.start).toISOString(),
       end: new Date(data.end).toISOString(),
+      type: data.type || "training", // Required field with default
+      location: data.location,
+      isPrivate: data.isPrivate || false, // Required field with default
+      teamId: data.teamId,
+      requiresMedical: data.requiresMedical || false,
+      lat: data.lat,
+      lng: data.lng,
     };
 
     setEvents([...events, newEvent]);
@@ -207,8 +208,9 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
           description,
           start: new Date(start).toISOString(),
           end: new Date(end).toISOString(),
-          type,
+          type: (type as "training" | "match" | "medical" | "meeting") || "training",
           location,
+          isPrivate: false,
         } as Event;
       });
       setEvents([...events, ...newEvents]);
