@@ -17,7 +17,7 @@ L.Icon.Default.mergeOptions({
 
 interface LocationPickerProps {
   value?: string;
-  onChange: (location: string, coordinates?: [number, number]) => void;
+  onChange: (location: string, coordinates?: { lat: number; lng: number }) => void;
 }
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {
@@ -100,7 +100,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       const data = await response.json();
       const address = data.display_name;
       setSelectedLocation(address);
-      onChange(address, [lat, lng]);
+      onChange(address, { lat, lng });
     } catch (error) {
       console.error('Error reverse geocoding:', error);
     }
@@ -113,7 +113,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     
     placeMarker([lat, lon]);
     setSelectedLocation(result.display_name);
-    onChange(result.display_name, [lat, lon]);
+    onChange(result.display_name, { lat, lon });
     setSearchResults([]);
   };
 
