@@ -917,28 +917,17 @@ const Warehouse = () => {
         <TabsContent value="catalog" className="p-1">
           {showVariants && selectedItem ? (
             <ItemVariantsList
-              baseItem={selectedItem}
               variants={items.find(item => item.id === selectedItem.id)?.variants || []}
-              onBack={() => setShowVariants(false)}
-              onAddVariant={(item) => {
-                setSelectedItem(item);
-                setDialogType('addVariant');
-              }}
-              onEditVariant={(variant) => {
+              onEdit={(variant) => {
                 setSelectedVariant(variant);
                 setDialogType('editVariant');
               }}
-              onDeleteVariant={(variant) => {
+              onDelete={(variant) => {
                 setDeleteTarget({ id: variant.id, type: 'variant' });
                 setIsDeleteModalOpen(true);
               }}
-              onAdjustStock={(variant) => {
-                setSelectedVariant(variant);
-                setDialogType('addMovement');
-              }}
-              onAssignToPlayer={(variant) => {
-                setSelectedVariant(variant);
-                setDialogType('addAssignment');
+              onAddVariant={() => {
+                setDialogType('addVariant');
               }}
             />
           ) : (

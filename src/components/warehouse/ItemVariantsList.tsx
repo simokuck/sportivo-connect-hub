@@ -100,8 +100,8 @@ export function ItemVariantsList({ variants, onEdit, onDelete, onAddVariant }: I
                     <Badge 
                       variant={variant.status === 'available' ? 'default' : 'outline'}
                       className={cn(
-                        (variant.status === 'low' || variant.status === 'low_stock') ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' : '',
-                        (variant.status === 'out' || variant.status === 'out_of_stock') ? 'bg-red-100 text-red-800 hover:bg-red-100' : ''
+                        (variant.status === 'low' || variant.status === 'low_stock') && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+                        (variant.status === 'out' || variant.status === 'out_of_stock') && 'bg-red-100 text-red-800 hover:bg-red-100'
                       )}
                     >
                       {variant.status === 'available' ? 'Disponibile' : 
