@@ -15,6 +15,7 @@ export type Player = {
   address?: string;
   city?: string;
   isCompliant?: boolean;
+  role?: UserRole; // Adding role property to match mock data
   stats?: {
     games: number;
     minutesPlayed: number;
@@ -77,7 +78,7 @@ export type ItemVariant = {
   color: string;
   size: string;
   quantity: number;
-  status: 'available' | 'low_stock' | 'out_of_stock';
+  status: 'available' | 'low_stock' | 'out_of_stock' | 'low' | 'out';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -95,40 +96,56 @@ export type Event = {
   requiresMedical?: boolean;
   lat?: number;
   lng?: number;
+  canEdit?: boolean; // Adding properties used in mockData
+  attendees?: string[]; // Adding properties used in mockData
 };
 
 export type Document = {
   id: string;
   title: string;
   type: string;
-  fileUrl: string;
+  fileUrl?: string; // Changed to optional since some places use 'url' instead
+  url?: string; // Added to support existing code
   thumbnailUrl?: string;
   category: string;
   tags?: string[];
   uploadDate: string;
   playerId?: string;
   teamId?: string;
+  userId?: string; // Added to support existing code
   expiryDate?: string;
   status?: 'valid' | 'expired' | 'pending';
   size?: number;
+  isTemplate?: boolean;
+  templateData?: {
+    templateId: string;
+    content: string;
+    additionalFields?: Record<string, any>;
+  };
 };
 
 export type DocumentTemplate = {
   id: string;
-  name: string;
+  name?: string; // Optional since some code uses title
+  title?: string; // Added to support existing code
   description?: string;
-  fileUrl: string;
-  category: string;
+  fileUrl?: string;
+  content?: string; // Added to support existing code
+  category?: string;
   tags?: string[];
-  createdAt: string;
+  createdAt?: string;
+  fields?: string[]; // Added to support existing code
+  type?: string; // Added to support existing code
+  createdBy?: string; // Added to support existing code
 };
 
 export type TrainingExercise = {
   id: string;
-  name: string;
+  name?: string; // Optional since some code uses title instead
+  title?: string; // Added to support existing code
   description: string;
   duration: number;
-  intensity: 'low' | 'medium' | 'high';
+  intensity?: 'low' | 'medium' | 'high';
   category: string;
   equipment?: string[];
   videoUrl?: string;
@@ -136,6 +153,10 @@ export type TrainingExercise = {
   instructions?: string[];
   goals?: string[];
   variations?: string[];
+  playersNeeded?: number; // Added to support existing code
+  groupsNeeded?: number; // Added to support existing code
+  forPosition?: string[]; // Added to support existing code
+  createdBy?: string; // Added to support existing code
 };
 
 export type CalendarEvent = Event;
@@ -148,6 +169,7 @@ export type Notification = {
   read: boolean;
   forRoles?: UserRole[];
   forUsers?: string[];
+  forTeams?: string[]; // Added to support existing code
   type?: 'info' | 'warning' | 'error' | 'success';
 };
 
@@ -164,4 +186,6 @@ export type MedicalInfo = {
   certificateExpiry?: string;
   certificateUrl?: string;
   status: 'valid' | 'expired' | 'pending';
+  doctorIdId?: string; // Added to support existing code
+  conditions?: string[]; // Added to support existing code
 };

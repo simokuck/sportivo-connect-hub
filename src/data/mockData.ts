@@ -1,3 +1,4 @@
+
 import { Player, Team, Document, TrainingExercise, CalendarEvent, Notification, MedicalInfo } from '@/types';
 
 // Players mock data
@@ -5,11 +6,12 @@ export const mockPlayers: Player[] = [
   {
     id: '1',
     name: 'Marco Rossi',
+    firstName: 'Marco',
+    lastName: 'Rossi',
     email: 'marco@example.com',
-    role: 'player',
-    avatar: '/assets/avatars/player1.jpg',
     position: 'Attaccante',
     strongFoot: 'right',
+    avatar: '/assets/avatars/player1.jpg',
     stats: {
       games: 20,
       minutesPlayed: 1450,
@@ -23,11 +25,12 @@ export const mockPlayers: Player[] = [
   {
     id: '5',
     name: 'Luca Bianchi',
+    firstName: 'Luca',
+    lastName: 'Bianchi',
     email: 'luca@example.com',
-    role: 'player',
-    avatar: '/assets/avatars/player2.jpg',
     position: 'Centrocampista',
     strongFoot: 'left',
+    avatar: '/assets/avatars/player2.jpg',
     stats: {
       games: 18,
       minutesPlayed: 1530,
@@ -41,11 +44,12 @@ export const mockPlayers: Player[] = [
   {
     id: '6',
     name: 'Alessandro Verdi',
+    firstName: 'Alessandro',
+    lastName: 'Verdi',
     email: 'alessandro@example.com',
-    role: 'player',
-    avatar: '/assets/avatars/player3.jpg',
     position: 'Difensore',
     strongFoot: 'right',
+    avatar: '/assets/avatars/player3.jpg',
     stats: {
       games: 22,
       minutesPlayed: 1890,
@@ -71,7 +75,10 @@ export const mockTeams: Team[] = [
       email: 'paolo@example.com',
       role: 'coach',
       avatar: '/assets/avatars/coach1.jpg'
-    }]
+    }],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: '2'
   },
   {
     id: '2',
@@ -84,7 +91,10 @@ export const mockTeams: Team[] = [
       email: 'paolo@example.com',
       role: 'coach',
       avatar: '/assets/avatars/coach1.jpg'
-    }]
+    }],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: '2'
   }
 ];
 
@@ -96,7 +106,8 @@ export const mockDocuments: Document[] = [
     type: 'contract',
     uploadDate: '2024-01-15',
     userId: '1',
-    url: '#'
+    url: '#',
+    category: 'contract'
   },
   {
     id: '2',
@@ -104,7 +115,8 @@ export const mockDocuments: Document[] = [
     type: 'medical',
     uploadDate: '2024-02-10',
     userId: '5',
-    url: '#'
+    url: '#',
+    category: 'medical'
   },
   {
     id: '3',
@@ -113,7 +125,8 @@ export const mockDocuments: Document[] = [
     uploadDate: '2024-03-01',
     userId: '2',
     teamId: '1',
-    url: '#'
+    url: '#',
+    category: 'training'
   }
 ];
 
@@ -122,27 +135,33 @@ export const mockExercises: TrainingExercise[] = [
   {
     id: '1',
     title: 'Passaggi in Triangolo',
+    name: 'Passaggi in Triangolo',
     description: 'Esercizio di passaggi rapidi in triangolo con movimento senza palla',
     category: 'technical',
     duration: 15,
-    createdBy: '2'
+    createdBy: '2',
+    intensity: 'medium'
   },
   {
     id: '2',
     title: 'Lavoro Aerobico',
+    name: 'Lavoro Aerobico',
     description: 'Corsa a media intensità con variazioni di ritmo',
     category: 'physical',
     duration: 20,
-    createdBy: '2'
+    createdBy: '2',
+    intensity: 'high'
   },
   {
     id: '3',
     title: 'Possesso Palla 5 vs 2',
+    name: 'Possesso Palla 5 vs 2',
     description: 'Esercizio di possesso con superiorità numerica',
     category: 'tactical',
     duration: 25,
     createdBy: '2',
-    forPosition: ['Centrocampista', 'Difensore']
+    forPosition: ['Centrocampista', 'Difensore'],
+    intensity: 'medium'
   }
 ];
 
@@ -157,7 +176,8 @@ export const mockEvents: CalendarEvent[] = [
     type: 'training',
     teamId: '1',
     location: 'Campo Principale',
-    canEdit: true
+    canEdit: true,
+    isPrivate: false
   },
   {
     id: '2',
@@ -169,7 +189,8 @@ export const mockEvents: CalendarEvent[] = [
     teamId: '1',
     location: 'Stadio Comunale',
     requiresMedical: true,
-    canEdit: true
+    canEdit: true,
+    isPrivate: false
   },
   {
     id: '3',
@@ -181,7 +202,8 @@ export const mockEvents: CalendarEvent[] = [
     teamId: '2',
     attendees: ['4', '5', '6'],
     location: 'Centro Medico Sportivo',
-    canEdit: true
+    canEdit: true,
+    isPrivate: false
   }
 ];
 
@@ -223,7 +245,8 @@ export const mockMedicalInfo: MedicalInfo[] = [
     playerId: '1',
     certificateExpiry: '2024-12-15',
     notes: 'Nessuna controindicazione all\'attività sportiva',
-    doctorIdId: '4'
+    doctorIdId: '4',
+    status: 'valid'
   },
   {
     id: '2',
@@ -231,13 +254,15 @@ export const mockMedicalInfo: MedicalInfo[] = [
     certificateExpiry: '2024-10-22',
     notes: 'Precedente infortunio al ginocchio, monitorare',
     conditions: ['Lieve tendinite'],
-    doctorIdId: '4'
+    doctorIdId: '4',
+    status: 'valid'
   },
   {
     id: '3',
     playerId: '6',
     certificateExpiry: '2024-11-05',
     notes: 'Nessuna controindicazione',
-    doctorIdId: '4'
+    doctorIdId: '4',
+    status: 'valid'
   }
 ];
