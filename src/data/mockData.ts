@@ -1,4 +1,3 @@
-
 import { Player, Team, Document, TrainingExercise, CalendarEvent, Notification, MedicalInfo } from '@/types';
 
 // Players mock data
@@ -224,7 +223,7 @@ export const mockMedicalInfo: MedicalInfo[] = [
     playerId: '1',
     certificateExpiry: '2024-12-15',
     notes: 'Nessuna controindicazione all\'attività sportiva',
-    doctorId: '4'
+    doctorIdId: '4'
   },
   {
     id: '2',
@@ -232,13 +231,13 @@ export const mockMedicalInfo: MedicalInfo[] = [
     certificateExpiry: '2024-10-22',
     notes: 'Precedente infortunio al ginocchio, monitorare',
     conditions: ['Lieve tendinite'],
-    doctorId: '4'
+    doctorIdId: '4'
   },
   {
     id: '3',
     playerId: '6',
     certificateExpiry: '2024-11-05',
     notes: 'Nessuna controindicazione',
-    doctorId: '4'
+    doctorIdId: '4'
   }
 ];
