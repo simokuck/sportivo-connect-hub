@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
+import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Documents from './pages/Documents';
@@ -37,7 +38,7 @@ function App() {
         <Router>
           <AuthProvider>
             <Routes>
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route
                 path="/"
                 element={
