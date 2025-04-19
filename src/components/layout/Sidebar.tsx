@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -11,13 +12,14 @@ import {
   Activity,
   X,
   CalendarDays,
-  Settings,
   Wrench,
   UserRound,
-  Package
+  Package,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ interface NavItem {
 export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const { user } = useAuth();
   const location = useLocation();
+  const { primaryColor } = useTheme();
 
   const navItems: NavItem[] = [
     { 
@@ -58,6 +61,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       icon: ClipboardList, 
       label: 'Esercitazioni', 
       href: '/exercises', 
+      roles: ['coach'] 
+    },
+    { 
+      icon: Video, 
+      label: 'Sessioni Video', 
+      href: '/video-sessions', 
       roles: ['coach'] 
     },
     { 
@@ -97,6 +106,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       roles: ['admin'] 
     },
     { 
+      icon: FileText, 
+      label: 'Anagrafica Società', 
+      href: '/company-info', 
+      roles: ['admin'] 
+    },
+    { 
       icon: Package, 
       label: 'Magazzino', 
       href: '/warehouse', 
@@ -106,18 +121,54 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
   if (!user) return null;
 
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.includes(user.role)
-  );
+  // Filtra gli elementi in base al ruolo e all'ordine salvato
+  const getFilteredAndOrderedNavItems = () => {
+    const savedOrderString = localStorage.getItem('sidebarNavOrder');
+    
+    if (savedOrderString) {
+      try {
+        const savedOrder = JSON.parse(savedOrderString);
+        const itemsCopy = [...navItems];
+        
+        // Ordina gli elementi in base all'ordine salvato
+        itemsCopy.sort((a, b) => {
+          // Trova gli ID in base al label che è univoco
+          const idA = savedOrder.indexOf(a.label.toLowerCase().replace(/\s+/g, '-'));
+          const idB = savedOrder.indexOf(b.label.toLowerCase().replace(/\s+/g, '-'));
+          
+          if (idA === -1) return 1;
+          if (idB === -1) return -1;
+          
+          return idA - idB;
+        });
+        
+        // Filtra per ruolo dopo l'ordinamento
+        return itemsCopy.filter(item => item.roles.includes(user.role));
+      } catch (e) {
+        console.error("Errore nel parsing dell'ordine salvato:", e);
+        return navItems.filter(item => item.roles.includes(user.role));
+      }
+    }
+    
+    return navItems.filter(item => item.roles.includes(user.role));
+  };
+
+  const filteredNavItems = getFilteredAndOrderedNavItems();
+
+  // Applica il colore principale alla sidebar
+  const sidebarStyle = {
+    backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
+  };
 
   return (
     <aside 
+      style={sidebarStyle}
       className={cn(
-        "fixed md:relative inset-y-0 left-0 z-40 w-64 bg-sportivo-blue text-white transform transition-transform duration-300 ease-in-out flex flex-col md:translate-x-0",
+        "fixed md:relative inset-y-0 left-0 z-40 w-64 text-white transform transition-transform duration-300 ease-in-out flex flex-col md:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-blue-700">
+      <div className="flex items-center justify-between p-4 border-b border-white/20">
         <h2 className="text-xl font-bold">Sportivo</h2>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="md:hidden text-white">
           <X className="h-5 w-5" />
@@ -134,8 +185,8 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 <Link
                   to={item.href}
                   className={cn(
-                    "flex items-center p-3 text-white hover:bg-blue-700 rounded-lg transition-colors",
-                    isActive && "bg-blue-700"
+                    "flex items-center p-3 text-white hover:bg-white/10 rounded-lg transition-colors",
+                    isActive && "bg-white/20"
                   )}
                 >
                   <item.icon className="h-5 w-5 mr-3" />
@@ -147,7 +198,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </ul>
       </div>
 
-      <div className="p-4 border-t border-blue-700">
+      <div className="p-4 border-t border-white/20">
         <div className="text-sm opacity-70">
           <p>Versione 1.0.0</p>
           <p>© 2025 Sportivo Connect</p>

@@ -18,11 +18,13 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
-  GripVertical
+  GripVertical,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/context/ThemeContext';
 
 interface NavItem {
   id: string;
@@ -35,6 +37,7 @@ interface NavItem {
 export const CollapsibleSidebar = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { primaryColor } = useTheme();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -72,6 +75,13 @@ export const CollapsibleSidebar = () => {
         icon: ClipboardList, 
         label: 'Esercitazioni', 
         href: '/exercises', 
+        roles: ['coach'] 
+      },
+      { 
+        id: 'video-sessions',
+        icon: Video, 
+        label: 'Sessioni Video', 
+        href: '/video-sessions', 
         roles: ['coach'] 
       },
       { 
@@ -114,6 +124,13 @@ export const CollapsibleSidebar = () => {
         icon: Wrench, 
         label: 'Impostazioni Dev', 
         href: '/dev-settings', 
+        roles: ['admin'] 
+      },
+      { 
+        id: 'company-info',
+        icon: FileText, 
+        label: 'Anagrafica Società', 
+        href: '/company-info', 
         roles: ['admin'] 
       },
       { 
@@ -164,11 +181,6 @@ export const CollapsibleSidebar = () => {
     setMobileOpen(false);
   }, [location.pathname]);
   
-  // Filtra i navItems in base al ruolo dell'utente
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.includes(user?.role || '')
-  );
-  
   // Gestori per il drag and drop
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedItemId(id);
@@ -218,6 +230,11 @@ export const CollapsibleSidebar = () => {
 
   if (!user) return null;
 
+  // Applica il colore principale alla sidebar
+  const sidebarStyle = {
+    backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -252,13 +269,14 @@ export const CollapsibleSidebar = () => {
 
       {/* Sidebar component */}
       <aside 
+        style={sidebarStyle}
         className={cn(
-          "fixed md:sticky inset-y-0 left-0 z-40 flex h-screen flex-col border-r bg-sportivo-blue text-white transition-all duration-300",
+          "fixed md:sticky inset-y-0 left-0 z-40 flex h-screen flex-col border-r text-white transition-all duration-300",
           isOpen ? "w-64" : "w-16",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-blue-700">
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
           <h2 className={cn("text-xl font-bold transition-opacity", isOpen ? "opacity-100" : "opacity-0 md:hidden")}>
             Sportivo
           </h2>
@@ -284,7 +302,7 @@ export const CollapsibleSidebar = () => {
 
         <div className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-2 px-3">
-            {filteredNavItems.map((item) => {
+            {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               
               return (
@@ -302,8 +320,8 @@ export const CollapsibleSidebar = () => {
                   <Link
                     to={item.href}
                     className={cn(
-                      "flex items-center p-3 text-white hover:bg-blue-700 rounded-lg transition-colors",
-                      isActive && "bg-blue-700"
+                      "flex items-center p-3 text-white hover:bg-white/10 rounded-lg transition-colors",
+                      isActive && "bg-white/20"
                     )}
                     title={!isOpen ? item.label : undefined}
                   >
@@ -319,7 +337,7 @@ export const CollapsibleSidebar = () => {
           </ul>
         </div>
 
-        <div className={cn("p-4 border-t border-blue-700", !isOpen && "hidden md:block")}>
+        <div className={cn("p-4 border-t border-white/20", !isOpen && "hidden md:block")}>
           <div className={cn("text-sm opacity-70", !isOpen && "hidden")}>
             <p>Versione 1.0.0</p>
             <p className={isOpen ? "" : "hidden"}>© 2025 Sportivo Connect</p>

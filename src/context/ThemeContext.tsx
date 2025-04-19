@@ -34,6 +34,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Aggiorniamo direttamente le variabili CSS
     document.documentElement.style.setProperty('--primary', convertHexToHSL(color));
     
+    // Applichiamo il colore primario anche alla sidebar
+    const sidebarElements = document.querySelectorAll('[style*="background-color"]');
+    sidebarElements.forEach(element => {
+      if ((element as HTMLElement).classList.contains('z-40') || (element as HTMLElement).getAttribute('style')?.includes('sportivo-blue')) {
+        (element as HTMLElement).style.backgroundColor = color;
+      }
+    });
+    
     // Forziamo un aggiornamento dei colori in tutto il CSS
     document.body.style.setProperty('--trigger-force-update', Date.now().toString());
     
@@ -110,6 +118,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // Imposta la variabile CSS per il colore primario
     document.documentElement.style.setProperty('--primary', convertHexToHSL(primaryColor));
+    
+    // Applica il colore alla sidebar
+    const applyColorToSidebar = () => {
+      setTimeout(() => {
+        const sidebarElements = document.querySelectorAll('aside');
+        sidebarElements.forEach(element => {
+          if ((element as HTMLElement).classList.contains('z-40')) {
+            (element as HTMLElement).style.backgroundColor = primaryColor;
+          }
+        });
+      }, 100);
+    };
+    
+    applyColorToSidebar();
+    
+    window.addEventListener('resize', applyColorToSidebar);
+    
+    return () => {
+      window.removeEventListener('resize', applyColorToSidebar);
+    };
   }, [primaryColor]);
   
   // Force a refresh of the styles by temporarily modifying the DOM
