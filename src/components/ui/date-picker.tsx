@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -11,43 +11,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { FormControl } from "@/components/ui/form"
-import { it } from "date-fns/locale"
+import { FormProvider, useForm } from "react-hook-form"
 
 interface DatePickerProps {
-  date: Date | undefined
-  setDate: (date: Date | undefined) => void
-  disabled?: boolean
-  className?: string
+  date?: Date
+  setDate: (date?: Date) => void
   placeholder?: string
-  format?: string
 }
 
-export function DatePicker({
-  date,
-  setDate,
-  disabled,
-  className,
-  placeholder = "Seleziona una data",
-  format: dateFormat = "dd/MM/yyyy"
-}: DatePickerProps) {
+export function DatePicker({ date, setDate, placeholder = "Seleziona una data" }: DatePickerProps) {
+  // Create a local form method to ensure the DatePicker can work standalone if needed
+  const formMethods = useForm();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <FormControl>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-full text-left font-normal",
-              !date && "text-muted-foreground",
-              className
-            )}
-            disabled={disabled}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, dateFormat, { locale: it }) : <span>{placeholder}</span>}
-          </Button>
-        </FormControl>
+        <Button
+          variant={"outline"}
+          className={cn(
+            "w-[240px] justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, "PPP") : <span>{placeholder}</span>}
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
@@ -55,8 +43,6 @@ export function DatePicker({
           selected={date}
           onSelect={setDate}
           initialFocus
-          locale={it}
-          className="p-3 pointer-events-auto"
         />
       </PopoverContent>
     </Popover>

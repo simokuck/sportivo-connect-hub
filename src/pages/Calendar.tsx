@@ -5,6 +5,7 @@ import { Team } from "@/types";
 import { useAuth } from '@/context/AuthContext';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { useForm, FormProvider } from "react-hook-form";
 
 // Mock data
 const mockEvents = [
@@ -78,6 +79,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ event, isOpen, onOpenChange, 
   const [teamId, setTeamId] = useState(event?.teamId || "");
   const [description, setDescription] = useState(event?.description || "");
   
+  const methods = useForm(); // Create a form instance for FormProvider
+  
   const handleSave = () => {
     if (!title || !date || !time || !location || !teamId) {
       return;
@@ -116,75 +119,78 @@ const EventDialog: React.FC<EventDialogProps> = ({ event, isOpen, onOpenChange, 
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">Titolo</label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Inserisci un titolo"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+        {/* Wrap the form content with FormProvider */}
+        <FormProvider {...methods}>
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">Data</label>
-              <DatePicker
-                date={date}
-                setDate={setDate}
-                placeholder="Seleziona una data"
+              <label htmlFor="title" className="text-sm font-medium">Titolo</label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Inserisci un titolo"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="date" className="text-sm font-medium">Data</label>
+                <DatePicker
+                  date={date}
+                  setDate={setDate}
+                  placeholder="Seleziona una data"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="time" className="text-sm font-medium">Orario</label>
+                <Input
+                  id="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  placeholder="es. 10:00 - 12:00"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="location" className="text-sm font-medium">Luogo</label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Inserisci il luogo"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="time" className="text-sm font-medium">Orario</label>
-              <Input
-                id="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                placeholder="es. 10:00 - 12:00"
+              <label htmlFor="team" className="text-sm font-medium">Squadra</label>
+              <Select value={teamId} onValueChange={setTeamId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona una squadra" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockTeams.map(team => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">Descrizione</label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descrizione dell'evento (opzionale)"
+                rows={3}
               />
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="location" className="text-sm font-medium">Luogo</label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Inserisci il luogo"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="team" className="text-sm font-medium">Squadra</label>
-            <Select value={teamId} onValueChange={setTeamId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleziona una squadra" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockTeams.map(team => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">Descrizione</label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descrizione dell'evento (opzionale)"
-              rows={3}
-            />
-          </div>
-        </div>
+        </FormProvider>
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -208,6 +214,7 @@ interface EventDetailsDialogProps {
 
 const EventDetailsDialog: React.FC<EventDetailsDialogProps> = ({ event, isOpen, onOpenChange, onEdit }) => {
   const teamName = event ? mockTeams.find(team => team.id === event.teamId)?.name || 'Nessuna squadra' : '';
+  const methods = useForm(); // Create a form instance for FormProvider
   
   if (!event) return null;
   
@@ -221,31 +228,34 @@ const EventDetailsDialog: React.FC<EventDetailsDialogProps> = ({ event, isOpen, 
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Orario</p>
-              <p className="text-sm">{event.time}</p>
+        {/* Wrap the content with FormProvider to ensure any form components work properly */}
+        <FormProvider {...methods}>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Orario</p>
+                <p className="text-sm">{event.time}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Squadra</p>
+                <p className="text-sm">{teamName}</p>
+              </div>
             </div>
             
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Squadra</p>
-              <p className="text-sm">{teamName}</p>
+              <p className="text-sm font-medium text-muted-foreground">Luogo</p>
+              <p className="text-sm">{event.location}</p>
             </div>
+            
+            {event.description && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Descrizione</p>
+                <p className="text-sm">{event.description}</p>
+              </div>
+            )}
           </div>
-          
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Luogo</p>
-            <p className="text-sm">{event.location}</p>
-          </div>
-          
-          {event.description && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Descrizione</p>
-              <p className="text-sm">{event.description}</p>
-            </div>
-          )}
-        </div>
+        </FormProvider>
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -278,6 +288,9 @@ const Calendar = () => {
   const [isEditEventDialogOpen, setIsEditEventDialogOpen] = useState(false);
   const [isViewEventDialogOpen, setIsViewEventDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  
+  // Import form methods
+  const importFormMethods = useForm();
   
   // Aggiungiamo la funzione per gestire l'importazione del calendario
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -364,38 +377,41 @@ const Calendar = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label htmlFor="team" className="text-sm font-medium">Squadra</label>
-                  <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona una squadra" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teams.map(team => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="file" className="text-sm font-medium">File</label>
-                  <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Input 
-                      id="file" 
-                      type="file" 
-                      accept=".csv,.xlsx,.xls" 
-                      onChange={handleFileChange}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Formati supportati: CSV, Excel (.xlsx, .xls)
-                    </p>
+              {/* Wrap the form content with FormProvider */}
+              <FormProvider {...importFormMethods}>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label htmlFor="team" className="text-sm font-medium">Squadra</label>
+                    <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleziona una squadra" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teams.map(team => (
+                          <SelectItem key={team.id} value={team.id}>
+                            {team.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="file" className="text-sm font-medium">File</label>
+                    <div className="grid w-full max-w-sm items-center gap-1.5">
+                      <Input 
+                        id="file" 
+                        type="file" 
+                        accept=".csv,.xlsx,.xls" 
+                        onChange={handleFileChange}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formati supportati: CSV, Excel (.xlsx, .xls)
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </FormProvider>
               
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
@@ -413,11 +429,14 @@ const Calendar = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Calendario</h1>
         <div className="flex gap-4 items-center">
-          <DatePicker
-            date={selectedDate}
-            setDate={setSelectedDate}
-            placeholder="Seleziona una data"
-          />
+          {/* Wrap the DatePicker with FormProvider */}
+          <FormProvider {...useForm()}>
+            <DatePicker
+              date={selectedDate}
+              setDate={setSelectedDate}
+              placeholder="Seleziona una data"
+            />
+          </FormProvider>
           <Button onClick={() => {
             setSelectedEvent(null);
             setIsNewEventDialogOpen(true);
