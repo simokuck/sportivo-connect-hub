@@ -131,6 +131,7 @@ const EventForm = ({
                 </div>
                 <FormControl>
                   <Switch
+                    size="small"
                     checked={field.value}
                     onCheckedChange={(checked) => {
                       field.onChange(checked);
@@ -204,6 +205,7 @@ const EventForm = ({
                 </div>
                 <FormControl>
                   <Switch
+                    size="small"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />

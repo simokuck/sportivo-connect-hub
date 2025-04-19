@@ -20,7 +20,7 @@ export interface WarehouseItem {
   material?: string;
   features?: string[];
   notes?: string[];
-  // Nuovi campi per supportare meglio le taglie
+  // Item sizes fields
   hasSizes?: boolean;
   sizesType?: 'numeric' | 'letter' | 'standard' | 'custom';
 }

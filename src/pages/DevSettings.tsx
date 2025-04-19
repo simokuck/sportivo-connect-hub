@@ -1,16 +1,17 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Laptop } from "lucide-react";
+import { Moon, Sun, Laptop, UserCog, FileText } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useTheme } from "@/context/ThemeContext";
+import { Link } from "react-router-dom";
 
 const themeSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
@@ -178,6 +179,46 @@ const DevSettings = () => {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5" /> Ruoli e Permessi
+            </CardTitle>
+            <CardDescription>
+              Configura ruoli e permessi per gli utenti dell'applicazione
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Gestisci i permessi per ciascun ruolo utente nel sistema. Definisci chi può accedere a quali funzionalità.
+            </p>
+            <Button asChild>
+              <Link to="/roles-and-permissions">Gestisci Ruoli e Permessi</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Audit Log
+            </CardTitle>
+            <CardDescription>
+              Visualizza il registro delle attività di sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Monitora tutte le azioni degli utenti, filtra per tipo di operazione, utente o intervallo di date.
+            </p>
+            <Button asChild>
+              <Link to="/audit-log">Visualizza Audit Log</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

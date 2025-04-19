@@ -21,6 +21,9 @@ import Warehouse from '@/pages/Warehouse'
 import UserProfile from '@/pages/UserProfile'
 import NotFound from '@/pages/NotFound'
 import DevSettings from '@/pages/DevSettings'
+import RolesAndPermissions from '@/pages/RolesAndPermissions'
+import AuditLog from '@/pages/AuditLog'
+import VideoSessions from '@/pages/VideoSessions'
 import Index from '@/pages/Index'
 
 const queryClient = new QueryClient({
@@ -53,7 +56,10 @@ export default function App() {
                 <Route path="medical" element={<Index />} />
                 <Route path="warehouse" element={<Warehouse />} />
                 <Route path="profile" element={<UserProfile />} />
+                <Route path="video-sessions" element={<VideoSessions />} />
                 <Route path="dev-settings" element={<DevSettings />} />
+                <Route path="roles-and-permissions" element={<RolesAndPermissions />} />
+                <Route path="audit-log" element={<AuditLog />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
