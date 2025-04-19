@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,6 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { UserRole } from '@/types';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 // Mock data for permissions
 const permissions = [
@@ -45,6 +46,7 @@ const initialRolePermissions: Record<UserRole, string[]> = {
 const RolesAndPermissions = () => {
   const [rolePermissions, setRolePermissions] = useState<Record<UserRole, string[]>>(initialRolePermissions);
   const roles: UserRole[] = ['player', 'coach', 'admin', 'medical'];
+  const navigate = useNavigate();
 
   const handleTogglePermission = (role: UserRole, permissionId: string) => {
     setRolePermissions(prev => {
@@ -83,7 +85,18 @@ const RolesAndPermissions = () => {
 
   return (
     <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Ruoli e Permessi</h1>
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => navigate(-1)}
+          className="h-8 w-8"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="sr-only">Indietro</span>
+        </Button>
+        <h1 className="text-3xl font-bold">Ruoli e Permessi</h1>
+      </div>
       
       <Card>
         <CardHeader>

@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Search, Filter, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, Search, Filter, RefreshCw, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { UserRole } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
-// Mock data for audit logs
 interface AuditLogEntry {
   id: string;
   timestamp: Date;
@@ -99,6 +99,7 @@ const AuditLog = () => {
   const [userFilter, setUserFilter] = useState<string>('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const navigate = useNavigate();
 
   const uniqueUsers = Array.from(new Set(mockAuditLogs.map(log => log.user.id)))
     .map(userId => mockAuditLogs.find(log => log.user.id === userId)?.user);
@@ -108,7 +109,6 @@ const AuditLog = () => {
   const applyFilters = () => {
     let filteredLogs = [...mockAuditLogs];
     
-    // Search query filter (case insensitive)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filteredLogs = filteredLogs.filter(log => 
@@ -118,23 +118,19 @@ const AuditLog = () => {
       );
     }
     
-    // Action filter
     if (actionFilter) {
       filteredLogs = filteredLogs.filter(log => log.action === actionFilter);
     }
     
-    // User filter
     if (userFilter) {
       filteredLogs = filteredLogs.filter(log => log.user.id === userFilter);
     }
     
-    // Date range filter
     if (startDate) {
       filteredLogs = filteredLogs.filter(log => log.timestamp >= startDate);
     }
     
     if (endDate) {
-      // Set end of day for the end date
       const endOfDay = new Date(endDate);
       endOfDay.setHours(23, 59, 59, 999);
       filteredLogs = filteredLogs.filter(log => log.timestamp <= endOfDay);
@@ -168,7 +164,18 @@ const AuditLog = () => {
 
   return (
     <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Audit Log</h1>
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => navigate(-1)}
+          className="h-8 w-8"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="sr-only">Indietro</span>
+        </Button>
+        <h1 className="text-3xl font-bold">Audit Log</h1>
+      </div>
       
       <Card className="mb-6">
         <CardHeader>

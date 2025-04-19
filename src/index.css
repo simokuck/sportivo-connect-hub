@@ -107,59 +107,19 @@
     @apply bg-blue-900/30 text-blue-100;
   }
   
+  /* Fix contrast for red backgrounds in dark mode */
+  .dark .bg-red-50 {
+    @apply bg-red-900/30;
+  }
+  
+  .dark .text-red-600 {
+    @apply text-red-300;
+  }
+  
   /* Fix contrast for forms and dialogs */
   .dark .text-muted-foreground {
-    @apply text-gray-300;
+    color: #9ca3af; /* Using direct color instead of circular reference */
   }
 }
 
-.bg-sportivo-blue {
-  background-color: var(--primary-color);
-}
-
-.text-sportivo-blue {
-  color: var(--primary-color);
-}
-
-.border-sportivo-blue {
-  border-color: var(--primary-color);
-}
-
-.hover\:bg-sportivo-blue-dark:hover {
-  background-color: var(--primary-color-hover);
-}
-
-/* Update sidebar hover state */
-.bg-blue-700 {
-  background-color: var(--primary-color-hover);
-}
-
-.hover\:bg-blue-700:hover {
-  background-color: var(--primary-color-hover);
-}
-
-.border-blue-700 {
-  border-color: var(--primary-color-hover);
-}
-
-/* Better toggle switch */
-.small-switch {
-  @apply h-4 w-7;
-}
-
-.small-switch .data-\[state\=checked\]\:translate-x-5 {
-  @apply data-[state=checked]:translate-x-3;
-}
-
-.small-switch .data-\[state\=unchecked\]\:translate-x-0 {
-  @apply data-[state=unchecked]:translate-x-0.5;
-}
-
-.small-switch-thumb {
-  @apply h-3 w-3;
-}
-
-/* Better dropdown styling */
-.dropdown-content {
-  @apply z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg;
-}
+/* ... keep existing code (the rest of the CSS file) */

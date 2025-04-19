@@ -156,9 +156,9 @@ const Dashboard = () => {
             <CardContent>
               <ul className="space-y-2">
                 {nonCompliantMembers.map((member) => (
-                  <li key={member.id} className="p-2 bg-red-50 rounded-md">
-                    <p className="font-medium">{member.name}</p>
-                    <p className="text-xs text-red-600">Documenti mancanti o scaduti</p>
+                  <li key={member.id} className="p-2 bg-red-50 dark:bg-red-900/30 rounded-md">
+                    <p className="font-medium dark:text-white">{member.name}</p>
+                    <p className="text-xs text-red-600 dark:text-red-300">Documenti mancanti o scaduti</p>
                   </li>
                 ))}
               </ul>
