@@ -97,8 +97,9 @@
     @apply text-gray-300;
   }
   
+  /* Fix for the circular dependency - using direct color value instead of @apply */
   .dark .text-gray-400 {
-    @apply text-gray-400;
+    color: #9ca3af; /* This is the equivalent hex value for gray-400 */
   }
   
   /* Fix contrast for notifications */
@@ -108,7 +109,7 @@
   
   /* Fix contrast for forms and dialogs */
   .dark .text-muted-foreground {
-    @apply text-gray-400;
+    @apply text-gray-300;
   }
 }
 
