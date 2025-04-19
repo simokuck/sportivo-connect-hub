@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -6,6 +5,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 // Fix Leaflet icon issue in React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
