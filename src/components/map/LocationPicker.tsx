@@ -1,169 +1,153 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-// Fix Leaflet icon issue in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
 
 interface LocationPickerProps {
   value?: string;
-  onChange: (location: string, coordinates?: { lat: number; lng: number }) => void;
-  inForm?: boolean;
+  onChange: (value: string, coords?: { lat: number; lng: number }) => void;
+  className?: string;
+  useOpenStreetMap?: boolean;
 }
 
-export function LocationPicker({ value, onChange, inForm = false }: LocationPickerProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState(value || '');
+const LocationPicker = ({ 
+  value = '', 
+  onChange, 
+  className,
+  useOpenStreetMap = false
+}: LocationPickerProps) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [mapUrl, setMapUrl] = useState('');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize map
   useEffect(() => {
-    if (mapRef.current && !mapInstance.current) {
-      const map = L.map(mapRef.current).setView([41.9028, 12.4964], 6); // Default to Italy
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-      
-      mapInstance.current = map;
-      
-      // Add click event to map
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        placeMarker([lat, lng]);
-        reverseGeocode(lat, lng);
-      });
+    setInputValue(value);
+    
+    // Generate map preview URL if location is set and OpenStreetMap is enabled
+    if (value && useOpenStreetMap) {
+      // Use the Nominatim API to get coordinates for the address
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            const { lat, lon } = data[0];
+            setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`);
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching coordinates:", error);
+        });
+    }
+  }, [value, useOpenStreetMap]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
     
-    // Cleanup
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, []);
-  
-  // Place marker on the map
-  const placeMarker = (coords: [number, number]) => {
-    if (!mapInstance.current) return;
-    
-    if (markerRef.current) {
-      mapInstance.current.removeLayer(markerRef.current);
-    }
-    
-    markerRef.current = L.marker(coords).addTo(mapInstance.current);
-    mapInstance.current.setView(coords, 16);
-  };
-  
-  // Search for location using Nominatim
-  const searchLocation = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    setSearchResults([]);
-    
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`
-      );
+    if (newValue.length > 2 && useOpenStreetMap) {
+      setIsLoading(true);
       
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (error) {
-      console.error('Error searching location:', error);
-    } finally {
-      setIsSearching(false);
+      timeoutRef.current = setTimeout(() => {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newValue)}`)
+          .then(response => response.json())
+          .then(data => {
+            setSuggestions(data);
+            setShowSuggestions(true);
+            setIsLoading(false);
+          })
+          .catch(error => {
+            console.error("Error fetching suggestions:", error);
+            setIsLoading(false);
+          });
+      }, 400);
+    } else {
+      setSuggestions([]);
     }
   };
-  
-  // Reverse geocode to get address from coordinates
-  const reverseGeocode = async (lat: number, lng: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-      );
-      
-      const data = await response.json();
-      const address = data.display_name;
-      setSelectedLocation(address);
-      onChange(address, { lat, lng });
-    } catch (error) {
-      console.error('Error reverse geocoding:', error);
-    }
-  };
-  
-  // Handle selection from search results
-  const handleSelectResult = (result: any) => {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
+
+  const handleSelectSuggestion = (suggestion: any) => {
+    const location = suggestion.display_name;
+    setInputValue(location);
+    onChange(location, { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
+    setShowSuggestions(false);
     
-    placeMarker([lat, lng]);
-    setSelectedLocation(result.display_name);
-    onChange(result.display_name, { lat, lng });
-    setSearchResults([]);
+    // Update map URL
+    setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${suggestion.lon-0.01},${suggestion.lat-0.01},${suggestion.lon+0.01},${suggestion.lat+0.01}&layer=mapnik&marker=${suggestion.lat},${suggestion.lon}`);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onChange(inputValue);
+    setShowSuggestions(false);
   };
 
   return (
-    <div className="space-y-4 relative">
-      <div className="flex space-x-2">
-        <Input
-          placeholder="Cerca un indirizzo..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && searchLocation()}
-        />
-        <Button type="button" onClick={searchLocation} variant="outline">
-          {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-        </Button>
-      </div>
-      
-      {selectedLocation && (
-        <div className="text-sm border p-2 rounded bg-muted">
-          <p><strong>Indirizzo selezionato:</strong> {selectedLocation}</p>
+    <div className={cn("space-y-2", className)}>
+      <form onSubmit={handleSubmit} className="relative">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            className="pl-8"
+            placeholder="Cerca una posizione..."
+          />
+          {isLoading && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+            </div>
+          )}
         </div>
-      )}
-      
-      {searchResults.length > 0 && (
-        <div className="bg-background border rounded-md shadow-sm z-10">
-          <ul className="max-h-60 overflow-auto">
-            {searchResults.map((result, index) => (
-              <li 
-                key={index}
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => handleSelectResult(result)}
-              >
-                {result.display_name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      <div 
-        ref={mapRef} 
-        className={cn(
-          "w-full rounded-md border",
-          inForm ? "h-[250px]" : "h-[300px]"
+        
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute mt-1 w-full rounded-md border bg-background shadow-lg z-50">
+            <ul className="py-1 max-h-60 overflow-auto">
+              {suggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                  className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+                >
+                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{suggestion.display_name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-      ></div>
+        
+        <Button type="submit" className="sr-only">
+          Cerca
+        </Button>
+      </form>
+      
+      {useOpenStreetMap && mapUrl && (
+        <div className="rounded-md border overflow-hidden h-[200px] mt-2">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            frameBorder="0" 
+            scrolling="no" 
+            marginHeight={0} 
+            marginWidth={0} 
+            src={mapUrl} 
+            title="OpenStreetMap" 
+            className="w-full h-full"
+          />
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default LocationPicker;

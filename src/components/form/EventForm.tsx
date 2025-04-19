@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { X } from "lucide-react";
+import { X, MapPin } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { Team } from "@/types";
 import LocationPicker from '@/components/map/LocationPicker';
@@ -195,11 +196,14 @@ const EventForm = ({
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Posizione</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" /> Posizione
+              </FormLabel>
               <FormControl>
                 <LocationPicker 
                   value={field.value} 
                   onChange={handleLocationChange}
+                  useOpenStreetMap={true}
                 />
               </FormControl>
               <FormMessage />

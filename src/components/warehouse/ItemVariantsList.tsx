@@ -1,159 +1,129 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ItemVariant } from "@/types/warehouse";
+import { cn } from "@/lib/utils";
+import { Edit, Trash, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { BaseItem, ItemVariant } from '@/types/warehouse';
-import { Edit, Plus, Trash2, ArrowRight, Warehouse, UserPlus } from 'lucide-react';
 
 interface ItemVariantsListProps {
-  baseItem: BaseItem;
   variants: ItemVariant[];
-  onAddVariant: (baseItem: BaseItem) => void;
-  onEditVariant: (variant: ItemVariant) => void;
-  onDeleteVariant: (variant: ItemVariant) => void;
-  onAdjustStock: (variant: ItemVariant) => void;
-  onAssignToPlayer: (variant: ItemVariant) => void;
-  onBack: () => void;
+  onEdit: (variant: ItemVariant) => void;
+  onDelete: (variant: ItemVariant) => void;
+  onAddVariant: () => void;
 }
 
-export function ItemVariantsList({
-  baseItem,
-  variants,
-  onAddVariant,
-  onEditVariant,
-  onDeleteVariant,
-  onAdjustStock,
-  onAssignToPlayer,
-  onBack
-}: ItemVariantsListProps) {
+// Funzione per convertire i codici colore in descrizioni
+const getColorDescription = (hexColor: string): string => {
+  const colorMap: Record<string, string> = {
+    '#FFFFFF': 'Bianco',
+    '#000000': 'Nero',
+    '#FF0000': 'Rosso',
+    '#0000FF': 'Blu',
+    '#008000': 'Verde',
+    '#FFFF00': 'Giallo',
+    '#FFA500': 'Arancione',
+    '#800080': 'Viola',
+    '#FFC0CB': 'Rosa',
+    '#A52A2A': 'Marrone',
+    '#808080': 'Grigio',
+    '#C0C0C0': 'Argento',
+    '#00FFFF': 'Ciano',
+    '#800000': 'Bordeaux',
+    '#FFD700': 'Oro',
+    '#000080': 'Blu Navy',
+    '#008080': 'Verde Acqua',
+    '#FF00FF': 'Fucsia',
+    '#F5F5DC': 'Beige',
+    '#D3D3D3': 'Grigio Chiaro',
+    '#1976d2': 'Blu Cobalto',
+    '#556B2F': 'Verde Oliva',
+    '#708090': 'Grigio Ardesia',
+    '#4B0082': 'Indaco',
+  };
+
+  // Normalizza il codice colore per la ricerca
+  const normalizedHex = hexColor.toUpperCase();
+  
+  // Se il colore è nella mappa, restituisci la descrizione
+  if (colorMap[normalizedHex]) {
+    return colorMap[normalizedHex];
+  }
+  
+  // Se non lo troviamo nella mappa, restituisci una descrizione generica
+  return `Personalizzato (${hexColor})`;
+};
+
+export function ItemVariantsList({ variants, onEdit, onDelete, onAddVariant }: ItemVariantsListProps) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowRight className="mr-1 h-4 w-4 rotate-180" />
-          Indietro
-        </Button>
-        <h2 className="text-xl font-bold">{baseItem.name}</h2>
-        <Badge>{baseItem.category}</Badge>
-        {baseItem.brand && <Badge variant="outline">{baseItem.brand}</Badge>}
-      </div>
-      
-      <div className="p-4 border rounded-md mb-4 bg-muted/20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Codice SKU: {baseItem.sku}</p>
-            {baseItem.description && <p>{baseItem.description}</p>}
-          </div>
-          {baseItem.image && (
-            <div className="flex justify-end">
-              <div className="w-24 h-24 rounded-md overflow-hidden">
-                <img src={baseItem.image} alt={baseItem.name} className="w-full h-full object-cover" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Varianti ({variants.length})</h3>
-        <Button onClick={() => onAddVariant(baseItem)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuova Variante
+        <Button onClick={onAddVariant} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Aggiungi Variante
         </Button>
       </div>
       
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>SKU</TableHead>
-              <TableHead>Taglia</TableHead>
-              <TableHead>Colore</TableHead>
-              <TableHead>Quantità</TableHead>
-              <TableHead>Soglia</TableHead>
-              <TableHead>Posizione</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="text-right">Azioni</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {variants.length === 0 ? (
+      {variants.length === 0 ? (
+        <div className="text-center py-8 border rounded-md">
+          <p className="text-muted-foreground">Nessuna variante disponibile</p>
+          <Button variant="outline" onClick={onAddVariant} className="mt-2">
+            <Plus className="h-4 w-4 mr-1" /> Aggiungi la prima variante
+          </Button>
+        </div>
+      ) : (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
-                  Nessuna variante per questo articolo
-                </TableCell>
+                <TableHead>Colore</TableHead>
+                <TableHead>Taglia</TableHead>
+                <TableHead>Quantità</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
-            ) : (
-              variants.map((variant) => (
+            </TableHeader>
+            <TableBody>
+              {variants.map((variant) => (
                 <TableRow key={variant.id}>
-                  <TableCell className="font-mono text-sm">{variant.uniqueSku}</TableCell>
-                  <TableCell>{variant.size}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-4 h-4 rounded-full border" 
-                        style={{ backgroundColor: variant.color }}
-                      />
-                      {variant.color}
-                    </div>
+                  <TableCell className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded-full border"
+                      style={{ backgroundColor: variant.color }}
+                    ></div>
+                    {getColorDescription(variant.color)}
                   </TableCell>
+                  <TableCell>{variant.size}</TableCell>
                   <TableCell>{variant.quantity}</TableCell>
-                  <TableCell>{variant.minimumThreshold}</TableCell>
-                  <TableCell>{variant.location || '-'}</TableCell>
                   <TableCell>
-                    <Badge variant={
-                      variant.status === 'low' ? "secondary" : 
-                      variant.status === 'out' ? "destructive" : 
-                      "outline"
-                    }>
+                    <Badge 
+                      variant={variant.status === 'available' ? 'default' : 'outline'}
+                      className={cn(
+                        variant.status === 'low_stock' && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+                        variant.status === 'out_of_stock' && 'bg-red-100 text-red-800 hover:bg-red-100'
+                      )}
+                    >
                       {variant.status === 'available' ? 'Disponibile' : 
-                       variant.status === 'low' ? 'Scorta bassa' : 
-                       variant.status === 'out' ? 'Esaurito' : variant.status}
+                       variant.status === 'low_stock' ? 'Scorta bassa' : 'Esaurito'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => onAdjustStock(variant)}
-                        title="Movimento magazzino"
-                      >
-                        <Warehouse className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => onAssignToPlayer(variant)}
-                        title="Assegna a giocatore"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => onEditVariant(variant)}
-                        title="Modifica"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => onDeleteVariant(variant)}
-                        title="Elimina"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => onEdit(variant)}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Modifica</span>
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => onDelete(variant)}>
+                      <Trash className="h-4 w-4" />
+                      <span className="sr-only">Elimina</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

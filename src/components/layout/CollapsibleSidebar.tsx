@@ -189,17 +189,21 @@ export const CollapsibleSidebar = () => {
     setMobileOpen(false);
   }, [location.pathname]);
   
-  // Gestori per il drag and drop
+  // Gestori per il drag and drop - solo per developer
   const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (user?.role !== 'developer') return;
+    
     setDraggedItemId(id);
     e.dataTransfer.setData('text/plain', id);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
+    if (user?.role !== 'developer') return;
     e.preventDefault();
   };
   
   const handleDrop = (e: React.DragEvent, targetId: string) => {
+    if (user?.role !== 'developer') return;
     e.preventDefault();
     
     if (!draggedItemId || draggedItemId === targetId) return;
@@ -247,6 +251,9 @@ export const CollapsibleSidebar = () => {
   const sidebarStyle = {
     backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
   };
+
+  // Determina se l'utente può riordinare la sidebar (solo developer)
+  const canReorderSidebar = user.role === 'developer';
 
   return (
     <>
@@ -320,14 +327,14 @@ export const CollapsibleSidebar = () => {
               
               return (
                 <li key={item.href}
-                    draggable={user.role === 'admin' || user.role === 'developer'}
+                    draggable={canReorderSidebar}
                     onDragStart={(e) => handleDragStart(e, item.id)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, item.id)}
                     onDragEnd={handleDragEnd}
                     className={cn(
                       "relative",
-                      draggedItemId === item.id ? "opacity-50" : "opacity-100"
+                      draggedItemId === item.id && canReorderSidebar ? "opacity-50" : "opacity-100"
                     )}
                 >
                   <Link
@@ -338,7 +345,7 @@ export const CollapsibleSidebar = () => {
                     )}
                     title={!isOpen ? item.label : undefined}
                   >
-                    {(user.role === 'admin' || user.role === 'developer') && isOpen && (
+                    {canReorderSidebar && isOpen && (
                       <GripVertical className="h-4 w-4 mr-2 cursor-grab opacity-50 hover:opacity-100" />
                     )}
                     <item.icon className={cn("h-5 w-5", isOpen ? "mr-3" : "mx-auto")} />
