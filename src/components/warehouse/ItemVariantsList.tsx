@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,7 +13,6 @@ interface ItemVariantsListProps {
   onAddVariant: () => void;
 }
 
-// Funzione per convertire i codici colore in descrizioni
 const getColorDescription = (hexColor: string): string => {
   const colorMap: Record<string, string> = {
     '#FFFFFF': 'Bianco',
@@ -43,15 +41,12 @@ const getColorDescription = (hexColor: string): string => {
     '#4B0082': 'Indaco',
   };
 
-  // Normalizza il codice colore per la ricerca
   const normalizedHex = hexColor.toUpperCase();
   
-  // Se il colore è nella mappa, restituisci la descrizione
   if (colorMap[normalizedHex]) {
     return colorMap[normalizedHex];
   }
   
-  // Se non lo troviamo nella mappa, restituisci una descrizione generica
   return `Personalizzato (${hexColor})`;
 };
 
