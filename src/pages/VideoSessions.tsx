@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,7 +95,7 @@ const VideoSessions = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<VideoSession | null>(null);
-  const [filterTeam, setFilterTeam] = useState<string>('');
+  const [filterTeam, setFilterTeam] = useState<string>("all"); // Changed from empty string to "all"
 
   const form = useForm<VideoSessionFormValues>({
     resolver: zodResolver(videoSessionSchema),
@@ -144,13 +143,13 @@ const VideoSessions = () => {
 
   const filteredSessions = sessions.filter(session => {
     if (activeTab === 'all') {
-      return filterTeam ? session.teamId === filterTeam : true;
+      return filterTeam === "all" ? true : session.teamId === filterTeam; // Updated condition
     }
     // Convert date to days old
     const daysOld = Math.floor((new Date().getTime() - session.date.getTime()) / (1000 * 3600 * 24));
     
     if (activeTab === 'recent' && daysOld <= 7) {
-      return filterTeam ? session.teamId === filterTeam : true;
+      return filterTeam === "all" ? true : session.teamId === filterTeam; // Updated condition
     }
     return false;
   });
@@ -345,7 +344,7 @@ const VideoSessions = () => {
               <SelectValue placeholder="Filtra per squadra" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tutte le squadre</SelectItem>
+              <SelectItem value="all">Tutte le squadre</SelectItem> {/* Changed value from "" to "all" */}
               {mockTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}
@@ -354,7 +353,7 @@ const VideoSessions = () => {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="icon" onClick={() => setFilterTeam('')}>
+          <Button variant="outline" size="icon" onClick={() => setFilterTeam("all")}> {/* Changed from empty string to "all" */}
             <Filter className="h-4 w-4" />
           </Button>
         </div>
