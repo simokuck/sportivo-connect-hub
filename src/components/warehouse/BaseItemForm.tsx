@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { BaseItem } from '@/types/warehouse';
-import { Image, Upload, Link as LinkIcon, Camera } from 'lucide-react';
+import { Image, Upload, Link as LinkIcon, Camera, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -55,7 +54,6 @@ export function BaseItemForm({ item, onSubmit, onCancel }: BaseItemFormProps) {
       ? values.notes.split('\n').filter(note => note.trim().length > 0) 
       : [];
     
-    // Aggiungi l'immagine selezionata
     const dataToSubmit = {
       ...values,
       image: selectedImage || undefined,
@@ -114,20 +112,16 @@ export function BaseItemForm({ item, onSubmit, onCancel }: BaseItemFormProps) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Imposta dimensioni canvas
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Disegna il frame corrente sul canvas
       const context = canvas.getContext('2d');
       context?.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Converti in data URL
       const imageDataUrl = canvas.toDataURL('image/jpeg');
       setSelectedImage(imageDataUrl);
       form.setValue('image', imageDataUrl);
       
-      // Chiudi la fotocamera e il dialogo
       stopCamera();
       setIsCameraDialogOpen(false);
     }
@@ -294,7 +288,6 @@ export function BaseItemForm({ item, onSubmit, onCancel }: BaseItemFormProps) {
                   </TabsContent>
                 </Tabs>
                 
-                {/* Anteprima immagine */}
                 {selectedImage && (
                   <div className="mt-4 relative">
                     <div className="relative w-40 h-40 border rounded overflow-hidden">

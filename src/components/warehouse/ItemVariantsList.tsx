@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -100,12 +99,12 @@ export function ItemVariantsList({ variants, onEdit, onDelete, onAddVariant }: I
                     <Badge 
                       variant={variant.status === 'available' ? 'default' : 'outline'}
                       className={cn(
-                        variant.status === 'low_stock' && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
-                        variant.status === 'out_of_stock' && 'bg-red-100 text-red-800 hover:bg-red-100'
+                        variant.status === 'low' && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+                        variant.status === 'out' && 'bg-red-100 text-red-800 hover:bg-red-100'
                       )}
                     >
                       {variant.status === 'available' ? 'Disponibile' : 
-                       variant.status === 'low_stock' ? 'Scorta bassa' : 'Esaurito'}
+                       variant.status === 'low' ? 'Scorta bassa' : 'Esaurito'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-1">

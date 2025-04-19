@@ -13,7 +13,7 @@ import { CalendarIcon, MapPin, Clock, Users, X } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { LocationPicker } from "@/components/map/LocationPicker";
+import LocationPicker from "@/components/map/LocationPicker";
 import { useAuth } from '@/context/AuthContext';
 
 // Tipi di evento
