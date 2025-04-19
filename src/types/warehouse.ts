@@ -53,6 +53,7 @@ export interface ItemAssignment {
   playerName: string;
   assignDate: string;
   returnDate?: string;
+  expectedReturnDate?: string;
   returnedCondition?: 'good' | 'damaged' | 'lost';
   notes?: string;
   quantity: number;
