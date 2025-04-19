@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -200,7 +199,7 @@ const AuditLog = () => {
                   <SelectValue placeholder="Tutte le azioni" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutte le azioni</SelectItem>
+                  <SelectItem value="all">Tutte le azioni</SelectItem>
                   {uniqueActions.map(action => (
                     <SelectItem key={action} value={action}>
                       {formatActionType(action)}
@@ -217,7 +216,7 @@ const AuditLog = () => {
                   <SelectValue placeholder="Tutti gli utenti" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutti gli utenti</SelectItem>
+                  <SelectItem value="all">Tutti gli utenti</SelectItem>
                   {uniqueUsers.map(user => user && (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
