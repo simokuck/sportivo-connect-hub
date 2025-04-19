@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { CalendarDays } from "lucide-react";
 import { Team } from "@/types";
+import { useAuth } from '@/context/AuthContext';
 
 // Mock data
 const mockEvents = [
