@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   GripVertical,
-  Video
+  Video,
+  Code
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -54,7 +55,7 @@ export const CollapsibleSidebar = () => {
         icon: Home, 
         label: 'Dashboard', 
         href: '/', 
-        roles: ['player', 'coach', 'admin', 'medical'] 
+        roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
       { 
         id: 'statistics',
@@ -68,7 +69,7 @@ export const CollapsibleSidebar = () => {
         icon: Calendar, 
         label: 'Calendario', 
         href: '/calendar', 
-        roles: ['player', 'coach', 'admin', 'medical'] 
+        roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
       { 
         id: 'exercises',
@@ -110,7 +111,7 @@ export const CollapsibleSidebar = () => {
         icon: FileText, 
         label: 'Documenti', 
         href: '/documents', 
-        roles: ['admin', 'medical', 'player', 'coach'] 
+        roles: ['admin', 'medical', 'player', 'coach', 'developer'] 
       },
       { 
         id: 'medical',
@@ -124,7 +125,7 @@ export const CollapsibleSidebar = () => {
         icon: Wrench, 
         label: 'Impostazioni Dev', 
         href: '/dev-settings', 
-        roles: ['admin'] 
+        roles: ['developer'] 
       },
       { 
         id: 'company-info',
@@ -139,6 +140,13 @@ export const CollapsibleSidebar = () => {
         label: 'Magazzino', 
         href: '/warehouse', 
         roles: ['admin'] 
+      },
+      { 
+        id: 'developer',
+        icon: Code, 
+        label: 'Area Developer', 
+        href: '/developer', 
+        roles: ['developer'] 
       },
     ];
     
@@ -230,6 +238,11 @@ export const CollapsibleSidebar = () => {
 
   if (!user) return null;
 
+  // Filtra gli elementi della navbar in base al ruolo dell'utente
+  const filteredNavItems = navItems.filter(item => 
+    item.roles.includes(user.role)
+  );
+
   // Applica il colore principale alla sidebar
   const sidebarStyle = {
     backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
@@ -302,12 +315,12 @@ export const CollapsibleSidebar = () => {
 
         <div className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-2 px-3">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.href;
               
               return (
                 <li key={item.href}
-                    draggable={user.role === 'admin'}
+                    draggable={user.role === 'admin' || user.role === 'developer'}
                     onDragStart={(e) => handleDragStart(e, item.id)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, item.id)}
@@ -325,7 +338,7 @@ export const CollapsibleSidebar = () => {
                     )}
                     title={!isOpen ? item.label : undefined}
                   >
-                    {user.role === 'admin' && isOpen && (
+                    {(user.role === 'admin' || user.role === 'developer') && isOpen && (
                       <GripVertical className="h-4 w-4 mr-2 cursor-grab opacity-50 hover:opacity-100" />
                     )}
                     <item.icon className={cn("h-5 w-5", isOpen ? "mr-3" : "mx-auto")} />

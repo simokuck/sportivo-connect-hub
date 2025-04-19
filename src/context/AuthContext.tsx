@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 
@@ -54,6 +53,19 @@ const mockUsers: User[] = [
     birthDate: '1975-09-05',
     address: 'Via Torino 32',
     city: 'Firenze',
+    biometricEnabled: true
+  },
+  {
+    id: '5',
+    name: 'Mario Neri',
+    firstName: 'Mario',
+    lastName: 'Neri',
+    email: 'mario@example.com',
+    role: 'developer',
+    avatar: '/assets/avatars/developer1.jpg',
+    birthDate: '1990-02-18',
+    address: 'Via Venezia 56',
+    city: 'Bologna',
     biometricEnabled: true
   }
 ];

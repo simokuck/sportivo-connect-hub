@@ -1,66 +1,208 @@
-
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
-import AppLayout from './components/layout/AppLayout';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Statistics from './pages/Statistics';
 import Calendar from './pages/Calendar';
-import Exercises from './pages/Exercises';
-import TrainingPlanner from './pages/TrainingPlanner';
+import Documents from './pages/Documents';
 import Teams from './pages/Teams';
 import TeamMembers from './pages/TeamMembers';
-import Documents from './pages/Documents';
+import Statistics from './pages/Statistics';
+import Medical from './pages/Medical';
 import DevSettings from './pages/DevSettings';
+import CompanyInfo from './pages/CompanyInfo';
 import Warehouse from './pages/Warehouse';
-import UserProfile from './pages/UserProfile';
-import AuditLog from './pages/AuditLog';
-import RolesAndPermissions from './pages/RolesAndPermissions';
-import LoginPage from './pages/LoginPage';
-import NotFound from './pages/NotFound';
+import Exercises from './pages/Exercises';
+import VideoSessions from './pages/VideoSessions';
+import TrainingPlanner from './pages/TrainingPlanner';
+import Profile from './pages/Profile';
+import SettingsPage from './pages/SettingsPage';
+import Developer from './pages/Developer';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppLayout } from './components/layout/AppLayout';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './hooks/use-toast';
 
-import VideoSessions from "./pages/VideoSessions";
-import CompanyInfo from "./pages/CompanyInfo";
+const AuthGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  return <>{children}</>;
+};
 
 function App() {
-  const queryClient = new QueryClient();
-
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+      <ToastProvider>
+        <Router>
           <AuthProvider>
-            <NotificationProvider>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/" element={<AppLayout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="statistics" element={<Statistics />} />
-                  <Route path="calendar" element={<Calendar />} />
-                  <Route path="exercises" element={<Exercises />} />
-                  <Route path="video-sessions" element={<VideoSessions />} />
-                  <Route path="training-planner" element={<TrainingPlanner />} />
-                  <Route path="teams" element={<Teams />} />
-                  <Route path="team-members" element={<TeamMembers />} />
-                  <Route path="documents" element={<Documents />} />
-                  <Route path="medical" element={<div>Medical Area</div>} />
-                  <Route path="dev-settings" element={<DevSettings />} />
-                  <Route path="company-info" element={<CompanyInfo />} />
-                  <Route path="warehouse" element={<Warehouse />} />
-                  <Route path="user-profile" element={<UserProfile />} />
-                  <Route path="audit-log" element={<AuditLog />} />
-                  <Route path="roles-permissions" element={<RolesAndPermissions />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </NotificationProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Calendar />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/documents"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Documents />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/teams"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Teams />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/team-members"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <TeamMembers />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/statistics"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Statistics />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/medical"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Medical />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/dev-settings"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <DevSettings />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/company-info"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <CompanyInfo />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/warehouse"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Warehouse />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/exercises"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Exercises />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/video-sessions"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <VideoSessions />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/training-planner"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <TrainingPlanner />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Profile />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <SettingsPage />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/developer"
+                element={
+                  <AuthGuard>
+                    <AppLayout>
+                      <Developer />
+                    </AppLayout>
+                  </AuthGuard>
+                }
+              />
+            </Routes>
           </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </Router>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 
