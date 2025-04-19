@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,10 @@ const Calendar = () => {
 
   const handleCreateEvent = () => {
     setShowEventForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowEventForm(false);
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -164,7 +163,6 @@ const CustomEventForm = ({ editEvent = null }) => {
             </div>
           </div>
           
-          {/* Show team selector based on showTeamSelector function which checks both role and isPrivate */}
           {showTeamSelector() && (
             <div className="space-y-2">
               <Label htmlFor="team">Squadra</Label>
@@ -329,7 +327,10 @@ const CustomEventForm = ({ editEvent = null }) => {
               >
                 <X className="h-4 w-4" />
               </Button>
-              <LocationPicker onSelect={handleMapSelection} />
+              <LocationPicker 
+                onChange={handleMapSelection} 
+                value={location}
+              />
             </div>
           )}
         </CardContent>
