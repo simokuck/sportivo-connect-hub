@@ -877,6 +877,12 @@ const Warehouse = () => {
     });
   };
 
+  // Find the problematic onEditItem handler and update it
+  const onEditItem = (item: any) => {
+    setSelectedItem(item);
+    setDialogType('editItem');
+  };
+
   // Get low stock items for dashboard
   const lowStockItems = items.filter(item => 
     item.variants.some(v => v.status === 'low' || v.status === 'out')
@@ -942,10 +948,7 @@ const Warehouse = () => {
                 setSelectedItem(item);
                 setShowVariants(true);
               }}
-              onEditItem={(item) => {
-                setSelectedItem(item);
-                setDialogType('editItem');
-              }}
+              onEditItem={onEditItem}
               onDeleteItem={(item) => {
                 setSelectedItem(item);
                 setDeleteTarget({ id: item.id, type: 'item' });

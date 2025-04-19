@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { X, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { Team } from "@/types";
 import LocationPicker from '@/components/map/LocationPicker';
