@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
@@ -18,10 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
-// Define document types as a TypeScript type for better type safety
 type DocumentType = 'contract' | 'medical' | 'admin' | 'training' | 'template';
 
-// Mock templates for document generation
 const documentTemplates: DocumentTemplate[] = [
   {
     id: 'template-1',
@@ -41,7 +38,6 @@ const documentTemplates: DocumentTemplate[] = [
   }
 ];
 
-// Define schemas with proper types
 const uploadSchema = z.object({
   title: z.string().min(3, { message: 'Il titolo deve essere di almeno 3 caratteri' }),
   type: z.enum(['contract', 'medical', 'admin', 'training', 'template']),
@@ -59,7 +55,6 @@ const templateSchema = z.object({
   additionalFields: z.record(z.string()).optional()
 });
 
-// Type definitions for the form data
 type UploadFormData = z.infer<typeof uploadSchema>;
 type TemplateFormData = z.infer<typeof templateSchema>;
 
@@ -129,7 +124,8 @@ const DocumentsPage = () => {
       uploadDate: new Date().toISOString(),
       userId: user?.id || '',
       teamId: data.teamId,
-      url: URL.createObjectURL(file)
+      url: URL.createObjectURL(file),
+      category: data.type
     };
     
     setDocuments([...documents, newDocument]);
@@ -147,7 +143,6 @@ const DocumentsPage = () => {
     setSelectedTemplate(template || null);
     
     if (template) {
-      // Reset form with default fields for this template
       templateForm.reset({
         templateId: template.id,
         additionalFields: {}
@@ -160,7 +155,6 @@ const DocumentsPage = () => {
     
     let content = selectedTemplate.content;
     
-    // Replace template placeholders with actual data
     const playerName = user?.firstName && user?.lastName 
       ? `${user.firstName} ${user.lastName}`
       : user?.name || '{playerName}';
@@ -171,7 +165,6 @@ const DocumentsPage = () => {
       .replace('{playerName}', playerName)
       .replace('{teamName}', teamName);
     
-    // Replace additional fields from the form data
     if (data.additionalFields) {
       for (const [key, value] of Object.entries(data.additionalFields)) {
         if (typeof value === 'string') {
@@ -190,15 +183,15 @@ const DocumentsPage = () => {
   const handleCreateFromTemplate = (data: TemplateFormData) => {
     if (!selectedTemplate) return;
     
-    // Create a document from the template
     const newDocument: Document = {
       id: `doc-template-${Date.now()}`,
       title: `${selectedTemplate.title} - Generato`,
-      type: selectedTemplate.type,
+      type: selectedTemplate.type || 'template',
       uploadDate: new Date().toISOString(),
       userId: user?.id || '',
       teamId: data.teamId,
-      url: '#', // In a real app, this would be a generated PDF URL
+      url: '#',
+      category: selectedTemplate.type || 'template',
       isTemplate: true,
       templateData: {
         templateId: selectedTemplate.id,
@@ -223,7 +216,6 @@ const DocumentsPage = () => {
       title: "Stampa in corso",
       description: "Il documento è stato inviato alla stampa",
     });
-    // In a real app, this would trigger a print dialog or generate a printable PDF
   };
 
   return (
@@ -288,7 +280,6 @@ const DocumentsPage = () => {
         ))}
       </Tabs>
       
-      {/* Upload Document Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -389,7 +380,6 @@ const DocumentsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Template Document Dialog */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -478,10 +468,9 @@ const DocumentsPage = () => {
                     />
                   )}
                   
-                  {/* Dynamic fields based on template */}
                   {selectedTemplate.fields
-                    .filter(field => !['playerName', 'teamName'].includes(field)) // Skip fields we handle automatically
-                    .filter(field => field !== 'season') // We already have a dedicated field for season
+                    .filter(field => !['playerName', 'teamName'].includes(field))
+                    .filter(field => field !== 'season')
                     .map((field) => (
                       <FormField
                         key={field}

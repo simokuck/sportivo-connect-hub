@@ -22,9 +22,30 @@ import { Team } from '@/types';
 
 // Mock data
 const mockTeams: Team[] = [
-  { id: '1', name: 'Prima Squadra', category: 'Senior' },
-  { id: '2', name: 'Under 19', category: 'Youth' },
-  { id: '3', name: 'Under 17', category: 'Youth' },
+  { 
+    id: '1', 
+    name: 'Prima Squadra', 
+    category: 'Senior',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'admin1'
+  },
+  { 
+    id: '2', 
+    name: 'Under 19', 
+    category: 'Youth',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'admin1'
+  },
+  { 
+    id: '3', 
+    name: 'Under 17', 
+    category: 'Youth',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'admin1'
+  },
 ];
 
 interface VideoSession {
@@ -95,7 +116,7 @@ const VideoSessions = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<VideoSession | null>(null);
-  const [filterTeam, setFilterTeam] = useState<string>("all"); // Changed from empty string to "all"
+  const [filterTeam, setFilterTeam] = useState<string>("all");
 
   const form = useForm<VideoSessionFormValues>({
     resolver: zodResolver(videoSessionSchema),
@@ -143,13 +164,12 @@ const VideoSessions = () => {
 
   const filteredSessions = sessions.filter(session => {
     if (activeTab === 'all') {
-      return filterTeam === "all" ? true : session.teamId === filterTeam; // Updated condition
+      return filterTeam === "all" ? true : session.teamId === filterTeam;
     }
-    // Convert date to days old
     const daysOld = Math.floor((new Date().getTime() - session.date.getTime()) / (1000 * 3600 * 24));
     
     if (activeTab === 'recent' && daysOld <= 7) {
-      return filterTeam === "all" ? true : session.teamId === filterTeam; // Updated condition
+      return filterTeam === "all" ? true : session.teamId === filterTeam;
     }
     return false;
   });
@@ -344,7 +364,7 @@ const VideoSessions = () => {
               <SelectValue placeholder="Filtra per squadra" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tutte le squadre</SelectItem> {/* Changed value from "" to "all" */}
+              <SelectItem value="all">Tutte le squadre</SelectItem>
               {mockTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}
@@ -353,7 +373,7 @@ const VideoSessions = () => {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="icon" onClick={() => setFilterTeam("all")}> {/* Changed from empty string to "all" */}
+          <Button variant="outline" size="icon" onClick={() => setFilterTeam("all")}>
             <Filter className="h-4 w-4" />
           </Button>
         </div>
@@ -447,7 +467,6 @@ const VideoSessions = () => {
         </Card>
       )}
       
-      {/* View Video Dialog */}
       {selectedSession && (
         <Dialog open={!!selectedSession} onOpenChange={() => setSelectedSession(null)}>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
