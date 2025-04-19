@@ -41,6 +41,9 @@ export interface InventoryMovement {
   notes?: string;
   performedBy?: string;
   playerId?: string;
+  baseItem?: BaseItem;
+  variant?: ItemVariant;
+  playerName?: string;
 }
 
 export interface ItemAssignment {
@@ -54,6 +57,8 @@ export interface ItemAssignment {
   notes?: string;
   quantity: number;
   status: 'assigned' | 'returned' | 'pending';
+  baseItem?: BaseItem;
+  variant?: ItemVariant;
 }
 
 export interface WarehouseItem {

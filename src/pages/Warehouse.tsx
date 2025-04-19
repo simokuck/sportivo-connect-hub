@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -318,15 +317,8 @@ const Warehouse = () => {
   // State management
   const [activeTab, setActiveTab] = useState('dashboard');
   const [items, setItems] = useState<(BaseItem & { variants: ItemVariant[] })[]>([]);
-  const [movements, setMovements] = useState<(InventoryMovement & { 
-    baseItem?: BaseItem, 
-    variant?: ItemVariant,
-    playerName?: string
-  })[]>([]);
-  const [assignments, setAssignments] = useState<(ItemAssignment & { 
-    baseItem?: BaseItem, 
-    variant?: ItemVariant 
-  })[]>([]);
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [assignments, setAssignments] = useState<ItemAssignment[]>([]);
   
   // View management
   const [selectedItem, setSelectedItem] = useState<BaseItem | null>(null);
@@ -455,7 +447,7 @@ const Warehouse = () => {
       baseItemId: selectedItem.id,
       status: data.quantity === 0 ? 'out' : 
               data.quantity <= data.minimumThreshold ? 'low' : 
-              'available',
+              'available' as 'available' | 'low' | 'out',
       lastUpdated: new Date().toISOString()
     };
     
@@ -471,7 +463,7 @@ const Warehouse = () => {
     
     // Create an 'in' movement for the initial quantity
     if (data.quantity > 0) {
-      const newMovement: any = {
+      const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
         variantId: newVariant.id,
         type: 'in',
@@ -526,7 +518,7 @@ const Warehouse = () => {
                 ...data,
                 status: data.quantity === 0 ? 'out' : 
                         data.quantity <= data.minimumThreshold ? 'low' : 
-                        'available',
+                        'available' as 'available' | 'low' | 'out',
                 lastUpdated: new Date().toISOString()
               };
             }
@@ -544,7 +536,7 @@ const Warehouse = () => {
       const updatedVariant = updatedItems.find(item => item.id === selectedItem.id)?.variants
                                 .find(v => v.id === selectedVariant.id);
                                 
-      const newMovement: any = {
+      const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
         variantId: selectedVariant.id,
         type: quantityDifference > 0 ? 'in' : 'out',
@@ -603,7 +595,7 @@ const Warehouse = () => {
     if (!baseItem || !variant) return;
     
     // Create new movement
-    const newMovement: any = {
+    const newMovement: InventoryMovement = {
       id: `mov-${Date.now()}`,
       variantId: data.variantId,
       type: data.type,
@@ -634,7 +626,7 @@ const Warehouse = () => {
               const newQuantity = Math.max(0, v.quantity + quantityChange);
               const newStatus = newQuantity === 0 ? 'out' :
                                newQuantity <= v.minimumThreshold ? 'low' :
-                               'available';
+                               'available' as 'available' | 'low' | 'out';
               
               return {
                 ...v,
@@ -654,7 +646,7 @@ const Warehouse = () => {
     
     // Create new assignment if needed
     if (data.type === 'assign' && data.playerId) {
-      const newAssignment: any = {
+      const newAssignment: ItemAssignment = {
         id: `assign-${Date.now()}`,
         variantId: data.variantId,
         playerId: data.playerId,
@@ -713,7 +705,7 @@ const Warehouse = () => {
     }
     
     // Create new assignment
-    const newAssignment: any = {
+    const newAssignment: ItemAssignment = {
       id: `assign-${Date.now()}`,
       variantId: data.variantId,
       playerId: data.playerId,
@@ -730,7 +722,7 @@ const Warehouse = () => {
     setAssignments(prev => [...prev, newAssignment]);
     
     // Create movement for the assignment
-    const newMovement: any = {
+    const newMovement: InventoryMovement = {
       id: `mov-${Date.now()}`,
       variantId: data.variantId,
       type: 'assign',
@@ -756,7 +748,7 @@ const Warehouse = () => {
               const newQuantity = Math.max(0, v.quantity - data.quantity);
               const newStatus = newQuantity === 0 ? 'out' :
                                newQuantity <= v.minimumThreshold ? 'low' :
-                               'available';
+                               'available' as 'available' | 'low' | 'out';
               
               return {
                 ...v,
@@ -806,7 +798,7 @@ const Warehouse = () => {
       
       if (!baseItem || !variant) return;
       
-      const newMovement: any = {
+      const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
         variantId: selectedAssignment.variantId,
         type: 'return',
@@ -832,7 +824,7 @@ const Warehouse = () => {
                 const newQuantity = v.quantity + selectedAssignment.quantity;
                 const newStatus = newQuantity === 0 ? 'out' :
                                  newQuantity <= v.minimumThreshold ? 'low' :
-                                 'available';
+                                 'available' as 'available' | 'low' | 'out';
                 
                 return {
                   ...v,
@@ -856,7 +848,7 @@ const Warehouse = () => {
       
       if (!baseItem || !variant) return;
       
-      const newMovement: any = {
+      const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
         variantId: selectedAssignment.variantId,
         type: data.returnedCondition === 'damaged' ? 'damaged' : 'lost',
