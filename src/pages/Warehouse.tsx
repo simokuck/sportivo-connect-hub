@@ -1,712 +1,1105 @@
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Shirt, Volleyball, Flag, Plus, Trash2, Edit, Image, Camera, Search, Filter, FileUp } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNotifications } from '@/context/NotificationContext';
+import { Player } from '@/types';
+import { 
+  BaseItem, 
+  ItemVariant, 
+  InventoryMovement, 
+  ItemAssignment 
+} from '@/types/warehouse';
 
-interface WarehouseItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  details: string;
-  image?: string;
-  status?: 'available' | 'low' | 'out';
-  lastUpdated?: string;
-  location?: string;
-  supplier?: string;
-  color?: string;
-  size?: string;
-}
+// Import components
+import { WarehouseDashboard } from '@/components/warehouse/WarehouseDashboard';
+import { BaseItemsList } from '@/components/warehouse/BaseItemsList';
+import { ItemVariantsList } from '@/components/warehouse/ItemVariantsList';
+import { InventoryMovements } from '@/components/warehouse/InventoryMovements';
+import { ItemAssignments } from '@/components/warehouse/ItemAssignments';
+import { BaseItemForm } from '@/components/warehouse/BaseItemForm';
+import { ItemVariantForm } from '@/components/warehouse/ItemVariantForm';
+import { MovementForm } from '@/components/warehouse/MovementForm';
+import { AssignmentForm } from '@/components/warehouse/AssignmentForm';
+import { ReturnForm } from '@/components/warehouse/ReturnForm';
 
-const mockKits: WarehouseItem[] = [
-  { 
-    id: '1', 
-    name: 'Kit Gara Home', 
-    category: 'kit', 
-    quantity: 25, 
-    details: 'Taglie: S(5), M(10), L(7), XL(3)',
-    status: 'available',
-    location: 'Armadio A',
-    supplier: 'Nike',
-    color: 'Blu/Bianco'
+// Mock data for players
+const mockPlayers: Player[] = [
+  {
+    id: '1',
+    name: 'Marco Rossi',
+    firstName: 'Marco',
+    lastName: 'Rossi',
+    email: 'marco@example.com',
+    role: 'player',
+    position: 'Attaccante',
+    strongFoot: 'right',
+    stats: {
+      games: 10,
+      minutesPlayed: 450,
+      goals: 5,
+      assists: 3,
+      yellowCards: 2,
+      redCards: 0,
+      absences: 1
+    }
   },
-  { 
-    id: '2', 
-    name: 'Kit Allenamento', 
-    category: 'kit', 
-    quantity: 30, 
-    details: 'Taglie: S(8), M(12), L(10)',
-    status: 'available',
-    location: 'Armadio B',
-    supplier: 'Adidas',
-    color: 'Nero'
+  {
+    id: '2',
+    name: 'Paolo Bianchi',
+    firstName: 'Paolo',
+    lastName: 'Bianchi',
+    email: 'paolo@example.com',
+    role: 'player',
+    position: 'Centrocampista',
+    strongFoot: 'left',
+    stats: {
+      games: 12,
+      minutesPlayed: 520,
+      goals: 2,
+      assists: 6,
+      yellowCards: 1,
+      redCards: 0,
+      absences: 0
+    }
   },
-  { 
-    id: '3', 
-    name: 'Kit Trasferta', 
-    category: 'kit', 
-    quantity: 5, 
-    details: 'Taglie: S(1), M(2), L(2)',
-    status: 'low',
-    location: 'Armadio A',
-    supplier: 'Nike',
-    color: 'Rosso/Nero'
-  },
+  {
+    id: '3',
+    name: 'Giuseppe Verdi',
+    firstName: 'Giuseppe',
+    lastName: 'Verdi',
+    email: 'giuseppe@example.com',
+    role: 'player',
+    position: 'Difensore',
+    strongFoot: 'right',
+    stats: {
+      games: 9,
+      minutesPlayed: 400,
+      goals: 0,
+      assists: 1,
+      yellowCards: 3,
+      redCards: 1,
+      absences: 2
+    }
+  }
 ];
 
-const mockEquipment: WarehouseItem[] = [
-  { 
-    id: '1', 
-    name: 'Palloni da gara', 
-    category: 'palloni', 
-    quantity: 15, 
-    details: 'Taglia 5',
-    status: 'available',
-    location: 'Scaffale 1',
-    supplier: 'Mikasa'
+// Mock data for base items
+const mockBaseItems: BaseItem[] = [
+  {
+    id: '1',
+    name: 'Maglia Gara Home',
+    category: 'Kit',
+    description: 'Maglia ufficiale da gara, colore blu',
+    brand: 'Nike',
+    sku: 'MG-HOME',
+    image: 'https://images.unsplash.com/photo-1580087608321-298cd7d4c599?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
+    notes: ['Maglia 2023-2024', 'Logo sponsor frontale'],
+    lastUpdated: new Date().toISOString()
   },
-  { 
-    id: '2', 
-    name: 'Cinesini', 
-    category: 'allenamento', 
-    quantity: 40, 
-    details: 'Colori vari',
-    status: 'available',
-    location: 'Scaffale 2',
-    supplier: 'Generic'
+  {
+    id: '2',
+    name: 'Maglia Gara Away',
+    category: 'Kit',
+    description: 'Maglia ufficiale da trasferta, colore bianco',
+    brand: 'Nike',
+    sku: 'MG-AWAY',
+    image: 'https://images.unsplash.com/photo-1565693413579-8ff3fdc1b03d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
+    notes: ['Maglia 2023-2024'],
+    lastUpdated: new Date().toISOString()
   },
-  { 
-    id: '3', 
-    name: 'Conetti', 
-    category: 'allenamento', 
-    quantity: 30, 
-    details: '30cm altezza',
-    status: 'available',
-    location: 'Scaffale 2',
-    supplier: 'Generic'
-  },
-  { 
-    id: '4', 
-    name: 'Fratini', 
-    category: 'allenamento', 
-    quantity: 20, 
-    details: '10 blu, 10 rossi',
-    status: 'available',
-    location: 'Armadio C',
-    supplier: 'Generic'
-  },
-  { 
-    id: '5', 
-    name: 'Pali slalom', 
-    category: 'allenamento', 
-    quantity: 3, 
-    details: 'Set da 6 pali',
-    status: 'low',
-    location: 'Magazzino esterno',
-    supplier: 'Sports Pro'
-  },
+  {
+    id: '3',
+    name: 'Pantaloncino Gara',
+    category: 'Kit',
+    description: 'Pantaloncino ufficiale da gara',
+    brand: 'Nike',
+    sku: 'PG',
+    image: 'https://images.unsplash.com/photo-1515355758951-ba5f6bafc0b3?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
+    lastUpdated: new Date().toISOString()
+  }
 ];
+
+// Mock data for item variants
+const mockVariants: ItemVariant[] = [
+  {
+    id: '1',
+    baseItemId: '1',
+    size: 'S',
+    color: '#0000FF',
+    uniqueSku: 'MG-HOME-S-BLUE',
+    quantity: 5,
+    minimumThreshold: 2,
+    location: 'Armadio A, Scaffale 1',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '2',
+    baseItemId: '1',
+    size: 'M',
+    color: '#0000FF',
+    uniqueSku: 'MG-HOME-M-BLUE',
+    quantity: 8,
+    minimumThreshold: 3,
+    location: 'Armadio A, Scaffale 1',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '3',
+    baseItemId: '1',
+    size: 'L',
+    color: '#0000FF',
+    uniqueSku: 'MG-HOME-L-BLUE',
+    quantity: 1,
+    minimumThreshold: 2,
+    location: 'Armadio A, Scaffale 1',
+    status: 'low',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '4',
+    baseItemId: '1',
+    size: 'XL',
+    color: '#0000FF',
+    uniqueSku: 'MG-HOME-XL-BLUE',
+    quantity: 0,
+    minimumThreshold: 2,
+    location: 'Armadio A, Scaffale 1',
+    status: 'out',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '5',
+    baseItemId: '2',
+    size: 'S',
+    color: '#FFFFFF',
+    uniqueSku: 'MG-AWAY-S-WHITE',
+    quantity: 3,
+    minimumThreshold: 2,
+    location: 'Armadio A, Scaffale 2',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '6',
+    baseItemId: '2',
+    size: 'M',
+    color: '#FFFFFF',
+    uniqueSku: 'MG-AWAY-M-WHITE',
+    quantity: 4,
+    minimumThreshold: 2,
+    location: 'Armadio A, Scaffale 2',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '7',
+    baseItemId: '3',
+    size: 'S',
+    color: '#000000',
+    uniqueSku: 'PG-S-BLACK',
+    quantity: 6,
+    minimumThreshold: 3,
+    location: 'Armadio B, Scaffale 1',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    id: '8',
+    baseItemId: '3',
+    size: 'M',
+    color: '#000000',
+    uniqueSku: 'PG-M-BLACK',
+    quantity: 6,
+    minimumThreshold: 3,
+    location: 'Armadio B, Scaffale 1',
+    status: 'available',
+    lastUpdated: new Date().toISOString()
+  }
+];
+
+// Mock data for movements
+const mockMovements: InventoryMovement[] = [
+  {
+    id: '1',
+    variantId: '1',
+    type: 'in',
+    quantity: 10,
+    date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
+    notes: 'Ordine iniziale',
+    performedBy: 'Admin'
+  },
+  {
+    id: '2',
+    variantId: '2',
+    type: 'in',
+    quantity: 10,
+    date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
+    notes: 'Ordine iniziale',
+    performedBy: 'Admin'
+  },
+  {
+    id: '3',
+    variantId: '1',
+    type: 'assign',
+    quantity: 2,
+    date: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+    notes: 'Consegna kit inizio stagione',
+    performedBy: 'Admin',
+    playerId: '1'
+  },
+  {
+    id: '4',
+    variantId: '2',
+    type: 'assign',
+    quantity: 2,
+    date: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+    notes: 'Consegna kit inizio stagione',
+    performedBy: 'Admin',
+    playerId: '2'
+  },
+  {
+    id: '5',
+    variantId: '1',
+    type: 'out',
+    quantity: 3,
+    date: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
+    notes: 'Danneggiati durante il trasporto',
+    performedBy: 'Admin'
+  }
+];
+
+// Mock data for assignments
+const mockAssignments: ItemAssignment[] = [
+  {
+    id: '1',
+    variantId: '1',
+    playerId: '1',
+    playerName: 'Marco Rossi',
+    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+    quantity: 2,
+    notes: 'Maglia gara numerata',
+    status: 'assigned'
+  },
+  {
+    id: '2',
+    variantId: '2',
+    playerId: '2',
+    playerName: 'Paolo Bianchi',
+    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+    quantity: 2,
+    notes: 'Maglia gara numerata',
+    status: 'assigned'
+  },
+  {
+    id: '3',
+    variantId: '7',
+    playerId: '1',
+    playerName: 'Marco Rossi',
+    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+    returnDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
+    quantity: 1,
+    notes: 'Pantaloncino gara',
+    status: 'returned'
+  }
+];
+
+// Dialog types
+type DialogType = 'addItem' | 'editItem' | 'addVariant' | 'editVariant' | 
+                 'addMovement' | 'addAssignment' | 'returnItem' | 'none';
 
 const Warehouse = () => {
-  const [kits, setKits] = useState<WarehouseItem[]>(mockKits);
-  const [equipment, setEquipment] = useState<WarehouseItem[]>(mockEquipment);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<WarehouseItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterLocation, setFilterLocation] = useState<string>('all');
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const { showNotification } = useNotifications();
-
-  const handleDelete = (id: string, category: 'kits' | 'equipment') => {
-    setIsDeleteModalOpen(false);
-    if (category === 'kits') {
-      setKits(kits.filter(item => item.id !== id));
-    } else {
-      setEquipment(equipment.filter(item => item.id !== id));
-    }
-    showNotification('success', 'Articolo eliminato', {
-      description: "L'articolo è stato rimosso dal magazzino",
+  
+  // State management
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [items, setItems] = useState<(BaseItem & { variants: ItemVariant[] })[]>([]);
+  const [movements, setMovements] = useState<(InventoryMovement & { 
+    baseItem?: BaseItem, 
+    variant?: ItemVariant,
+    playerName?: string
+  })[]>([]);
+  const [assignments, setAssignments] = useState<(ItemAssignment & { 
+    baseItem?: BaseItem, 
+    variant?: ItemVariant 
+  })[]>([]);
+  
+  // View management
+  const [selectedItem, setSelectedItem] = useState<BaseItem | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ItemVariant | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<ItemAssignment | null>(null);
+  const [showVariants, setShowVariants] = useState(false);
+  
+  // Dialog management
+  const [dialogType, setDialogType] = useState<DialogType>('none');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, type: 'item' | 'variant' } | null>(null);
+  
+  // Initialize data
+  useEffect(() => {
+    // Create objects with relationships
+    const itemsWithVariants = mockBaseItems.map(item => ({
+      ...item,
+      variants: mockVariants.filter(v => v.baseItemId === item.id)
+    }));
+    
+    const movementsWithRelations = mockMovements.map(movement => {
+      const variant = mockVariants.find(v => v.id === movement.variantId);
+      const baseItem = variant ? mockBaseItems.find(item => item.id === variant.baseItemId) : undefined;
+      const player = movement.playerId ? mockPlayers.find(p => p.id === movement.playerId) : undefined;
+      
+      return {
+        ...movement,
+        variant,
+        baseItem,
+        playerName: player ? `${player.firstName} ${player.lastName}` : undefined
+      };
     });
-  };
-
-  const handleEdit = (item: WarehouseItem) => {
-    setCurrentItem(item);
-    setTempImageUrl(item.image || null);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleAdd = (newItem: Omit<WarehouseItem, 'id'>) => {
-    const item = {
-      ...newItem,
-      id: Math.random().toString(36).substring(7),
-      lastUpdated: new Date().toISOString(),
-      image: tempImageUrl || undefined
-    };
-    if (newItem.category === 'kit') {
-      setKits([...kits, item as WarehouseItem]);
-    } else {
-      setEquipment([...equipment, item as WarehouseItem]);
-    }
-    setIsAddDialogOpen(false);
-    setTempImageUrl(null);
-    showNotification('success', 'Articolo aggiunto', {
-      description: "Il nuovo articolo è stato aggiunto al magazzino",
+    
+    const assignmentsWithRelations = mockAssignments.map(assignment => {
+      const variant = mockVariants.find(v => v.id === assignment.variantId);
+      const baseItem = variant ? mockBaseItems.find(item => item.id === variant.baseItemId) : undefined;
+      
+      return {
+        ...assignment,
+        variant,
+        baseItem
+      };
     });
-  };
-
-  const handleUpdate = (updatedItem: WarehouseItem) => {
-    const itemWithImage = {
-      ...updatedItem,
-      image: tempImageUrl || updatedItem.image,
+    
+    setItems(itemsWithVariants);
+    setMovements(movementsWithRelations);
+    setAssignments(assignmentsWithRelations);
+  }, []);
+  
+  // Handle create base item
+  const handleCreateBaseItem = (data: any) => {
+    const newItem: BaseItem = {
+      ...data,
+      id: `item-${Date.now()}`,
       lastUpdated: new Date().toISOString()
     };
     
-    if (updatedItem.category === 'kit') {
-      setKits(kits.map(item => item.id === updatedItem.id ? itemWithImage : item));
-    } else {
-      setEquipment(equipment.map(item => item.id === updatedItem.id ? itemWithImage : item));
-    }
-    setIsEditDialogOpen(false);
-    setTempImageUrl(null);
+    setItems(prev => [...prev, { ...newItem, variants: [] }]);
+    setDialogType('none');
+    
+    showNotification('success', 'Articolo creato', {
+      description: "Il nuovo articolo è stato aggiunto al magazzino",
+    });
+  };
+  
+  // Handle update base item
+  const handleUpdateBaseItem = (data: any) => {
+    if (!selectedItem) return;
+    
+    const updatedItems = items.map(item => {
+      if (item.id === selectedItem.id) {
+        return { 
+          ...item, 
+          ...data, 
+          lastUpdated: new Date().toISOString() 
+        };
+      }
+      return item;
+    });
+    
+    setItems(updatedItems);
+    setDialogType('none');
+    
     showNotification('success', 'Articolo aggiornato', {
-      description: "Le modifiche sono state salvate",
+      description: "Le modifiche all'articolo sono state salvate",
+    });
+  };
+  
+  // Handle delete base item
+  const handleDeleteBaseItem = (itemId: string) => {
+    // Delete the item and all its variants
+    setItems(prev => prev.filter(item => item.id !== itemId));
+    
+    // Delete movements related to the variants of this item
+    const variantIds = items.find(item => item.id === itemId)?.variants.map(v => v.id) || [];
+    setMovements(prev => prev.filter(m => !variantIds.includes(m.variantId)));
+    
+    // Delete assignments related to the variants of this item
+    setAssignments(prev => prev.filter(a => !variantIds.includes(a.variantId)));
+    
+    setIsDeleteModalOpen(false);
+    setDeleteTarget(null);
+    
+    showNotification('success', 'Articolo eliminato', {
+      description: "L'articolo e tutte le sue varianti sono stati eliminati",
+    });
+  };
+  
+  // Handle create variant
+  const handleCreateVariant = (data: any) => {
+    if (!selectedItem) return;
+    
+    // Check if variant with same size and color already exists
+    const isDuplicate = items.find(item => item.id === selectedItem.id)?.variants.some(
+      v => v.size === data.size && v.color === data.color
+    );
+    
+    if (isDuplicate) {
+      toast.error("Esiste già una variante con questa taglia e colore");
+      return;
+    }
+    
+    const newVariant: ItemVariant = {
+      ...data,
+      id: `variant-${Date.now()}`,
+      baseItemId: selectedItem.id,
+      status: data.quantity === 0 ? 'out' : 
+              data.quantity <= data.minimumThreshold ? 'low' : 
+              'available',
+      lastUpdated: new Date().toISOString()
+    };
+    
+    setItems(prev => prev.map(item => {
+      if (item.id === selectedItem.id) {
+        return { 
+          ...item, 
+          variants: [...item.variants, newVariant]
+        };
+      }
+      return item;
+    }));
+    
+    // Create an 'in' movement for the initial quantity
+    if (data.quantity > 0) {
+      const newMovement: any = {
+        id: `mov-${Date.now()}`,
+        variantId: newVariant.id,
+        type: 'in',
+        quantity: data.quantity,
+        date: new Date().toISOString(),
+        notes: 'Creazione variante',
+        variant: newVariant,
+        baseItem: selectedItem
+      };
+      
+      setMovements(prev => [...prev, newMovement]);
+    }
+    
+    setDialogType('none');
+    
+    showNotification('success', 'Variante creata', {
+      description: "La nuova variante è stata aggiunta all'articolo",
+    });
+  };
+  
+  // Handle update variant
+  const handleUpdateVariant = (data: any) => {
+    if (!selectedItem || !selectedVariant) return;
+    
+    // Check for duplicate size and color, excluding the current variant
+    const isDuplicate = items.find(item => item.id === selectedItem.id)?.variants.some(
+      v => v.id !== selectedVariant.id && v.size === data.size && v.color === data.color
+    );
+    
+    if (isDuplicate) {
+      toast.error("Esiste già una variante con questa taglia e colore");
+      return;
+    }
+    
+    // Get current quantity to detect changes
+    const currentVariant = items.find(item => item.id === selectedItem.id)?.variants
+                               .find(v => v.id === selectedVariant.id);
+    
+    const currentQuantity = currentVariant?.quantity || 0;
+    const newQuantity = data.quantity;
+    const quantityDifference = newQuantity - currentQuantity;
+    
+    // Update variant
+    const updatedItems = items.map(item => {
+      if (item.id === selectedItem.id) {
+        return {
+          ...item,
+          variants: item.variants.map(variant => {
+            if (variant.id === selectedVariant.id) {
+              return { 
+                ...variant, 
+                ...data,
+                status: data.quantity === 0 ? 'out' : 
+                        data.quantity <= data.minimumThreshold ? 'low' : 
+                        'available',
+                lastUpdated: new Date().toISOString()
+              };
+            }
+            return variant;
+          })
+        };
+      }
+      return item;
+    });
+    
+    setItems(updatedItems);
+    
+    // Create a movement if quantity changed
+    if (quantityDifference !== 0) {
+      const updatedVariant = updatedItems.find(item => item.id === selectedItem.id)?.variants
+                                .find(v => v.id === selectedVariant.id);
+                                
+      const newMovement: any = {
+        id: `mov-${Date.now()}`,
+        variantId: selectedVariant.id,
+        type: quantityDifference > 0 ? 'in' : 'out',
+        quantity: Math.abs(quantityDifference),
+        date: new Date().toISOString(),
+        notes: 'Aggiornamento variante',
+        variant: updatedVariant,
+        baseItem: selectedItem
+      };
+      
+      setMovements(prev => [...prev, newMovement]);
+    }
+    
+    setDialogType('none');
+    
+    showNotification('success', 'Variante aggiornata', {
+      description: "Le modifiche alla variante sono state salvate",
+    });
+  };
+  
+  // Handle delete variant
+  const handleDeleteVariant = (variantId: string) => {
+    if (!selectedItem) return;
+    
+    // Delete the variant
+    setItems(prev => prev.map(item => {
+      if (item.id === selectedItem.id) {
+        return {
+          ...item,
+          variants: item.variants.filter(v => v.id !== variantId)
+        };
+      }
+      return item;
+    }));
+    
+    // Delete related movements
+    setMovements(prev => prev.filter(m => m.variantId !== variantId));
+    
+    // Delete related assignments
+    setAssignments(prev => prev.filter(a => a.variantId !== variantId));
+    
+    setIsDeleteModalOpen(false);
+    setDeleteTarget(null);
+    
+    showNotification('success', 'Variante eliminata', {
+      description: "La variante è stata eliminata dal magazzino",
+    });
+  };
+  
+  // Handle stock adjustment (new movement)
+  const handleAddMovement = (data: any) => {
+    const baseItem = items.find(item => item.id === data.baseItemId);
+    const variant = baseItem?.variants.find(v => v.id === data.variantId);
+    const player = data.playerId ? mockPlayers.find(p => p.id === data.playerId) : undefined;
+    
+    if (!baseItem || !variant) return;
+    
+    // Create new movement
+    const newMovement: any = {
+      id: `mov-${Date.now()}`,
+      variantId: data.variantId,
+      type: data.type,
+      quantity: data.quantity,
+      date: data.date.toISOString(),
+      notes: data.notes,
+      performedBy: 'Admin', // In a real app, this would be the logged-in user
+      playerId: data.playerId,
+      playerName: player ? `${player.firstName} ${player.lastName}` : undefined,
+      baseItem,
+      variant
+    };
+    
+    setMovements(prev => [...prev, newMovement]);
+    
+    // Update variant quantity
+    let quantityChange = data.quantity;
+    if (['out', 'assign', 'lost', 'damaged'].includes(data.type)) {
+      quantityChange = -quantityChange;
+    }
+    
+    const updatedItems = items.map(item => {
+      if (item.id === baseItem.id) {
+        return {
+          ...item,
+          variants: item.variants.map(v => {
+            if (v.id === variant.id) {
+              const newQuantity = Math.max(0, v.quantity + quantityChange);
+              const newStatus = newQuantity === 0 ? 'out' :
+                               newQuantity <= v.minimumThreshold ? 'low' :
+                               'available';
+              
+              return {
+                ...v,
+                quantity: newQuantity,
+                status: newStatus,
+                lastUpdated: new Date().toISOString()
+              };
+            }
+            return v;
+          })
+        };
+      }
+      return item;
+    });
+    
+    setItems(updatedItems);
+    
+    // Create new assignment if needed
+    if (data.type === 'assign' && data.playerId) {
+      const newAssignment: any = {
+        id: `assign-${Date.now()}`,
+        variantId: data.variantId,
+        playerId: data.playerId,
+        playerName: player ? `${player.firstName} ${player.lastName}` : 'Unknown Player',
+        assignDate: data.date.toISOString(),
+        quantity: data.quantity,
+        notes: data.notes,
+        status: 'assigned',
+        baseItem,
+        variant
+      };
+      
+      setAssignments(prev => [...prev, newAssignment]);
+    }
+    
+    // Update assignment if it's a return
+    if (data.type === 'return' && data.playerId) {
+      const assignmentToUpdate = assignments.find(
+        a => a.variantId === data.variantId && a.playerId === data.playerId && a.status === 'assigned'
+      );
+      
+      if (assignmentToUpdate) {
+        setAssignments(prev => prev.map(a => {
+          if (a.id === assignmentToUpdate.id) {
+            return {
+              ...a,
+              status: 'returned',
+              returnDate: data.date.toISOString(),
+              notes: data.notes ? `${a.notes ? `${a.notes}, ` : ''}${data.notes}` : a.notes
+            };
+          }
+          return a;
+        }));
+      }
+    }
+    
+    setDialogType('none');
+    
+    showNotification('success', 'Movimento registrato', {
+      description: `${data.quantity} pezzi ${data.type === 'in' ? 'caricati' : 'scaricati'} dal magazzino`,
+    });
+  };
+  
+  // Handle new assignment
+  const handleAddAssignment = (data: any) => {
+    const baseItem = items.find(item => item.id === data.baseItemId);
+    const variant = baseItem?.variants.find(v => v.id === data.variantId);
+    const player = mockPlayers.find(p => p.id === data.playerId);
+    
+    if (!baseItem || !variant || !player) return;
+    
+    // Check if there's enough quantity
+    if (variant.quantity < data.quantity) {
+      toast.error("Quantità non disponibile in magazzino");
+      return;
+    }
+    
+    // Create new assignment
+    const newAssignment: any = {
+      id: `assign-${Date.now()}`,
+      variantId: data.variantId,
+      playerId: data.playerId,
+      playerName: `${player.firstName} ${player.lastName}`,
+      assignDate: data.assignDate.toISOString(),
+      expectedReturnDate: data.expectedReturnDate ? data.expectedReturnDate.toISOString() : undefined,
+      quantity: data.quantity,
+      notes: data.notes,
+      status: 'assigned',
+      baseItem,
+      variant
+    };
+    
+    setAssignments(prev => [...prev, newAssignment]);
+    
+    // Create movement for the assignment
+    const newMovement: any = {
+      id: `mov-${Date.now()}`,
+      variantId: data.variantId,
+      type: 'assign',
+      quantity: data.quantity,
+      date: data.assignDate.toISOString(),
+      notes: data.notes,
+      performedBy: 'Admin',
+      playerId: data.playerId,
+      playerName: `${player.firstName} ${player.lastName}`,
+      baseItem,
+      variant
+    };
+    
+    setMovements(prev => [...prev, newMovement]);
+    
+    // Update variant quantity
+    const updatedItems = items.map(item => {
+      if (item.id === baseItem.id) {
+        return {
+          ...item,
+          variants: item.variants.map(v => {
+            if (v.id === variant.id) {
+              const newQuantity = Math.max(0, v.quantity - data.quantity);
+              const newStatus = newQuantity === 0 ? 'out' :
+                               newQuantity <= v.minimumThreshold ? 'low' :
+                               'available';
+              
+              return {
+                ...v,
+                quantity: newQuantity,
+                status: newStatus,
+                lastUpdated: new Date().toISOString()
+              };
+            }
+            return v;
+          })
+        };
+      }
+      return item;
+    });
+    
+    setItems(updatedItems);
+    
+    setDialogType('none');
+    
+    showNotification('success', 'Assegnazione creata', {
+      description: `${data.quantity} pezzi assegnati a ${player.firstName} ${player.lastName}`,
+    });
+  };
+  
+  // Handle mark assignment as returned
+  const handleMarkReturned = (data: any) => {
+    if (!selectedAssignment) return;
+    
+    // Update assignment
+    setAssignments(prev => prev.map(a => {
+      if (a.id === selectedAssignment.id) {
+        return {
+          ...a,
+          status: 'returned',
+          returnDate: data.returnDate.toISOString(),
+          returnedCondition: data.returnedCondition,
+          notes: data.notes ? `${a.notes ? `${a.notes}, ` : ''}${data.notes}` : a.notes
+        };
+      }
+      return a;
+    }));
+    
+    // Create movement if the item is returned in good condition
+    if (data.returnedCondition === 'good') {
+      const baseItem = selectedAssignment.baseItem;
+      const variant = selectedAssignment.variant;
+      
+      if (!baseItem || !variant) return;
+      
+      const newMovement: any = {
+        id: `mov-${Date.now()}`,
+        variantId: selectedAssignment.variantId,
+        type: 'return',
+        quantity: selectedAssignment.quantity,
+        date: data.returnDate.toISOString(),
+        notes: data.notes,
+        performedBy: 'Admin',
+        playerId: selectedAssignment.playerId,
+        playerName: selectedAssignment.playerName,
+        baseItem,
+        variant
+      };
+      
+      setMovements(prev => [...prev, newMovement]);
+      
+      // Update variant quantity
+      const updatedItems = items.map(item => {
+        if (item.id === baseItem.id) {
+          return {
+            ...item,
+            variants: item.variants.map(v => {
+              if (v.id === variant.id) {
+                const newQuantity = v.quantity + selectedAssignment.quantity;
+                const newStatus = newQuantity === 0 ? 'out' :
+                                 newQuantity <= v.minimumThreshold ? 'low' :
+                                 'available';
+                
+                return {
+                  ...v,
+                  quantity: newQuantity,
+                  status: newStatus,
+                  lastUpdated: new Date().toISOString()
+                };
+              }
+              return v;
+            })
+          };
+        }
+        return item;
+      });
+      
+      setItems(updatedItems);
+    } else {
+      // Create movement for damaged or lost items
+      const baseItem = selectedAssignment.baseItem;
+      const variant = selectedAssignment.variant;
+      
+      if (!baseItem || !variant) return;
+      
+      const newMovement: any = {
+        id: `mov-${Date.now()}`,
+        variantId: selectedAssignment.variantId,
+        type: data.returnedCondition === 'damaged' ? 'damaged' : 'lost',
+        quantity: selectedAssignment.quantity,
+        date: data.returnDate.toISOString(),
+        notes: data.notes,
+        performedBy: 'Admin',
+        playerId: selectedAssignment.playerId,
+        playerName: selectedAssignment.playerName,
+        baseItem,
+        variant
+      };
+      
+      setMovements(prev => [...prev, newMovement]);
+    }
+    
+    setDialogType('none');
+    setSelectedAssignment(null);
+    
+    showNotification('success', 'Restituzione registrata', {
+      description: `Articolo segnato come ${
+        data.returnedCondition === 'good' ? 'restituito in buone condizioni' : 
+        data.returnedCondition === 'damaged' ? 'restituito danneggiato' : 
+        'smarrito'
+      }`,
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // In una vera applicazione, qui carichiamo il file su un server
-      // Per ora, creiamo un URL temporaneo
-      const imageUrl = URL.createObjectURL(file);
-      setTempImageUrl(imageUrl);
-      showNotification('info', 'Immagine caricata', {
-        description: "L'immagine verrà associata all'articolo al salvataggio",
-      });
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const filteredKits = kits.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (item.supplier?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-    const matchesLocation = filterLocation === 'all' || item.location === filterLocation;
-    
-    return matchesSearch && matchesCategory && matchesStatus && matchesLocation;
-  });
-
-  const filteredEquipment = equipment.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (item.supplier?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-    const matchesLocation = filterLocation === 'all' || item.location === filterLocation;
-    
-    return matchesSearch && matchesCategory && matchesStatus && matchesLocation;
-  });
-
-  const allItems = [...kits, ...equipment];
-  const categories = Array.from(new Set(allItems.map(item => item.category)));
-  const statuses = Array.from(new Set(allItems.map(item => item.status).filter(Boolean)));
-  const locations = Array.from(new Set(allItems.map(item => item.location).filter(Boolean)));
-
+  // Get low stock items for dashboard
+  const lowStockItems = items.filter(item => 
+    item.variants.some(v => v.status === 'low' || v.status === 'out')
+  );
+  
+  // Get recent assignments for dashboard
+  const recentAssignments = assignments
+    .sort((a, b) => new Date(b.assignDate).getTime() - new Date(a.assignDate).getTime())
+    .slice(0, 5);
+  
   return (
     <div className="container mx-auto p-2 sm:p-4 space-y-6 content-wrapper">
       <div className="flex justify-between items-center">
         <h1 className="text-xl sm:text-2xl font-bold">Magazzino</h1>
-        <Button 
-          onClick={() => setIsAddDialogOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Aggiungi Articolo
-        </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Cerca articoli..." 
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button 
-          variant="outline" 
-          onClick={() => setIsFilterVisible(!isFilterVisible)}
-          className="sm:w-auto w-full"
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Filtri {isFilterVisible ? '▲' : '▼'}
-        </Button>
-      </div>
-
-      {isFilterVisible && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-background rounded-md border">
-          <div>
-            <Label htmlFor="category-filter">Categoria</Label>
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger id="category-filter" className="w-full">
-                <SelectValue placeholder="Seleziona categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte le categorie</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="status-filter">Stato</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger id="status-filter" className="w-full">
-                <SelectValue placeholder="Seleziona stato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli stati</SelectItem>
-                {statuses.map(status => (
-                  <SelectItem key={status} value={status}>
-                    {status === 'available' ? 'Disponibile' : 
-                     status === 'low' ? 'Scorta bassa' : 
-                     status === 'out' ? 'Esaurito' : status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="location-filter">Posizione</Label>
-            <Select value={filterLocation} onValueChange={setFilterLocation}>
-              <SelectTrigger id="location-filter" className="w-full">
-                <SelectValue placeholder="Seleziona posizione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte le posizioni</SelectItem>
-                {locations.map(location => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      <Tabs defaultValue="kits" className="w-full">
+      <Tabs defaultValue="dashboard" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full sm:w-auto flex overflow-x-auto">
-          <TabsTrigger value="kits" className="flex-1 sm:flex-none">Kit</TabsTrigger>
-          <TabsTrigger value="equipment" className="flex-1 sm:flex-none">Materiale Tecnico</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="catalog">Catalogo</TabsTrigger>
+          <TabsTrigger value="movements">Movimenti</TabsTrigger>
+          <TabsTrigger value="assignments">Assegnazioni</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="kits">
-          {filteredKits.length === 0 ? (
-            <Alert>
-              <AlertDescription>Nessun kit corrisponde ai criteri di ricerca.</AlertDescription>
-            </Alert>
+        <TabsContent value="dashboard" className="space-y-6 p-1">
+          <WarehouseDashboard 
+            lowStockItems={lowStockItems}
+            recentAssignments={recentAssignments}
+          />
+        </TabsContent>
+
+        <TabsContent value="catalog" className="p-1">
+          {showVariants && selectedItem ? (
+            <ItemVariantsList
+              baseItem={selectedItem}
+              variants={items.find(item => item.id === selectedItem.id)?.variants || []}
+              onBack={() => setShowVariants(false)}
+              onAddVariant={(item) => {
+                setSelectedItem(item);
+                setDialogType('addVariant');
+              }}
+              onEditVariant={(variant) => {
+                setSelectedVariant(variant);
+                setDialogType('editVariant');
+              }}
+              onDeleteVariant={(variant) => {
+                setDeleteTarget({ id: variant.id, type: 'variant' });
+                setIsDeleteModalOpen(true);
+              }}
+              onAdjustStock={(variant) => {
+                setSelectedVariant(variant);
+                setDialogType('addMovement');
+              }}
+              onAssignToPlayer={(variant) => {
+                setSelectedVariant(variant);
+                setDialogType('addAssignment');
+              }}
+            />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredKits.map((item) => (
-                <Card key={item.id} className="h-full">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                          <Shirt className="h-5 w-5" />
-                          {item.name}
-                        </CardTitle>
-                        <CardDescription className="flex flex-wrap gap-2 mt-1">
-                          <Badge variant={
-                            item.status === 'low' ? "secondary" : 
-                            item.status === 'out' ? "destructive" : 
-                            "outline"
-                          }>
-                            {item.status === 'available' ? 'Disponibile' : 
-                             item.status === 'low' ? 'Scorta bassa' : 
-                             item.status === 'out' ? 'Esaurito' : item.status}
-                          </Badge>
-                          <Badge variant="secondary">Qt. {item.quantity}</Badge>
-                          {item.color && <Badge variant="outline">{item.color}</Badge>}
-                        </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setCurrentItem(item);
-                            setIsDeleteModalOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {item.image && (
-                        <div className="w-24 h-24 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{item.details}</p>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          <p>Posizione: {item.location}</p>
-                          <p>Fornitore: {item.supplier}</p>
-                          {item.lastUpdated && (
-                            <p>Ultimo aggiornamento: {new Date(item.lastUpdated).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <BaseItemsList
+              items={items}
+              onSelectItem={(item) => {
+                setSelectedItem(item);
+                setShowVariants(true);
+              }}
+              onEditItem={(item) => {
+                setSelectedItem(item);
+                setDialogType('editItem');
+              }}
+              onDeleteItem={(item) => {
+                setSelectedItem(item);
+                setDeleteTarget({ id: item.id, type: 'item' });
+                setIsDeleteModalOpen(true);
+              }}
+              onAddItem={() => setDialogType('addItem')}
+            />
           )}
         </TabsContent>
 
-        <TabsContent value="equipment">
-          {filteredEquipment.length === 0 ? (
-            <Alert>
-              <AlertDescription>Nessun materiale tecnico corrisponde ai criteri di ricerca.</AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredEquipment.map((item) => (
-                <Card key={item.id} className="h-full">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                          {item.category === 'palloni' ? (
-                            <Volleyball className="h-5 w-5" />
-                          ) : (
-                            <Flag className="h-5 w-5" />
-                          )}
-                          {item.name}
-                        </CardTitle>
-                        <CardDescription className="flex flex-wrap gap-2 mt-1">
-                          <Badge variant={
-                            item.status === 'low' ? "secondary" : 
-                            item.status === 'out' ? "destructive" : 
-                            "outline"
-                          }>
-                            {item.status === 'available' ? 'Disponibile' : 
-                             item.status === 'low' ? 'Scorta bassa' : 
-                             item.status === 'out' ? 'Esaurito' : item.status}
-                          </Badge>
-                          <Badge variant="secondary">Qt. {item.quantity}</Badge>
-                        </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setCurrentItem(item);
-                            setIsDeleteModalOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {item.image && (
-                        <div className="w-24 h-24 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{item.details}</p>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          <p>Posizione: {item.location}</p>
-                          <p>Fornitore: {item.supplier}</p>
-                          {item.lastUpdated && (
-                            <p>Ultimo aggiornamento: {new Date(item.lastUpdated).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+        <TabsContent value="movements" className="p-1">
+          <InventoryMovements 
+            movements={movements}
+            onAddMovement={() => setDialogType('addMovement')}
+          />
+        </TabsContent>
+        
+        <TabsContent value="assignments" className="p-1">
+          <ItemAssignments 
+            assignments={assignments}
+            players={mockPlayers}
+            onAddAssignment={() => setDialogType('addAssignment')}
+            onMarkReturned={(assignment) => {
+              setSelectedAssignment(assignment);
+              setDialogType('returnItem');
+            }}
+          />
         </TabsContent>
       </Tabs>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleImageUpload}
-        accept="image/*"
-        className="hidden"
-      />
-
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Base Item Dialog */}
+      <Dialog open={dialogType === 'addItem' || dialogType === 'editItem'} onOpenChange={(open) => {
+        if (!open) setDialogType('none');
+      }}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Aggiungi Nuovo Articolo</DialogTitle>
+            <DialogTitle>
+              {dialogType === 'addItem' ? 'Aggiungi articolo' : 'Modifica articolo'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nome
-              </Label>
-              <Input id="name" className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Categoria
-              </Label>
-              <Select defaultValue="kit">
-                <SelectTrigger id="category" className="col-span-3">
-                  <SelectValue placeholder="Seleziona categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="kit">Kit</SelectItem>
-                  <SelectItem value="palloni">Palloni</SelectItem>
-                  <SelectItem value="allenamento">Attrezzatura Allenamento</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="quantity" className="text-right">
-                Quantità
-              </Label>
-              <Input id="quantity" type="number" className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="details" className="text-right">
-                Dettagli
-              </Label>
-              <Input id="details" className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
-                Stato
-              </Label>
-              <Select defaultValue="available">
-                <SelectTrigger id="status" className="col-span-3">
-                  <SelectValue placeholder="Seleziona stato" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Disponibile</SelectItem>
-                  <SelectItem value="low">Scorta bassa</SelectItem>
-                  <SelectItem value="out">Esaurito</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
-                Posizione
-              </Label>
-              <Input id="location" className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="supplier" className="text-right">
-                Fornitore
-              </Label>
-              <Input id="supplier" className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">
-                Immagine
-              </Label>
-              <div className="col-span-3 space-y-4">
-                <div className="flex gap-2">
-                  <Button variant="outline" className="w-full" onClick={triggerFileInput}>
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Carica immagine
-                  </Button>
-                </div>
-                {tempImageUrl && (
-                  <div className="w-full h-32 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                    <img src={tempImageUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsAddDialogOpen(false);
-              setTempImageUrl(null);
-            }}>
-              Annulla
-            </Button>
-            <Button onClick={() => handleAdd({
-              name: (document.getElementById('name') as HTMLInputElement).value,
-              category: (document.querySelector('#category [data-value]') as HTMLElement)?.getAttribute('data-value') || 'kit',
-              quantity: parseInt((document.getElementById('quantity') as HTMLInputElement).value) || 0,
-              details: (document.getElementById('details') as HTMLInputElement).value,
-              status: (document.querySelector('#status [data-value]') as HTMLElement)?.getAttribute('data-value') as any || 'available',
-              location: (document.getElementById('location') as HTMLInputElement).value,
-              supplier: (document.getElementById('supplier') as HTMLInputElement).value,
-              lastUpdated: new Date().toISOString()
-            })}>
-              Salva
-            </Button>
-          </DialogFooter>
+          <BaseItemForm 
+            item={dialogType === 'editItem' ? selectedItem || undefined : undefined}
+            onSubmit={dialogType === 'addItem' ? handleCreateBaseItem : handleUpdateBaseItem}
+            onCancel={() => setDialogType('none')}
+          />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Item Variant Dialog */}
+      <Dialog open={dialogType === 'addVariant' || dialogType === 'editVariant'} onOpenChange={(open) => {
+        if (!open) setDialogType('none');
+      }}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Modifica Articolo</DialogTitle>
+            <DialogTitle>
+              {dialogType === 'addVariant' ? 'Aggiungi variante' : 'Modifica variante'}
+            </DialogTitle>
           </DialogHeader>
-          {currentItem && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Nome
-                </Label>
-                <Input id="edit-name" defaultValue={currentItem.name} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-quantity" className="text-right">
-                  Quantità
-                </Label>
-                <Input id="edit-quantity" type="number" defaultValue={currentItem.quantity} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-details" className="text-right">
-                  Dettagli
-                </Label>
-                <Input id="edit-details" defaultValue={currentItem.details} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-status" className="text-right">
-                  Stato
-                </Label>
-                <Select defaultValue={currentItem.status || 'available'}>
-                  <SelectTrigger id="edit-status" className="col-span-3">
-                    <SelectValue placeholder="Seleziona stato" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Disponibile</SelectItem>
-                    <SelectItem value="low">Scorta bassa</SelectItem>
-                    <SelectItem value="out">Esaurito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-location" className="text-right">
-                  Posizione
-                </Label>
-                <Input id="edit-location" defaultValue={currentItem.location} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-supplier" className="text-right">
-                  Fornitore
-                </Label>
-                <Input id="edit-supplier" defaultValue={currentItem.supplier} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">
-                  Immagine
-                </Label>
-                <div className="col-span-3 space-y-4">
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="w-full" onClick={triggerFileInput}>
-                      <FileUp className="mr-2 h-4 w-4" />
-                      {currentItem.image || tempImageUrl ? 'Cambia immagine' : 'Carica immagine'}
-                    </Button>
-                  </div>
-                  {(tempImageUrl || currentItem.image) && (
-                    <div className="w-full h-32 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                      <img src={tempImageUrl || currentItem.image} alt="Preview" className="max-w-full max-h-full object-contain" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          {selectedItem && (
+            <ItemVariantForm 
+              baseItem={selectedItem}
+              variant={dialogType === 'editVariant' ? selectedVariant || undefined : undefined}
+              onSubmit={dialogType === 'addVariant' ? handleCreateVariant : handleUpdateVariant}
+              onCancel={() => setDialogType('none')}
+            />
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditDialogOpen(false);
-              setTempImageUrl(null);
-            }}>
-              Annulla
-            </Button>
-            <Button onClick={() => {
-              if (currentItem) {
-                handleUpdate({
-                  ...currentItem,
-                  name: (document.getElementById('edit-name') as HTMLInputElement).value,
-                  quantity: parseInt((document.getElementById('edit-quantity') as HTMLInputElement).value) || 0,
-                  details: (document.getElementById('edit-details') as HTMLInputElement).value,
-                  status: (document.querySelector('#edit-status [data-value]') as HTMLElement)?.getAttribute('data-value') as any || currentItem.status,
-                  location: (document.getElementById('edit-location') as HTMLInputElement).value,
-                  supplier: (document.getElementById('edit-supplier') as HTMLInputElement).value,
-                });
-              }
-            }}>
-              Salva modifiche
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Movement Dialog */}
+      <Dialog open={dialogType === 'addMovement'} onOpenChange={(open) => {
+        if (!open) setDialogType('none');
+      }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Registra movimento</DialogTitle>
+          </DialogHeader>
+          <MovementForm 
+            items={items}
+            players={mockPlayers}
+            onSubmit={handleAddMovement}
+            onCancel={() => setDialogType('none')}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Assignment Dialog */}
+      <Dialog open={dialogType === 'addAssignment'} onOpenChange={(open) => {
+        if (!open) setDialogType('none');
+      }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Nuova assegnazione</DialogTitle>
+          </DialogHeader>
+          <AssignmentForm 
+            items={items}
+            players={mockPlayers}
+            onSubmit={handleAddAssignment}
+            onCancel={() => setDialogType('none')}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Return Dialog */}
+      <Dialog open={dialogType === 'returnItem'} onOpenChange={(open) => {
+        if (!open) setDialogType('none');
+      }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Registra restituzione</DialogTitle>
+          </DialogHeader>
+          {selectedAssignment && (
+            <ReturnForm 
+              assignment={selectedAssignment}
+              onSubmit={handleMarkReturned}
+              onCancel={() => {
+                setDialogType('none');
+                setSelectedAssignment(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={() => currentItem && handleDelete(currentItem.id, currentItem.category === 'kit' ? 'kits' : 'equipment')}
-        title="Conferma eliminazione"
-        description={`Sei sicuro di voler eliminare ${currentItem?.name}? Questa azione non può essere annullata.`}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={() => {
+          if (deleteTarget) {
+            if (deleteTarget.type === 'item') {
+              handleDeleteBaseItem(deleteTarget.id);
+            } else {
+              handleDeleteVariant(deleteTarget.id);
+            }
+          }
+        }}
+        title={`Conferma eliminazione ${deleteTarget?.type === 'item' ? 'articolo' : 'variante'}`}
+        description={`Sei sicuro di voler eliminare ${deleteTarget?.type === 'item' ? 'questo articolo e tutte le sue varianti' : 'questa variante'}? Questa azione non può essere annullata.`}
         confirmText="Elimina"
         cancelText="Annulla"
-        toastMessage="Articolo eliminato"
-        toastDescription="L'articolo è stato rimosso dal magazzino"
+        toastMessage={`${deleteTarget?.type === 'item' ? 'Articolo' : 'Variante'} eliminato`}
+        toastDescription={`${deleteTarget?.type === 'item' ? 'L\'articolo' : 'La variante'} è stato rimosso dal magazzino`}
       />
     </div>
   );

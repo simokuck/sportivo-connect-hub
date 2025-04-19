@@ -5,6 +5,57 @@ export interface ItemSize {
   status?: 'available' | 'low' | 'out';
 }
 
+export interface BaseItem {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  brand?: string;
+  image?: string;
+  sku: string;
+  notes?: string[];
+  lastUpdated?: string;
+}
+
+export interface ItemVariant {
+  id: string;
+  baseItemId: string;
+  size: string;
+  color: string;
+  uniqueSku: string;
+  quantity: number;
+  minimumThreshold: number;
+  location?: string;
+  status: 'available' | 'low' | 'out';
+  lastUpdated?: string;
+}
+
+export type MovementType = 'in' | 'out' | 'assign' | 'return' | 'lost' | 'damaged';
+
+export interface InventoryMovement {
+  id: string;
+  variantId: string;
+  type: MovementType;
+  quantity: number;
+  date: string;
+  notes?: string;
+  performedBy?: string;
+  playerId?: string;
+}
+
+export interface ItemAssignment {
+  id: string;
+  variantId: string;
+  playerId: string;
+  playerName: string;
+  assignDate: string;
+  returnDate?: string;
+  returnedCondition?: 'good' | 'damaged' | 'lost';
+  notes?: string;
+  quantity: number;
+  status: 'assigned' | 'returned' | 'pending';
+}
+
 export interface WarehouseItem {
   id: string;
   name: string;
@@ -20,7 +71,6 @@ export interface WarehouseItem {
   material?: string;
   features?: string[];
   notes?: string[];
-  // Item sizes fields
   hasSizes?: boolean;
   sizesType?: 'numeric' | 'letter' | 'standard' | 'custom';
 }
