@@ -101,19 +101,32 @@ const CalendarPage = () => {
     setShowEventForm(false);
   };
 
+  // Gestione dei tasti per il form
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showEventForm) {
+        if (e.key === 'Escape') {
+          handleCloseForm();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showEventForm]);
+
   return (
     <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Calendario</h1>
+        <Button onClick={handleCreateEvent}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nuovo Evento
+        </Button>
+      </div>
+      
       <Card>
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold">Calendario</CardTitle>
-          <div className="space-x-2">
-            <Button onClick={handleCreateEvent}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nuovo Evento
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Calendario a sinistra */}
             <div className="md:col-span-1">

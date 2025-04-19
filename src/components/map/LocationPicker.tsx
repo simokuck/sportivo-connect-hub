@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,9 +18,10 @@ L.Icon.Default.mergeOptions({
 interface LocationPickerProps {
   value?: string;
   onChange: (location: string, coordinates?: { lat: number; lng: number }) => void;
+  inForm?: boolean;
 }
 
-export function LocationPicker({ value, onChange }: LocationPickerProps) {
+export function LocationPicker({ value, onChange, inForm = false }: LocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -108,11 +110,11 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   // Handle selection from search results
   const handleSelectResult = (result: any) => {
     const lat = parseFloat(result.lat);
-    const lon = parseFloat(result.lon);
+    const lng = parseFloat(result.lon);
     
-    placeMarker([lat, lon]);
+    placeMarker([lat, lng]);
     setSelectedLocation(result.display_name);
-    onChange(result.display_name, { lat, lng: lon });
+    onChange(result.display_name, { lat, lng });
     setSearchResults([]);
   };
 
@@ -152,7 +154,13 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         </div>
       )}
       
-      <div ref={mapRef} className="h-[300px] w-full rounded-md border"></div>
+      <div 
+        ref={mapRef} 
+        className={cn(
+          "w-full rounded-md border",
+          inForm ? "h-[250px]" : "h-[300px]"
+        )}
+      ></div>
     </div>
   );
 }

@@ -17,12 +17,15 @@ import {
   UserRound,
   Package,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavItem {
+  id: string;
   icon: React.ElementType;
   label: string;
   href: string;
@@ -31,9 +34,126 @@ interface NavItem {
 
 export const CollapsibleSidebar = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  
+  // Recupera l'ordine salvato dal localStorage o usa quello di default
+  const getInitialNavItems = (): NavItem[] => {
+    const savedOrderString = localStorage.getItem('sidebarNavOrder');
+    
+    // Definizione di default degli elementi della navbar
+    const defaultNavItems: NavItem[] = [
+      { 
+        id: 'dashboard',
+        icon: Home, 
+        label: 'Dashboard', 
+        href: '/', 
+        roles: ['player', 'coach', 'admin', 'medical'] 
+      },
+      { 
+        id: 'statistics',
+        icon: BarChart3, 
+        label: 'Statistiche', 
+        href: '/statistics', 
+        roles: ['player', 'coach'] 
+      },
+      { 
+        id: 'calendar',
+        icon: Calendar, 
+        label: 'Calendario', 
+        href: '/calendar', 
+        roles: ['player', 'coach', 'admin', 'medical'] 
+      },
+      { 
+        id: 'exercises',
+        icon: ClipboardList, 
+        label: 'Esercitazioni', 
+        href: '/exercises', 
+        roles: ['coach'] 
+      },
+      { 
+        id: 'training-planner',
+        icon: CalendarDays, 
+        label: 'Pianifica Allenamenti', 
+        href: '/training-planner', 
+        roles: ['coach'] 
+      },
+      { 
+        id: 'teams',
+        icon: Users, 
+        label: 'Squadre', 
+        href: '/teams', 
+        roles: ['coach', 'admin'] 
+      },
+      { 
+        id: 'team-members',
+        icon: UserRound, 
+        label: 'Membri', 
+        href: '/team-members', 
+        roles: ['coach', 'admin'] 
+      },
+      { 
+        id: 'documents',
+        icon: FileText, 
+        label: 'Documenti', 
+        href: '/documents', 
+        roles: ['admin', 'medical', 'player', 'coach'] 
+      },
+      { 
+        id: 'medical',
+        icon: Activity, 
+        label: 'Area Medica', 
+        href: '/medical', 
+        roles: ['medical'] 
+      },
+      { 
+        id: 'dev-settings',
+        icon: Wrench, 
+        label: 'Impostazioni Dev', 
+        href: '/dev-settings', 
+        roles: ['admin'] 
+      },
+      { 
+        id: 'warehouse',
+        icon: Package, 
+        label: 'Magazzino', 
+        href: '/warehouse', 
+        roles: ['admin'] 
+      },
+    ];
+    
+    if (savedOrderString) {
+      try {
+        // Ottiene l'ordine salvato
+        const savedOrder = JSON.parse(savedOrderString);
+        
+        // Crea un nuovo array con l'ordine salvato
+        // Se ci sono nuovi item che non erano nell'ordine salvato, li aggiunge alla fine
+        const reorderedItems = [...defaultNavItems];
+        reorderedItems.sort((a, b) => {
+          const indexA = savedOrder.indexOf(a.id);
+          const indexB = savedOrder.indexOf(b.id);
+          
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          
+          return indexA - indexB;
+        });
+        
+        return reorderedItems;
+      } catch (e) {
+        console.error("Errore nel parsing dell'ordine salvato:", e);
+        return defaultNavItems;
+      }
+    }
+    
+    return defaultNavItems;
+  };
+  
+  const [navItems, setNavItems] = useState<NavItem[]>(getInitialNavItems());
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -43,81 +163,60 @@ export const CollapsibleSidebar = () => {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
-
-  const navItems: NavItem[] = [
-    { 
-      icon: Home, 
-      label: 'Dashboard', 
-      href: '/', 
-      roles: ['player', 'coach', 'admin', 'medical'] 
-    },
-    { 
-      icon: BarChart3, 
-      label: 'Statistiche', 
-      href: '/statistics', 
-      roles: ['player', 'coach'] 
-    },
-    { 
-      icon: Calendar, 
-      label: 'Calendario', 
-      href: '/calendar', 
-      roles: ['player', 'coach', 'admin', 'medical'] 
-    },
-    { 
-      icon: ClipboardList, 
-      label: 'Esercitazioni', 
-      href: '/exercises', 
-      roles: ['coach'] 
-    },
-    { 
-      icon: CalendarDays, 
-      label: 'Pianifica Allenamenti', 
-      href: '/training-planner', 
-      roles: ['coach'] 
-    },
-    { 
-      icon: Users, 
-      label: 'Squadre', 
-      href: '/teams', 
-      roles: ['coach', 'admin'] 
-    },
-    { 
-      icon: UserRound, 
-      label: 'Membri', 
-      href: '/team-members', 
-      roles: ['coach', 'admin'] 
-    },
-    { 
-      icon: FileText, 
-      label: 'Documenti', 
-      href: '/documents', 
-      roles: ['admin', 'medical', 'player', 'coach'] 
-    },
-    { 
-      icon: Activity, 
-      label: 'Area Medica', 
-      href: '/medical', 
-      roles: ['medical'] 
-    },
-    { 
-      icon: Wrench, 
-      label: 'Impostazioni Dev', 
-      href: '/dev-settings', 
-      roles: ['admin'] 
-    },
-    { 
-      icon: Package, 
-      label: 'Magazzino', 
-      href: '/warehouse', 
-      roles: ['admin'] 
-    },
-  ];
+  
+  // Filtra i navItems in base al ruolo dell'utente
+  const filteredNavItems = navItems.filter(item => 
+    item.roles.includes(user?.role || '')
+  );
+  
+  // Gestori per il drag and drop
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedItemId(id);
+    e.dataTransfer.setData('text/plain', id);
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    
+    if (!draggedItemId || draggedItemId === targetId) return;
+    
+    // Ottieni l'indice dell'elemento trascinato e dell'elemento di destinazione
+    const itemsCopy = [...navItems];
+    const draggedItemIndex = itemsCopy.findIndex(item => item.id === draggedItemId);
+    const targetItemIndex = itemsCopy.findIndex(item => item.id === targetId);
+    
+    if (draggedItemIndex === -1 || targetItemIndex === -1) return;
+    
+    // Rimuovi l'elemento trascinato dalla sua posizione corrente
+    const [draggedItem] = itemsCopy.splice(draggedItemIndex, 1);
+    
+    // Inserisci l'elemento trascinato nella nuova posizione
+    itemsCopy.splice(targetItemIndex, 0, draggedItem);
+    
+    // Aggiorna lo stato
+    setNavItems(itemsCopy);
+    
+    // Salva il nuovo ordine nel localStorage
+    const newOrder = itemsCopy.map(item => item.id);
+    localStorage.setItem('sidebarNavOrder', JSON.stringify(newOrder));
+    
+    toast({
+      title: "Ordine aggiornato",
+      description: "L'ordine delle sezioni è stato aggiornato",
+    });
+    
+    setDraggedItemId(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedItemId(null);
+  };
 
   if (!user) return null;
-
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.includes(user.role)
-  );
 
   return (
     <>
@@ -189,7 +288,17 @@ export const CollapsibleSidebar = () => {
               const isActive = location.pathname === item.href;
               
               return (
-                <li key={item.href}>
+                <li key={item.href}
+                    draggable={user.role === 'admin'}
+                    onDragStart={(e) => handleDragStart(e, item.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, item.id)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "relative",
+                      draggedItemId === item.id ? "opacity-50" : "opacity-100"
+                    )}
+                >
                   <Link
                     to={item.href}
                     className={cn(
@@ -198,6 +307,9 @@ export const CollapsibleSidebar = () => {
                     )}
                     title={!isOpen ? item.label : undefined}
                   >
+                    {user.role === 'admin' && isOpen && (
+                      <GripVertical className="h-4 w-4 mr-2 cursor-grab opacity-50 hover:opacity-100" />
+                    )}
                     <item.icon className={cn("h-5 w-5", isOpen ? "mr-3" : "mx-auto")} />
                     {isOpen && <span>{item.label}</span>}
                   </Link>

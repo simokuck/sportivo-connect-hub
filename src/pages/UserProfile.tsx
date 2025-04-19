@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -126,14 +125,27 @@ const UserProfile = () => {
     passwordForm.reset();
   };
 
-  // Handle profile image change
+  // Handle profile image change and close dialog
+  const [imageUploadDialogOpen, setImageUploadDialogOpen] = useState(false);
+  
   const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setProfileImage(e.target.result as string);
+          const newImageUrl = e.target.result as string;
+          setProfileImage(newImageUrl);
+          
+          // Salva l'immagine nel localStorage
+          localStorage.setItem('userAvatar', newImageUrl);
+          
+          // Dispara un evento per notificare altri componenti dell'aggiornamento
+          window.dispatchEvent(new Event('avatarUpdate'));
+          
+          // Chiudi il dialog
+          setImageUploadDialogOpen(false);
+          
           toast({
             title: "Immagine caricata",
             description: "La tua foto profilo è stata aggiornata",
@@ -168,7 +180,7 @@ const UserProfile = () => {
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 
-                <Dialog>
+                <Dialog open={imageUploadDialogOpen} onOpenChange={setImageUploadDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Camera className="mr-2 h-4 w-4" />
@@ -191,7 +203,7 @@ const UserProfile = () => {
                       />
                     </div>
                     <DialogFooter>
-                      <Button type="button" variant="ghost">
+                      <Button type="button" variant="ghost" onClick={() => setImageUploadDialogOpen(false)}>
                         Annulla
                       </Button>
                     </DialogFooter>

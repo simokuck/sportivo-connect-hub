@@ -1,14 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { ItemSize } from '@/types/warehouse';
-import { MinusCircle, PlusCircle } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import SizeTypeSelector from './SizeTypeSelector';
+import SizesList from './SizesList';
+import CustomSizeInput from './CustomSizeInput';
 
 interface SizesEditorProps {
   form: UseFormReturn<any>;
@@ -38,7 +36,6 @@ const defaultSizes = {
 const SizesEditor = ({ form }: SizesEditorProps) => {
   const hasSizes = form.watch('hasSizes');
   const sizesType = form.watch('sizesType') || 'standard';
-  const [newSizeLabel, setNewSizeLabel] = useState('');
 
   // Initialize sizes if needed
   useEffect(() => {
@@ -50,8 +47,6 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
 
   // Update sizes based on type selection
   const updateSizesForType = (type: string) => {
-    form.setValue('sizesType', type);
-    
     if (type !== 'custom') {
       form.setValue('sizes', [...defaultSizes[type as keyof typeof defaultSizes]]);
     } else if (!form.getValues('sizes') || form.getValues('sizes').length === 0) {
@@ -60,9 +55,7 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   };
 
   // Add new custom size
-  const handleAddSize = () => {
-    if (!newSizeLabel.trim()) return;
-    
+  const handleAddSize = (newSizeLabel: string) => {
     const currentSizes = form.getValues('sizes') || [];
     if (currentSizes.some(size => size.label.toLowerCase() === newSizeLabel.trim().toLowerCase())) {
       return;
@@ -70,7 +63,6 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
     
     const updatedSizes = [...currentSizes, { label: newSizeLabel.trim(), quantity: 0 }];
     form.setValue('sizes', updatedSizes);
-    setNewSizeLabel('');
   };
 
   // Remove size
@@ -149,31 +141,9 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
 
       {hasSizes && (
         <>
-          <FormField
-            control={form.control}
-            name="sizesType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo di taglie</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(value) => updateSizesForType(value)}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona un tipo di taglia" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="numeric">Numeriche (36, 38, 40...)</SelectItem>
-                    <SelectItem value="letter">Lettere (XS, S, M, L, XL...)</SelectItem>
-                    <SelectItem value="standard">Taglia unica</SelectItem>
-                    <SelectItem value="custom">Personalizzate</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+          <SizeTypeSelector 
+            form={form} 
+            onTypeChange={updateSizesForType} 
           />
 
           <FormField
@@ -184,49 +154,15 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
                 <FormLabel>Taglie disponibili</FormLabel>
                 <div className="space-y-3">
                   {sizesType === 'custom' && (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Nuova taglia"
-                        value={newSizeLabel}
-                        onChange={(e) => setNewSizeLabel(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button 
-                        type="button" 
-                        onClick={handleAddSize}
-                        size="sm"
-                      >
-                        <PlusCircle className="h-4 w-4 mr-1" /> Aggiungi
-                      </Button>
-                    </div>
+                    <CustomSizeInput onAddSize={handleAddSize} />
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {form.watch('sizes')?.map((size: ItemSize, index: number) => (
-                      <div key={index} className="flex items-center gap-2 border rounded-md p-2">
-                        <Badge variant="outline" className="min-w-16 justify-center">
-                          {size.label}
-                        </Badge>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={size.quantity}
-                          onChange={(e) => updateSizeQuantity(index, parseInt(e.target.value) || 0)}
-                          className="w-20"
-                        />
-                        {sizesType === 'custom' && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveSize(index)}
-                          >
-                            <MinusCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <SizesList 
+                    form={form}
+                    sizesType={sizesType}
+                    updateSizeQuantity={updateSizeQuantity}
+                    handleRemoveSize={handleRemoveSize}
+                  />
                 </div>
                 <FormMessage />
               </FormItem>
