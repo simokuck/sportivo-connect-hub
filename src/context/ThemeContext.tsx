@@ -30,14 +30,49 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setPrimaryColor = (color: string) => {
     setPrimaryColorState(color);
     localStorage.setItem('primaryColor', color);
-    document.documentElement.style.setProperty('--primary-color', color);
     
-    // Add CSS variables for hover state
-    const lighterColor = adjustColorBrightness(color, 0.85);
-    document.documentElement.style.setProperty('--primary-color-hover', lighterColor);
+    // Aggiorniamo direttamente le variabili CSS
+    document.documentElement.style.setProperty('--primary', convertHexToHSL(color));
+    
+    // Forziamo un aggiornamento dei colori in tutto il CSS
+    document.body.style.setProperty('--trigger-force-update', Date.now().toString());
     
     // Force a style refresh to update styles across the app
     forceStyleRefresh();
+  };
+
+  // Convertire un colore esadecimale in formato HSL per CSS variables
+  const convertHexToHSL = (hex: string): string => {
+    // Rimuovi il # se presente
+    hex = hex.replace(/^#/, '');
+    
+    // Converti hex in RGB
+    let r = parseInt(hex.slice(0, 2), 16) / 255;
+    let g = parseInt(hex.slice(2, 4), 16) / 255;
+    let b = parseInt(hex.slice(4, 6), 16) / 255;
+    
+    // Trova max e min
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      
+      h = Math.round(h * 60);
+    }
+    
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+    
+    return `${h} ${s}% ${l}%`;
   };
 
   // Apply the theme based on user preference or system preference
@@ -73,9 +108,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   // Apply the primary color when the app loads
   useEffect(() => {
-    document.documentElement.style.setProperty('--primary-color', primaryColor);
-    const lighterColor = adjustColorBrightness(primaryColor, 0.85);
-    document.documentElement.style.setProperty('--primary-color-hover', lighterColor);
+    // Imposta la variabile CSS per il colore primario
+    document.documentElement.style.setProperty('--primary', convertHexToHSL(primaryColor));
   }, [primaryColor]);
   
   // Force a refresh of the styles by temporarily modifying the DOM
@@ -87,22 +121,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     window.getComputedStyle(tempElement).getPropertyValue('opacity');
     // Remove the element
     document.body.removeChild(tempElement);
-  };
-  
-  // Utility function to adjust color brightness
-  const adjustColorBrightness = (color: string, factor: number): string => {
-    // Convert hex to RGB
-    let r = parseInt(color.slice(1, 3), 16);
-    let g = parseInt(color.slice(3, 5), 16);
-    let b = parseInt(color.slice(5, 7), 16);
-    
-    // Adjust brightness
-    r = Math.min(255, Math.round(r * factor));
-    g = Math.min(255, Math.round(g * factor));
-    b = Math.min(255, Math.round(b * factor));
-    
-    // Convert back to hex
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
   
   return (

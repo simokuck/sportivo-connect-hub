@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,23 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   const sizesType = form.watch('sizesType') || 'standard';
   const [newSizeLabel, setNewSizeLabel] = useState('');
 
+  // Inizializza le taglie se necessario
+  useEffect(() => {
+    if (hasSizes && (!form.getValues('sizes') || form.getValues('sizes').length === 0)) {
+      form.setValue('sizesType', 'standard');
+      form.setValue('sizes', [...defaultSizes.standard]);
+    }
+  }, [hasSizes, form]);
+
   // Helper to update sizes based on type selection
   const updateSizesForType = (type: string) => {
     form.setValue('sizesType', type);
     
     if (type !== 'custom') {
       form.setValue('sizes', [...defaultSizes[type as keyof typeof defaultSizes]]);
+    } else if (!form.getValues('sizes') || form.getValues('sizes').length === 0) {
+      // Se si seleziona custom e non ci sono taglie, inizializza con un array vuoto
+      form.setValue('sizes', []);
     }
   };
 
@@ -76,8 +87,42 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   const updateSizeQuantity = (index: number, quantity: number) => {
     const currentSizes = form.getValues('sizes') || [];
     const updatedSizes = [...currentSizes];
-    updatedSizes[index] = { ...updatedSizes[index], quantity };
+    
+    // Status
+    let status: 'available' | 'low' | 'out' = 'available';
+    if (quantity === 0) {
+      status = 'out';
+    } else if (quantity <= 5) {
+      status = 'low';
+    }
+    
+    updatedSizes[index] = { 
+      ...updatedSizes[index], 
+      quantity,
+      status
+    };
+    
     form.setValue('sizes', updatedSizes);
+    
+    // Aggiorna lo stato generale
+    updateGeneralStatus(updatedSizes);
+  };
+  
+  // Aggiorna lo stato generale dell'articolo in base alle taglie
+  const updateGeneralStatus = (sizes: ItemSize[]) => {
+    if (!sizes || sizes.length === 0) return;
+    
+    // Calcola la quantità totale
+    const totalQuantity = sizes.reduce((total, size) => total + size.quantity, 0);
+    
+    let generalStatus: 'available' | 'low' | 'out' = 'available';
+    if (totalQuantity === 0) {
+      generalStatus = 'out';
+    } else if (totalQuantity <= 5) {
+      generalStatus = 'low';
+    }
+    
+    form.setValue('status', generalStatus);
   };
 
   return (

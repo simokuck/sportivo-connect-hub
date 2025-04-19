@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, List, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
+import { Calendar } from "@/components/ui/calendar";
 import CustomEventForm from '@/components/form/CustomEventForm';
 
 const mockEvents = [
@@ -77,11 +78,20 @@ const mockEvents = [
   },
 ];
 
-const Calendar = () => {
-  const [view, setView] = useState<'month' | 'list'>('month');
+const CalendarPage = () => {
   const [date, setDate] = useState(new Date());
   const [showEventForm, setShowEventForm] = useState(false);
   const navigate = useNavigate();
+  
+  // Filtro gli eventi del giorno selezionato
+  const eventsForSelectedDay = mockEvents.filter(event => {
+    const eventDate = new Date(event.start);
+    return (
+      eventDate.getDate() === date.getDate() &&
+      eventDate.getMonth() === date.getMonth() &&
+      eventDate.getFullYear() === date.getFullYear()
+    );
+  });
 
   const handleCreateEvent = () => {
     setShowEventForm(true);
@@ -97,9 +107,6 @@ const Calendar = () => {
         <CardHeader className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold">Calendario</CardTitle>
           <div className="space-x-2">
-            <Button variant="outline" size="icon" onClick={() => setView(view === 'month' ? 'list' : 'month')}>
-              {view === 'month' ? <List className="h-5 w-5" /> : <CalendarIcon className="h-5 w-5" />}
-            </Button>
             <Button onClick={handleCreateEvent}>
               <Plus className="mr-2 h-4 w-4" />
               Nuovo Evento
@@ -107,18 +114,70 @@ const Calendar = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {view === 'month' ? (
-            <div>Calendario Mese</div>
-          ) : (
-            <div>Lista Eventi</div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Calendario a sinistra */}
+            <div className="md:col-span-1">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(newDate) => newDate && setDate(newDate)}
+                className="border rounded-md"
+                locale={it}
+              />
+            </div>
+            
+            {/* Eventi del giorno a destra */}
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-medium mb-4">
+                Eventi del {format(date, "d MMMM yyyy", { locale: it })}
+              </h3>
+              
+              {eventsForSelectedDay.length > 0 ? (
+                <div className="space-y-4">
+                  {eventsForSelectedDay.map((event) => (
+                    <Card key={event.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">{event.title}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {format(new Date(event.start), "HH:mm")} - {format(new Date(event.end), "HH:mm")}
+                          </p>
+                          {event.location && (
+                            <p className="text-sm mt-1">{event.location}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`h-3 w-3 rounded-full ${
+                            event.type === 'training' ? 'bg-green-500' :
+                            event.type === 'match' ? 'bg-orange-500' :
+                            event.type === 'meeting' ? 'bg-blue-500' :
+                            event.type === 'medical' ? 'bg-red-500' : 'bg-gray-500'
+                          }`}></div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {event.type === 'training' ? 'Allenamento' :
+                             event.type === 'match' ? 'Partita' :
+                             event.type === 'meeting' ? 'Riunione' :
+                             event.type === 'medical' ? 'Medico' : 'Altro'}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  Nessun evento programmato per questo giorno
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
       
       {showEventForm && (
         <div className="fixed inset-0 bg-black/50 z-40 overflow-auto pt-10 pb-20">
           <div className="max-w-4xl mx-auto">
-            <CustomEventForm />
+            <CustomEventForm onClose={handleCloseForm} />
           </div>
         </div>
       )}
@@ -133,4 +192,4 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default CalendarPage;

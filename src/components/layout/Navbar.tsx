@@ -38,13 +38,13 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
   if (!user) return null;
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-2.5">
+    <header className="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
             <Menu className="h-6 w-6" />
           </Button>
-          <h1 className="text-xl font-semibold text-sportivo-blue">Sportivo Connect Hub</h1>
+          <h1 className="text-xl font-semibold text-sportivo-blue dark:text-white">Sportivo Connect Hub</h1>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -65,12 +65,10 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon">
+          <Button variant="outline" size="icon" className="text-gray-500 dark:text-gray-300 dark:border-gray-600">
             <Bell className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <Calendar className="h-5 w-5" />
-          </Button>
+          {/* Rimuoviamo l'icona del calendario poiché è già presente nella sidebar */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

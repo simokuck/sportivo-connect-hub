@@ -1,116 +1,139 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { SelectValue, SelectTrigger, SelectItem, SelectContent, Select } from "@/components/ui/select";
+import { CalendarIcon, MapPin, Clock, Users, X } from "lucide-react";
 import { format } from "date-fns";
-import { CalendarIcon, MapPin, X } from "lucide-react";
+import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import LocationPicker from "../map/LocationPicker";
+import { LocationPicker } from "@/components/map/LocationPicker";
+import { useAuth } from '@/context/AuthContext';
 
-// Mock team data
-const teams = [
-  { id: "1", name: "Prima Squadra" },
-  { id: "2", name: "Under 17" },
-  { id: "3", name: "Under 15" },
+// Tipi di evento
+const eventTypes = [
+  { value: "training", label: "Allenamento" },
+  { value: "match", label: "Partita" },
+  { value: "meeting", label: "Riunione" },
+  { value: "medical", label: "Visita Medica" },
+  { value: "other", label: "Altro" },
 ];
 
-// Prevent submission of duplicate events
-let submittingEvent = false;
+// Ore disponibili per selezionare inizio e fine evento
+const availableHours = Array.from({ length: 24 }, (_, i) => ({
+  value: i.toString().padStart(2, '0') + ":00",
+  label: i.toString().padStart(2, '0') + ":00",
+}));
 
-const CustomEventForm = ({ editEvent = null }) => {
+// Squadre disponibili (mock)
+const availableTeams = [
+  { id: "1", name: "Prima Squadra" },
+  { id: "2", name: "Juniores" },
+  { id: "3", name: "Allievi" },
+  { id: "4", name: "Giovanissimi" }
+];
+
+interface CustomEventFormProps {
+  onClose?: () => void;
+}
+
+const CustomEventForm: React.FC<CustomEventFormProps> = ({ onClose }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  
-  // Event form state
-  const [title, setTitle] = useState(editEvent?.title || "");
-  const [description, setDescription] = useState(editEvent?.description || "");
-  const [eventType, setEventType] = useState(editEvent?.type || "training");
-  const [startDate, setStartDate] = useState(editEvent?.start ? new Date(editEvent.start) : new Date());
-  const [endDate, setEndDate] = useState(editEvent?.end ? new Date(editEvent.end) : new Date(new Date().setHours(new Date().getHours() + 2)));
-  const [location, setLocation] = useState(editEvent?.location || "");
-  const [coords, setCoords] = useState(editEvent?.coords || null);
-  const [isPrivate, setIsPrivate] = useState(editEvent?.isPrivate || false);
-  const [selectedTeam, setSelectedTeam] = useState(editEvent?.teamId || "");
-  const [showMap, setShowMap] = useState(false);
-  
-  // Fix: This useEffect ensures that changes to isPrivate immediately update UI
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("11:00");
+  const [eventType, setEventType] = useState(eventTypes[0].value);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [teamId, setTeamId] = useState<string | undefined>(undefined);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Funzione per determinare se mostrare il selettore squadra
+  const showTeamSelector = () => {
+    // Se l'evento è privato, non mostrare il selettore squadra
+    if (isPrivate) return false;
+    
+    // Se l'utente è admin, coach o staff medico, mostrare il selettore squadra
+    return ['admin', 'coach', 'medical'].includes(user?.role || '');
+  };
+
+  // Aggiorna la UI quando isPrivate cambia
   useEffect(() => {
-    console.log("isPrivate changed:", isPrivate);
+    // Se l'evento diventa privato, resetta la squadra selezionata
+    if (isPrivate) {
+      setTeamId(undefined);
+    }
   }, [isPrivate]);
 
-  const handleSubmit = (e) => {
+  const handleMapSelection = (locationName: string, coords: { lat: number; lng: number }) => {
+    setLocation(locationName);
+    setLocationCoords(coords);
+    setShowLocationPicker(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (submittingEvent) return;
-    submittingEvent = true;
-    
-    // Simple validation
-    if (!title.trim()) {
-      toast.error("Inserisci un titolo per l'evento");
-      submittingEvent = false;
-      return;
-    }
-    
+    // Costruiamo l'oggetto evento
     const eventData = {
-      id: editEvent?.id || Date.now().toString(),
       title,
       description,
+      date: date ? format(date, "yyyy-MM-dd") : "",
+      startTime,
+      endTime,
       type: eventType,
-      start: startDate,
-      end: endDate,
-      location,
-      coords,
-      createdBy: user.id,
       isPrivate,
-      teamId: !isPrivate ? selectedTeam : null,
+      teamId: isPrivate ? null : teamId,
+      location,
+      coords: locationCoords,
+      createdBy: user?.id,
     };
     
-    // In a real app, we'd save to a backend
-    setTimeout(() => {
-      toast.success(
-        editEvent ? "Evento aggiornato con successo" : "Evento creato con successo"
-      );
-      console.log("Event data:", eventData);
-      navigate("/calendar");
-      submittingEvent = false;
-    }, 500);
+    console.log("Dati evento:", eventData);
+    
+    // Qui andrebbe la chiamata API per salvare l'evento
+    // Per ora simuliamo un successo e chiudiamo il form
+    
+    if (onClose) {
+      onClose();
+    }
   };
-  
-  const handleMapSelection = (locationName, locationCoords) => {
-    setLocation(locationName);
-    setCoords(locationCoords);
-    setShowMap(false);
-  };
-  
-  // Fix: showTeamSelector now properly checks if user has a role that can see teams AND the event is not private
-  const showTeamSelector = () => {
-    const canSelectTeam = ['admin', 'coach', 'medical'].includes(user.role);
-    return canSelectTeam && !isPrivate && teams.length > 0;
-  };
-  
+
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{editEvent ? "Modifica Evento" : "Crea Nuovo Evento"}</CardTitle>
+    <Card className="w-full">
+      <CardHeader className="relative pb-2">
+        <CardTitle className="text-xl">Crea Nuovo Evento</CardTitle>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="absolute top-2 right-2"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </CardHeader>
+      
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Titolo</Label>
+            <Label htmlFor="title">Titolo Evento *</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Titolo dell'evento"
+              placeholder="Inserisci il titolo dell'evento"
+              required
             />
           </div>
           
@@ -120,58 +143,103 @@ const CustomEventForm = ({ editEvent = null }) => {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descrizione dell'evento"
+              placeholder="Inserisci una descrizione dell'evento"
               rows={3}
             />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="event-type">Tipo di Evento</Label>
+              <Label>Data *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? (
+                      format(date, "PPP", { locale: it })
+                    ) : (
+                      <span>Seleziona una data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    locale={it}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="eventType">Tipo Evento *</Label>
               <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger id="event-type">
-                  <SelectValue placeholder="Seleziona tipo" />
+                <SelectTrigger id="eventType">
+                  <SelectValue placeholder="Seleziona il tipo di evento" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="training">Allenamento</SelectItem>
-                  <SelectItem value="match">Partita</SelectItem>
-                  <SelectItem value="meeting">Riunione</SelectItem>
-                  <SelectItem value="medical">Visita Medica</SelectItem>
-                  <SelectItem value="other">Altro</SelectItem>
+                  {eventTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Ora Inizio *</Label>
+              <Select value={startTime} onValueChange={setStartTime}>
+                <SelectTrigger id="startTime">
+                  <SelectValue placeholder="Seleziona ora inizio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableHours.map((hour) => (
+                    <SelectItem key={hour.value} value={hour.value}>
+                      {hour.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="is-private" className="flex items-center justify-between">
-                Evento Privato
-                <Switch 
-                  id="is-private" 
-                  checked={isPrivate} 
-                  onCheckedChange={(checked) => {
-                    console.log("Setting isPrivate to:", checked);
-                    setIsPrivate(checked);
-                    if (checked) {
-                      setSelectedTeam("");
-                    }
-                  }}
-                />
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Gli eventi privati sono visibili solo a te
-              </p>
+              <Label htmlFor="endTime">Ora Fine *</Label>
+              <Select value={endTime} onValueChange={setEndTime}>
+                <SelectTrigger id="endTime">
+                  <SelectValue placeholder="Seleziona ora fine" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableHours.map((hour) => (
+                    <SelectItem key={hour.value} value={hour.value}>
+                      {hour.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
           {showTeamSelector() && (
             <div className="space-y-2">
               <Label htmlFor="team">Squadra</Label>
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+              <Select value={teamId} onValueChange={setTeamId}>
                 <SelectTrigger id="team">
-                  <SelectValue placeholder="Seleziona squadra" />
+                  <SelectValue placeholder="Seleziona la squadra" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teams.map((team) => (
+                  {availableTeams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
                     </SelectItem>
@@ -181,149 +249,44 @@ const CustomEventForm = ({ editEvent = null }) => {
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Data e Ora Inizio</Label>
-              <div className="flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : "Seleziona data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          const newDate = new Date(date);
-                          newDate.setHours(startDate.getHours());
-                          newDate.setMinutes(startDate.getMinutes());
-                          setStartDate(newDate);
-                          
-                          // Adjust end date if it's before the new start date
-                          if (endDate < newDate) {
-                            const newEndDate = new Date(newDate);
-                            newEndDate.setHours(newDate.getHours() + 2);
-                            setEndDate(newEndDate);
-                          }
-                        }
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                
-                <Input
-                  type="time"
-                  value={format(startDate, "HH:mm")}
-                  onChange={(e) => {
-                    const [hours, minutes] = e.target.value.split(':').map(Number);
-                    const newDate = new Date(startDate);
-                    newDate.setHours(hours, minutes);
-                    setStartDate(newDate);
-                    
-                    // Adjust end date if it's before the new start date
-                    if (endDate < newDate) {
-                      const newEndDate = new Date(newDate);
-                      newEndDate.setHours(newDate.getHours() + 2);
-                      setEndDate(newEndDate);
-                    }
-                  }}
-                  className="w-24 flex-shrink-0"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Data e Ora Fine</Label>
-              <div className="flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : "Seleziona data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          const newDate = new Date(date);
-                          newDate.setHours(endDate.getHours());
-                          newDate.setMinutes(endDate.getMinutes());
-                          
-                          // Ensure end date is not before start date
-                          setEndDate(newDate < startDate ? new Date(startDate.getTime() + 7200000) : newDate);
-                        }
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                
-                <Input
-                  type="time"
-                  value={format(endDate, "HH:mm")}
-                  onChange={(e) => {
-                    const [hours, minutes] = e.target.value.split(':').map(Number);
-                    const newDate = new Date(endDate);
-                    newDate.setHours(hours, minutes);
-                    
-                    // Ensure end date is not before start date
-                    setEndDate(newDate < startDate ? new Date(startDate.getTime() + 7200000) : newDate);
-                  }}
-                  className="w-24 flex-shrink-0"
-                />
-              </div>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="private"
+              checked={isPrivate}
+              onCheckedChange={setIsPrivate}
+            />
+            <Label htmlFor="private">Evento Privato</Label>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="location">Luogo</Label>
-            <div className="flex gap-2">
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Luogo dell'evento"
-                className="flex-1"
-              />
+            <div className="flex justify-between items-center">
+              <Label htmlFor="location">Ubicazione</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLocationPicker(true)}
+              >
+                <MapPin className="mr-1 h-4 w-4" />
+                Seleziona sulla mappa
+              </Button>
+            </div>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Inserisci l'ubicazione dell'evento"
+            />
+          </div>
+          
+          {showLocationPicker && (
+            <div className="border rounded-md p-2 relative h-[300px]">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setShowMap(true)}
-              >
-                <MapPin className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {showMap && (
-            <div className="relative mt-2 rounded-md border p-4">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2 z-10"
-                onClick={() => setShowMap(false)}
+                onClick={() => setShowLocationPicker(false)}
+                className="absolute top-2 right-2 z-10"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -335,13 +298,11 @@ const CustomEventForm = ({ editEvent = null }) => {
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+        <CardFooter className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onClose}>
             Annulla
           </Button>
-          <Button type="submit">
-            {editEvent ? "Aggiorna Evento" : "Crea Evento"}
-          </Button>
+          <Button type="submit">Salva Evento</Button>
         </CardFooter>
       </form>
     </Card>

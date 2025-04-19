@@ -69,6 +69,18 @@
     @apply bg-background text-foreground;
   }
   
+  /* Fix per la visualizzazione mobile */
+  .overflow-x-auto {
+    @apply max-w-full;
+  }
+  
+  /* Assicura che il contenuto sia sempre visibile su mobile */
+  .container, .max-w-full, main, .p-4, .px-4 {
+    @apply box-border;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
   /* Improved readability in dark mode for inputs and selects */
   .dark input, 
   .dark select, 
