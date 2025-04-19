@@ -40,7 +40,7 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   const sizesType = form.watch('sizesType') || 'standard';
   const [newSizeLabel, setNewSizeLabel] = useState('');
 
-  // Inizializza le taglie se necessario
+  // Initialize sizes if needed
   useEffect(() => {
     if (hasSizes && (!form.getValues('sizes') || form.getValues('sizes').length === 0)) {
       form.setValue('sizesType', 'standard');
@@ -48,27 +48,24 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
     }
   }, [hasSizes, form]);
 
-  // Helper to update sizes based on type selection
+  // Update sizes based on type selection
   const updateSizesForType = (type: string) => {
     form.setValue('sizesType', type);
     
     if (type !== 'custom') {
       form.setValue('sizes', [...defaultSizes[type as keyof typeof defaultSizes]]);
     } else if (!form.getValues('sizes') || form.getValues('sizes').length === 0) {
-      // Se si seleziona custom e non ci sono taglie, inizializza con un array vuoto
       form.setValue('sizes', []);
     }
   };
 
-  // Handle adding a new custom size
+  // Add new custom size
   const handleAddSize = () => {
     if (!newSizeLabel.trim()) return;
     
     const currentSizes = form.getValues('sizes') || [];
-    
-    // Check if size already exists
     if (currentSizes.some(size => size.label.toLowerCase() === newSizeLabel.trim().toLowerCase())) {
-      return; // Size already exists
+      return;
     }
     
     const updatedSizes = [...currentSizes, { label: newSizeLabel.trim(), quantity: 0 }];
@@ -76,7 +73,7 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
     setNewSizeLabel('');
   };
 
-  // Handle removing a size
+  // Remove size
   const handleRemoveSize = (index: number) => {
     const currentSizes = form.getValues('sizes') || [];
     const updatedSizes = currentSizes.filter((_, i) => i !== index);
@@ -104,15 +101,14 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
     
     form.setValue('sizes', updatedSizes);
     
-    // Aggiorna lo stato generale
+    // Update general status
     updateGeneralStatus(updatedSizes);
   };
   
-  // Aggiorna lo stato generale dell'articolo in base alle taglie
+  // Update general status based on sizes
   const updateGeneralStatus = (sizes: ItemSize[]) => {
     if (!sizes || sizes.length === 0) return;
     
-    // Calcola la quantità totale
     const totalQuantity = sizes.reduce((total, size) => total + size.quantity, 0);
     
     let generalStatus: 'available' | 'low' | 'out' = 'available';
@@ -141,7 +137,6 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
                 onCheckedChange={(checked) => {
                   field.onChange(checked);
                   if (checked && !form.getValues('sizes')) {
-                    // Set default sizes when enabling the feature
                     form.setValue('sizesType', 'standard');
                     form.setValue('sizes', [...defaultSizes.standard]);
                   }

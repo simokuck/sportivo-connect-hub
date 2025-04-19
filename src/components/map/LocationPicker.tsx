@@ -117,7 +117,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <div className="flex space-x-2">
         <Input
           placeholder="Cerca un indirizzo..."

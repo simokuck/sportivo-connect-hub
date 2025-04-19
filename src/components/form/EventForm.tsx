@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +30,20 @@ const EventForm = ({
 }: EventFormProps) => {
   const isPrivate = form.watch("isPrivate");
   
+  // Add keyboard event handlers
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        form.reset();
+      } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        form.handleSubmit(onSubmit)();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [form, onSubmit]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -214,18 +228,12 @@ const EventForm = ({
           />
         )}
         
-        <DialogFooter className="space-x-2">
-          {dialogAction === 'edit' && handleDeleteEvent && (
-            <Button 
-              type="button" 
-              variant="destructive" 
-              onClick={handleDeleteEvent}
-            >
-              <X className="mr-2 h-4 w-4" /> Elimina
-            </Button>
-          )}
+        <DialogFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={() => form.reset()}>
+            Annulla (ESC)
+          </Button>
           <Button type="submit">
-            {dialogAction === 'create' ? 'Crea Evento' : 'Aggiorna Evento'}
+            {dialogAction === 'create' ? 'Crea Evento' : 'Aggiorna Evento'} (⌘ + Enter)
           </Button>
         </DialogFooter>
       </form>
