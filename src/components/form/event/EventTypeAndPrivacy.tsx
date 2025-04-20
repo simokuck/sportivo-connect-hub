@@ -14,6 +14,13 @@ interface EventTypeAndPrivacyProps {
 
 const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
   const isPrivate = form.watch("isPrivate");
+  
+  React.useEffect(() => {
+    // Reset teamId when isPrivate is toggled to true
+    if (isPrivate && form.getValues("teamId")) {
+      form.setValue("teamId", undefined);
+    }
+  }, [isPrivate, form]);
 
   return (
     <>
@@ -53,12 +60,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
               <FormControl>
                 <Switch
                   checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    if (checked) {
-                      form.setValue("teamId", undefined);
-                    }
-                  }}
+                  onCheckedChange={field.onChange}
                 />
               </FormControl>
             </FormItem>
@@ -76,6 +78,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || ""}
+                defaultValue=""
               >
                 <FormControl>
                   <SelectTrigger>

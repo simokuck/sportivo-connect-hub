@@ -42,7 +42,7 @@ const EventsList = ({ events, setEvents, onEventSelect }: EventsListProps) => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="bg-white rounded-md shadow-sm p-4 border"
+                    className="hover-card-highlight bg-white rounded-md shadow-sm p-4 border dark:bg-gray-800 dark:border-gray-700"
                     onClick={() => onEventSelect(event)}
                   >
                     <h3 className="text-lg font-semibold">{event.title}</h3>

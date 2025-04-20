@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
@@ -46,7 +47,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Player & Coach: Statistics */}
         {(user.role === 'player' || user.role === 'coach') && (
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/statistics')}>
+          <Card className="hover-card-highlight cursor-pointer" onClick={() => navigate('/statistics')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <BarChart3 className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -81,7 +82,7 @@ const Dashboard = () => {
 
         {/* Coach & Admin: Teams */}
         {(user.role === 'coach' || user.role === 'admin') && (
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/teams')}>
+          <Card className="hover-card-highlight cursor-pointer" onClick={() => navigate('/teams')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <Users className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -112,7 +113,7 @@ const Dashboard = () => {
 
         {/* Admin & Medical: Documents */}
         {(user.role === 'admin' || user.role === 'medical') && (
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/documents')}>
+          <Card className="hover-card-highlight cursor-pointer" onClick={() => navigate('/documents')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <FileText className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -143,7 +144,7 @@ const Dashboard = () => {
 
         {/* Admin: Non-compliant Members Overview */}
         {user.role === 'admin' && nonCompliantMembers.length > 0 && (
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/team-members')}>
+          <Card className="hover-card-highlight cursor-pointer" onClick={() => navigate('/team-members')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
@@ -167,7 +168,7 @@ const Dashboard = () => {
         )}
 
         {/* All roles: Calendar Events */}
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/calendar')}>
+        <Card className="hover-card-highlight cursor-pointer" onClick={() => navigate('/calendar')}>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center text-lg">
               <Calendar className="h-5 w-5 mr-2 text-sportivo-blue" />
@@ -203,7 +204,7 @@ const Dashboard = () => {
         </Card>
 
         {/* All roles: Notifications */}
-        <Card>
+        <Card className="hover-card-highlight">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center text-lg">
               <Bell className="h-5 w-5 mr-2 text-sportivo-blue" />

@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { MapPin } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormValues } from '@/schemas/eventSchema';
+import LocationPicker from '@/components/map/LocationPicker';
 
 interface EventLocationAndMedicalProps {
   form: UseFormReturn<EventFormValues>;
@@ -24,12 +24,13 @@ const EventLocationAndMedical = ({ form, handleLocationChange }: EventLocationAn
               <MapPin className="h-4 w-4" /> Posizione
             </FormLabel>
             <FormControl>
-              <Input 
-                {...field}
-                onChange={(e) => {
-                  field.onChange(e);
-                  handleLocationChange(e.target.value);
+              <LocationPicker
+                value={field.value}
+                onChange={(location, coords) => {
+                  field.onChange(location);
+                  handleLocationChange(location, coords);
                 }}
+                useOpenStreetMap={true}
               />
             </FormControl>
             <FormMessage />

@@ -132,6 +132,16 @@
   .dark .text-muted-foreground {
     color: #9ca3af; /* Using direct color instead of circular reference */
   }
+  
+  /* Card hover effect for all dashboards */
+  .hover-card-highlight {
+    @apply transition-all duration-200;
+  }
+  
+  .hover-card-highlight:hover {
+    @apply ring-2 ring-primary/50 shadow-lg;
+    transform: translateY(-2px);
+  }
 }
 
 /* ... keep existing code (the rest of the CSS file) */
