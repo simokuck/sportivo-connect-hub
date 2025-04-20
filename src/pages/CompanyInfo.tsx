@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText, Save, User, Users, Building, Award } from 'lucide-react';
+
+const LOCAL_STORAGE_KEY = 'companyInfo';
 
 const companyInfoSchema = z.object({
   companyName: z.string().min(1, 'Il nome della società è richiesto'),
@@ -79,24 +80,54 @@ const CompanyInfo = () => {
   const { toast } = useToast();
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [isColorDialogOpen, setIsColorDialogOpen] = useState(false);
 
   const form = useForm<CompanyInfoValues>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: mockCompanyInfo,
   });
 
+  useEffect(() => {
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        form.reset(parsedData);
+      } catch (error) {
+        console.error('Error parsing saved company data:', error);
+      }
+    }
+  }, [form]);
+
   const onSubmit = (data: CompanyInfoValues) => {
     setIsConfirmDialogOpen(true);
   };
 
   const handleConfirm = () => {
-    // Qui salveremmo i dati
-    console.log('Dati salvati:', form.getValues());
+    const data = form.getValues();
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    
     setIsConfirmDialogOpen(false);
     toast({
       title: 'Dati salvati',
       description: 'Le informazioni della società sono state aggiornate',
     });
+
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const previousColors = savedData ? JSON.parse(savedData).colors : '';
+    
+    if (data.colors !== previousColors) {
+      setIsColorDialogOpen(true);
+    }
+  };
+
+  const applyColorsToApp = () => {
+    const colors = form.getValues('colors');
+    toast({
+      title: 'Colori applicati',
+      description: `I colori "${colors}" sono stati impostati come tema principale dell'applicativo`,
+    });
+    setIsColorDialogOpen(false);
   };
 
   return (
@@ -530,6 +561,25 @@ const CompanyInfo = () => {
               </Button>
               <Button onClick={handleConfirm}>
                 Conferma
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isColorDialogOpen} onOpenChange={setIsColorDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Applica colori sociali</DialogTitle>
+              <DialogDescription>
+                Vuoi utilizzare i colori sociali ({form.getValues('colors')}) come tema principale dell'applicazione?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsColorDialogOpen(false)}>
+                No, solo salva
+              </Button>
+              <Button onClick={applyColorsToApp}>
+                Sì, applica come tema
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -22,28 +22,11 @@ const LocationPicker = ({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [mapUrl, setMapUrl] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setInputValue(value);
-    
-    // Generate map preview URL if location is set and OpenStreetMap is enabled
-    if (value && useOpenStreetMap) {
-      // Use the Nominatim API to get coordinates for the address
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data && data.length > 0) {
-            const { lat, lon } = data[0];
-            setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`);
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching coordinates:", error);
-        });
-    }
-  }, [value, useOpenStreetMap]);
+  }, [value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -79,71 +62,53 @@ const LocationPicker = ({
     setInputValue(location);
     onChange(location, { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
     setShowSuggestions(false);
-    
-    // Update map URL
-    setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${suggestion.lon-0.01},${suggestion.lat-0.01},${suggestion.lon+0.01},${suggestion.lat+0.01}&layer=mapnik&marker=${suggestion.lat},${suggestion.lon}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent form submission from bubbling up
     onChange(inputValue);
     setShowSuggestions(false);
   };
 
   return (
     <div className={cn("space-y-2", className)}>
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            className="pl-8"
-            placeholder="Cerca una posizione..."
-          />
-          {isLoading && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            </div>
-          )}
-        </div>
-        
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute mt-1 w-full rounded-md border bg-background shadow-lg z-50">
-            <ul className="py-1 max-h-60 overflow-auto">
-              {suggestions.map((suggestion, index) => (
-                <li
-                  key={index}
-                  onClick={() => handleSelectSuggestion(suggestion)}
-                  className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer text-sm"
-                >
-                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">{suggestion.display_name}</span>
-                </li>
-              ))}
-            </ul>
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          className="pl-8"
+          placeholder="Cerca una posizione..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        />
+        {isLoading && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
           </div>
         )}
-        
-        <Button type="submit" className="sr-only">
-          Cerca
-        </Button>
-      </form>
+      </div>
       
-      {useOpenStreetMap && mapUrl && (
-        <div className="rounded-md border overflow-hidden h-[200px] mt-2">
-          <iframe 
-            width="100%" 
-            height="100%" 
-            frameBorder="0" 
-            scrolling="no" 
-            marginHeight={0} 
-            marginWidth={0} 
-            src={mapUrl} 
-            title="OpenStreetMap" 
-            className="w-full h-full"
-          />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute mt-1 w-full rounded-md border bg-background shadow-lg z-50">
+          <ul className="py-1 max-h-60 overflow-auto">
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectSuggestion(suggestion)}
+                className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+              >
+                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate">{suggestion.display_name}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

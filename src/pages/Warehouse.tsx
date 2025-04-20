@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WarehouseProvider, useWarehouse } from '@/context/WarehouseContext';
+import { useSearchParams } from 'react-router-dom';
 
 // Import components
 import { WarehouseDashboard } from '@/components/warehouse/WarehouseDashboard';
@@ -20,8 +21,25 @@ const WarehouseContent = () => {
     setDialogType, 
     setSelectedAssignment,
     lowStockItems,
-    recentAssignments
+    recentAssignments,
+    items
   } = useWarehouse();
+  
+  const [searchParams] = useSearchParams();
+  
+  useEffect(() => {
+    // Handle tab changes from URL parameters
+    const viewParam = searchParams.get('view');
+    if (viewParam && ['dashboard', 'catalog', 'movements', 'assignments'].includes(viewParam)) {
+      setActiveTab(viewParam);
+    }
+    
+    // Handle filters if needed
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'low-stock') {
+      // Add logic to filter items
+    }
+  }, [searchParams, setActiveTab]);
 
   return (
     <div className="container mx-auto p-2 sm:p-4 space-y-6 content-wrapper">

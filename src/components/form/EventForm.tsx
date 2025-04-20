@@ -47,7 +47,10 @@ const EventForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit(onSubmit)(e);
+      }} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -55,7 +58,14 @@ const EventForm = ({
             <FormItem>
               <FormLabel>Titolo</FormLabel>
               <FormControl>
-                <Input placeholder="Inserisci il titolo dell'evento" {...field} />
+                <Input
+                  placeholder="Inserisci il titolo dell'evento" 
+                  {...field}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    field.onChange(e);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -203,7 +213,7 @@ const EventForm = ({
                 <LocationPicker 
                   value={field.value} 
                   onChange={handleLocationChange}
-                  useOpenStreetMap={true}
+                  useOpenStreetMap={false} // Disable OpenStreetMap
                 />
               </FormControl>
               <FormMessage />

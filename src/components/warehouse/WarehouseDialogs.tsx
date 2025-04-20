@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
@@ -112,7 +113,10 @@ export function WarehouseDialogs() {
 
       {/* Return Dialog */}
       <Dialog open={dialogType === 'returnItem'} onOpenChange={(open) => {
-        if (!open) setDialogType('none');
+        if (!open) {
+          setDialogType('none');
+          setSelectedAssignment(null);
+        }
       }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
