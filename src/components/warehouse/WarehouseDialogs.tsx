@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
@@ -18,6 +17,7 @@ export function WarehouseDialogs() {
     selectedItem,
     selectedVariant,
     selectedAssignment,
+    setSelectedAssignment,
     isDeleteModalOpen,
     setIsDeleteModalOpen,
     deleteTarget,
