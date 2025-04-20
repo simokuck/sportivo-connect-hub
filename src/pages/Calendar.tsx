@@ -4,12 +4,16 @@ import { Event } from '@/types';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { eventSchema } from "@/schemas/eventSchema";
+import * as z from 'zod';
 import EventForm from '@/components/form/EventForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CalendarHeader from '@/components/calendar/CalendarHeader';
 import EventsList from '@/components/calendar/EventsList';
 import ImportDialog from '@/components/calendar/ImportDialog';
 import { useAuth } from '@/context/AuthContext';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface CalendarProps {
   className?: string;

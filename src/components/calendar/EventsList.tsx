@@ -4,6 +4,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautif
 import { Event } from "@/types";
 import { useForm } from "react-hook-form";
 import { eventSchema } from "@/schemas/eventSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface EventsListProps {
   events: Event[];
