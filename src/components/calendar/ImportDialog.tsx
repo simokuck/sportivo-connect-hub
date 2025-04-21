@@ -60,7 +60,7 @@ const ImportDialog = ({ isOpen, setIsOpen, events, setEvents }: ImportDialogProp
               end: new Date(end).toISOString(),
               type: (type as "training" | "match" | "medical" | "meeting") || "training",
               location: location || "",
-              isPrivate: false,
+              recipients: []
             } as Event;
           } catch (error) {
             console.error("Errore nel parsing della riga:", line, error);

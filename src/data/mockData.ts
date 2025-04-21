@@ -177,7 +177,8 @@ export const mockEvents: CalendarEvent[] = [
     teamId: '1',
     location: 'Campo Principale',
     canEdit: true,
-    isPrivate: false
+    recipients: [],
+    attendees: []
   },
   {
     id: '2',
@@ -190,7 +191,8 @@ export const mockEvents: CalendarEvent[] = [
     location: 'Stadio Comunale',
     requiresMedical: true,
     canEdit: true,
-    isPrivate: false
+    recipients: [],
+    attendees: []
   },
   {
     id: '3',
@@ -203,7 +205,7 @@ export const mockEvents: CalendarEvent[] = [
     attendees: ['4', '5', '6'],
     location: 'Centro Medico Sportivo',
     canEdit: true,
-    isPrivate: false
+    recipients: []
   }
 ];
 
