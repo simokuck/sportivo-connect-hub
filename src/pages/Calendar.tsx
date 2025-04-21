@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
-import { Event } from '@/types';
+
+import React, { useState, useCallback } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { eventSchema } from "@/schemas/eventSchema";
-import * as z from 'zod';
-import EventForm from '@/components/form/EventForm';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Event } from '@/types';
+import { cn } from "@/lib/utils";
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import CalendarHeader from '@/components/calendar/CalendarHeader';
 import EventsList from '@/components/calendar/EventsList';
 import ImportDialog from '@/components/calendar/ImportDialog';
-import { useAuth } from '@/context/AuthContext';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import CreateEventDialog from '@/components/calendar/dialogs/CreateEventDialog';
+import EditEventDialog from '@/components/calendar/dialogs/EditEventDialog';
 
 interface CalendarProps {
   className?: string;
@@ -20,15 +18,15 @@ interface CalendarProps {
 
 const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [teams, setTeams] = useState<any[]>([]);
-  const { user } = useAuth();
+  const [teams] = useState<any[]>([]);
 
-  const form = useForm<z.infer<typeof eventSchema>>({
+  const { events, setEvents, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
+
+  const form = useForm({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: "",
@@ -42,92 +40,35 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     },
   });
 
-  React.useEffect(() => {
-    const storedEvents = localStorage.getItem('events');
-    if (storedEvents) {
-      setEvents(JSON.parse(storedEvents));
-    }
-
-    const storedTeams = localStorage.getItem('teams');
-    if (storedTeams) {
-      setTeams(JSON.parse(storedTeams));
-    }
-  }, []);
-
-  React.useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
-
-  const handleCreateEvent = (data: z.infer<typeof eventSchema>) => {
-    const newEvent: Event = {
-      id: uuidv4(),
-      title: data.title,
-      description: data.description || "",
-      start: new Date(data.start).toISOString(),
-      end: new Date(data.end).toISOString(),
-      type: data.type || "training",
-      location: data.location,
-      recipients: data.recipients || [],
-      teamId: data.teamId,
-      requiresMedical: data.requiresMedical || false,
-      lat: data.lat,
-      lng: data.lng,
-    };
-
-    setEvents([...events, newEvent]);
-    setIsCreateDialogOpen(false);
-    form.reset();
-    toast({
-      title: "Evento creato",
-      description: "L'evento è stato creato con successo",
-    });
-  };
-
-  const handleUpdateEvent = (data: z.infer<typeof eventSchema>) => {
-    if (!selectedEvent) return;
-
-    const updatedEvent: Event = {
-      ...selectedEvent,
-      ...data,
-      start: new Date(data.start).toISOString(),
-      end: new Date(data.end).toISOString(),
-    };
-
-    const updatedEvents = events.map(event =>
-      event.id === updatedEvent.id ? updatedEvent : event
-    );
-
-    setEvents(updatedEvents);
-    setIsEditDialogOpen(false);
-    setSelectedEvent(null);
-    form.reset();
-    toast({
-      title: "Evento aggiornato",
-      description: "L'evento è stato aggiornato con successo",
-    });
-  };
-
-  const handleDeleteEvent = () => {
-    if (!selectedEvent) return;
-
-    const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
-    setEvents(updatedEvents);
-    setIsEditDialogOpen(false);
-    setSelectedEvent(null);
-    form.reset();
-    toast({
-      title: "Evento eliminato",
-      description: "L'evento è stato eliminato con successo",
-    });
-  };
-
-  const handleLocationChange = React.useCallback((location: string, coords?: { lat: number; lng: number }) => {
+  const handleLocationChange = useCallback((location: string, coords?: { lat: number; lng: number }) => {
     form.setValue("location", location);
     if (coords) {
       form.setValue("lat", coords.lat);
       form.setValue("lng", coords.lng);
     }
   }, [form]);
+
+  const handleCreateEvent = (data: any) => {
+    createEvent(data);
+    setIsCreateDialogOpen(false);
+    form.reset();
+  };
+
+  const handleUpdateEvent = (data: any) => {
+    if (!selectedEvent) return;
+    updateEvent(selectedEvent.id, data);
+    setIsEditDialogOpen(false);
+    setSelectedEvent(null);
+    form.reset();
+  };
+
+  const handleDeleteEvent = () => {
+    if (!selectedEvent) return;
+    deleteEvent(selectedEvent.id);
+    setIsEditDialogOpen(false);
+    setSelectedEvent(null);
+    form.reset();
+  };
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -160,42 +101,24 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         />
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Crea un nuovo evento</DialogTitle>
-            <DialogDescription>
-              Aggiungi un evento al calendario. Clicca salva quando hai finito.
-            </DialogDescription>
-          </DialogHeader>
-          <EventForm 
-            form={form}
-            onSubmit={handleCreateEvent}
-            dialogAction="create"
-            teams={teams}
-            handleLocationChange={handleLocationChange}
-          />
-        </DialogContent>
-      </Dialog>
+      <CreateEventDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        form={form}
+        onSubmit={handleCreateEvent}
+        teams={teams}
+        handleLocationChange={handleLocationChange}
+      />
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Modifica evento</DialogTitle>
-            <DialogDescription>
-              Modifica i dettagli dell'evento. Clicca aggiorna quando hai finito.
-            </DialogDescription>
-          </DialogHeader>
-          <EventForm 
-            form={form}
-            onSubmit={handleUpdateEvent}
-            dialogAction="edit"
-            handleDeleteEvent={handleDeleteEvent}
-            teams={teams}
-            handleLocationChange={handleLocationChange}
-          />
-        </DialogContent>
-      </Dialog>
+      <EditEventDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        form={form}
+        onSubmit={handleUpdateEvent}
+        onDelete={handleDeleteEvent}
+        teams={teams}
+        handleLocationChange={handleLocationChange}
+      />
 
       <ImportDialog 
         isOpen={importDialogOpen}
