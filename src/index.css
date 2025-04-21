@@ -59,9 +59,7 @@
     --button-background: 217.2 91.2% 59.8%;
     --button-foreground: 222.2 47.4% 11.2%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -133,15 +131,40 @@
     color: #9ca3af; /* Using direct color instead of circular reference */
   }
   
-  /* Card hover effect for all dashboards */
-  .hover-card-highlight {
-    @apply transition-all duration-200;
+  /* Card hover effect for all cards in the project */
+  .hover-card-highlight,
+  .Card,
+  .card {
+    @apply transition-all duration-200 border rounded-lg shadow-sm;
   }
   
-  .hover-card-highlight:hover {
+  .hover-card-highlight:hover,
+  .Card:hover,
+  .card:hover {
     @apply ring-2 ring-primary/50 shadow-lg;
     transform: translateY(-2px);
   }
 }
 
-/* ... keep existing code (the rest of the CSS file) */
+/* Fixed positioning for LocationPicker in forms */
+.location-picker-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+  z-index: 0;
+  margin-bottom: 1rem;
+}
+
+/* Style for geosearch control */
+.geo-search-input {
+  @apply text-sm px-2 py-1 rounded;
+}
+
+.geo-search-button {
+  @apply bg-primary text-white rounded p-1;
+}
+
+/* Fix for leaflet maps in dialogs */
+.leaflet-container {
+  z-index: 10;
+}

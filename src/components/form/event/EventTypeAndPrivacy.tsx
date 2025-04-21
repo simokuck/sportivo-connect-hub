@@ -14,6 +14,7 @@ interface EventTypeAndPrivacyProps {
 
 const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
   const isPrivate = form.watch("isPrivate");
+  const formType = form.watch("type");
   
   React.useEffect(() => {
     // Reset teamId when isPrivate is toggled to true
@@ -21,6 +22,14 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
       form.setValue("teamId", undefined);
     }
   }, [isPrivate, form]);
+
+  // Show team selection only for training, match, and medical events
+  // And only when the event is not private AND teams exist
+  const showTeamSelection = React.useMemo(() => {
+    const hasTeams = teams && teams.length > 0;
+    const isTeamEvent = ['training', 'match', 'medical'].includes(formType);
+    return !isPrivate && hasTeams && isTeamEvent;
+  }, [isPrivate, teams, formType]);
 
   return (
     <>
@@ -31,7 +40,14 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo di evento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={(value) => {
+                field.onChange(value);
+                // Reset team selection if changing to a non-team event type
+                if (!['training', 'match', 'medical'].includes(value)) {
+                  form.setValue("teamId", undefined);
+                }
+              }} 
+              defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleziona un tipo" />
@@ -68,7 +84,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
         />
       </div>
 
-      {!isPrivate && teams && teams.length > 0 && (
+      {showTeamSelection && (
         <FormField
           control={form.control}
           name="teamId"
@@ -86,7 +102,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {teams.map((team) => (
+                  {teams && teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
                     </SelectItem>

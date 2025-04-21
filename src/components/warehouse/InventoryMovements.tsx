@@ -1,169 +1,88 @@
-
-import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { InventoryMovement, BaseItem, ItemVariant } from '@/types/warehouse';
-import { ArrowDown, ArrowUp, CalendarIcon, Filter, Plus, Search } from 'lucide-react';
-import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { it } from 'date-fns/locale';
+import React, {useState} from 'react';
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {FileDown, Filter, Plus} from "lucide-react";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import {Movement} from "@/types/warehouse";
+import {MovementTypeBadge} from './MovementTypeBadge';
+import {MovementNote} from './MovementNote';
+import {VariantDisplay} from './VariantDisplay';
 
 interface InventoryMovementsProps {
-  movements: (InventoryMovement & { 
-    baseItem?: BaseItem, 
-    variant?: ItemVariant,
-    playerName?: string
-  })[];
+  movements: Movement[];
   onAddMovement: () => void;
 }
 
-export function InventoryMovements({ movements, onAddMovement }: InventoryMovementsProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const filteredMovements = movements.filter(movement => {
-    const matchesSearch = 
-      (movement.baseItem?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (movement.variant?.color?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (movement.variant?.size?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (movement.playerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    
-    const matchesType = filterType === 'all' || movement.type === filterType;
-    
-    const matchesDate = !filterDate || 
-      format(new Date(movement.date), 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd');
-    
-    return matchesSearch && matchesType && matchesDate;
-  });
-
-  const getMovementTypeLabel = (type: string) => {
-    switch(type) {
-      case 'in': return 'Carico';
-      case 'out': return 'Scarico';
-      case 'assign': return 'Assegnazione';
-      case 'return': return 'Restituzione';
-      case 'lost': return 'Smarrimento';
-      case 'damaged': return 'Danneggiamento';
-      default: return type;
-    }
+export const InventoryMovements = ({ movements, onAddMovement }: InventoryMovementsProps) => {
+  const [filter, setFilter] = useState<string | null>(null);
+  
+  // Sort movements by date (newest first)
+  const sortedMovements = [...movements].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  // Apply filter if set
+  const filteredMovements = filter 
+    ? sortedMovements.filter(m => m.type === filter)
+    : sortedMovements;
+  
+  const exportToCSV = () => {
+    // Implementation for CSV export
+    console.log("Exporting movements to CSV");
   };
   
-  const getMovementTypeVariant = (type: string) => {
-    switch(type) {
-      case 'in': 
-      case 'return': 
-        return 'default';
-      case 'out': 
-      case 'assign': 
-        return 'outline';
-      case 'lost': 
-      case 'damaged': 
-        return 'destructive';
-      default: 
-        return 'secondary';
-    }
-  };
-
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Movimenti Magazzino</h2>
-        <Button onClick={onAddMovement}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuovo Movimento
-        </Button>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Cerca articoli o giocatori..." 
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <Card className="hover-card-highlight">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 space-y-0">
+        <CardTitle className="text-xl">Movimenti Magazzino</CardTitle>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="mr-2 h-4 w-4" />
+                Filtri
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setFilter(null)}>
+                Tutti
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setFilter('in')}>
+                Solo carichi
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setFilter('out')}>
+                Solo scarichi
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setFilter('assign')}>
+                Solo assegnazioni
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setFilter('return')}>
+                Solo resi
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button variant="outline" size="sm" onClick={exportToCSV}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Esporta
+          </Button>
+          
+          <Button onClick={onAddMovement} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Nuovo Movimento
+          </Button>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="sm:w-auto w-full"
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Filtri {isFilterOpen ? '▲' : '▼'}
-        </Button>
-      </div>
-      
-      {isFilterOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-background rounded-md border mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Tipo movimento</label>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tutti i tipi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti i tipi</SelectItem>
-                <SelectItem value="in">Carico</SelectItem>
-                <SelectItem value="out">Scarico</SelectItem>
-                <SelectItem value="assign">Assegnazione</SelectItem>
-                <SelectItem value="return">Restituzione</SelectItem>
-                <SelectItem value="lost">Smarrimento</SelectItem>
-                <SelectItem value="damaged">Danneggiamento</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Data</label>
-            <div className="flex gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filterDate ? format(filterDate, 'PPP', { locale: it }) : 'Seleziona data'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={filterDate}
-                    onSelect={setFilterDate}
-                    locale={it}
-                  />
-                </PopoverContent>
-              </Popover>
-              {filterDate && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setFilterDate(undefined)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div className="rounded-md border">
+      </CardHeader>
+      <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
+              <TableHead className="w-32">Data</TableHead>
               <TableHead>Articolo</TableHead>
               <TableHead>Variante</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Quantità</TableHead>
+              <TableHead className="text-center">Quantità</TableHead>
+              <TableHead className="text-center">Tipo</TableHead>
               <TableHead>Note</TableHead>
               <TableHead>Operatore</TableHead>
             </TableRow>
@@ -171,58 +90,46 @@ export function InventoryMovements({ movements, onAddMovement }: InventoryMoveme
           <TableBody>
             {filteredMovements.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                   Nessun movimento trovato
                 </TableCell>
               </TableRow>
             ) : (
               filteredMovements.map((movement) => (
                 <TableRow key={movement.id}>
-                  <TableCell>{format(new Date(movement.date), 'dd/MM/yyyy HH:mm')}</TableCell>
-                  <TableCell>{movement.baseItem?.name || '-'}</TableCell>
                   <TableCell>
-                    {movement.variant ? (
-                      <div>
-                        <span className="font-medium">{movement.variant.size}</span>,{' '}
-                        <span className="flex items-center gap-1 inline-flex">
-                          <div 
-                            className="w-3 h-3 rounded-full border inline-block" 
-                            style={{ backgroundColor: movement.variant.color }}
-                          />
-                          {movement.variant.color}
-                        </span>
-                      </div>
-                    ) : '-'}
+                    {new Date(movement.date).toLocaleDateString('it-IT')}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getMovementTypeVariant(movement.type)}>
-                      {getMovementTypeLabel(movement.type)}
-                      {movement.type === 'in' || movement.type === 'return' ? (
-                        <ArrowDown className="ml-1 h-3 w-3" />
-                      ) : movement.type === 'out' || movement.type === 'assign' ? (
-                        <ArrowUp className="ml-1 h-3 w-3" />
-                      ) : null}
-                    </Badge>
-                    {movement.playerName && (
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {movement.playerName}
-                      </div>
-                    )}
+                    {movement.baseItem?.name || "Articolo non disponibile"}
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {movement.type === 'in' || movement.type === 'return' ? '+' : '-'}
-                    {movement.quantity}
+                  <TableCell>
+                    <VariantDisplay 
+                      color={movement.color} 
+                      size={movement.size} 
+                      variant={movement.variant}
+                    />
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {movement.notes || '-'}
+                  <TableCell className="text-center font-medium">
+                    {Math.abs(movement.quantity)}
                   </TableCell>
-                  <TableCell>{movement.performedBy || '-'}</TableCell>
+                  <TableCell className="text-center">
+                    <MovementTypeBadge type={movement.type} />
+                  </TableCell>
+                  <TableCell>
+                    <MovementNote note={movement.note} />
+                  </TableCell>
+                  <TableCell>
+                    {movement.operator?.name || movement.userId || movement.performedBy || "Sistema"}
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default InventoryMovements;

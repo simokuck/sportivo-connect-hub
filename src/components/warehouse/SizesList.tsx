@@ -1,12 +1,10 @@
-
 import React from 'react';
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MinusCircle } from 'lucide-react';
-import { ItemSize } from '@/types/warehouse';
-import { UseFormReturn } from 'react-hook-form';
+import {Badge} from "@/components/ui/badge";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {MinusCircle} from 'lucide-react';
+import {ItemSize} from '@/types/warehouse';
+import {UseFormReturn} from 'react-hook-form';
 
 interface SizesListProps {
   form: UseFormReturn<any>;
@@ -16,7 +14,7 @@ interface SizesListProps {
 }
 
 const SizesList = ({ form, sizesType, updateSizeQuantity, handleRemoveSize }: SizesListProps) => {
-  const sizes = form.watch('sizes') || [];
+  const sizes: ItemSize[] = form.watch('sizes') || [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

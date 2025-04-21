@@ -1,286 +1,275 @@
+import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant, Movement} from '@/types/warehouse';
+// Import players from the mock data file
+import {mockPlayers} from '@/data/mockData';
 
-import { BaseItem, ItemVariant, InventoryMovement, ItemAssignment } from "@/types/warehouse";
-import { Player } from "@/types";
+// Function to create Date objects
+const createDate = (daysAgo: number = 0): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date;
+};
 
-// Mock data for players
-export const mockPlayers: Player[] = [
-  {
-    id: '1',
-    name: 'Marco Rossi',
-    firstName: 'Marco',
-    lastName: 'Rossi',
-    email: 'marco@example.com',
-    role: 'player',
-    position: 'Attaccante',
-    strongFoot: 'right',
-    stats: {
-      games: 10,
-      minutesPlayed: 450,
-      goals: 5,
-      assists: 3,
-      yellowCards: 2,
-      redCards: 0,
-      absences: 1
-    }
-  },
-  {
-    id: '2',
-    name: 'Paolo Bianchi',
-    firstName: 'Paolo',
-    lastName: 'Bianchi',
-    email: 'paolo@example.com',
-    role: 'player',
-    position: 'Centrocampista',
-    strongFoot: 'left',
-    stats: {
-      games: 12,
-      minutesPlayed: 520,
-      goals: 2,
-      assists: 6,
-      yellowCards: 1,
-      redCards: 0,
-      absences: 0
-    }
-  },
-  {
-    id: '3',
-    name: 'Giuseppe Verdi',
-    firstName: 'Giuseppe',
-    lastName: 'Verdi',
-    email: 'giuseppe@example.com',
-    role: 'player',
-    position: 'Difensore',
-    strongFoot: 'right',
-    stats: {
-      games: 9,
-      minutesPlayed: 400,
-      goals: 0,
-      assists: 1,
-      yellowCards: 3,
-      redCards: 1,
-      absences: 2
-    }
-  }
-];
-
-// Mock data for base items
+// Sample base items
 export const mockBaseItems: BaseItem[] = [
   {
-    id: '1',
-    name: 'Maglia Gara Home',
-    category: 'Kit',
-    description: 'Maglia ufficiale da gara, colore blu',
+    id: 'item-1',
+    name: 'Maglia da gara',
+    category: 'kit',
+    description: 'Maglia ufficiale da gara della stagione corrente',
     brand: 'Nike',
-    sku: 'MG-HOME',
-    image: 'https://images.unsplash.com/photo-1580087608321-298cd7d4c599?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
-    notes: ['Maglia 2023-2024', 'Logo sponsor frontale'],
-    lastUpdated: new Date().toISOString()
+    sku: 'MAG-01',
+    image: '/assets/items/jersey.jpg',
+    notes: ['Lavare a 30°', 'Non usare candeggina'],
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '2',
-    name: 'Maglia Gara Away',
-    category: 'Kit',
-    description: 'Maglia ufficiale da trasferta, colore bianco',
+    id: 'item-2',
+    name: 'Pantaloncino da gara',
+    category: 'kit',
+    description: 'Pantaloncino ufficiale da gara della stagione corrente',
     brand: 'Nike',
-    sku: 'MG-AWAY',
-    image: 'https://images.unsplash.com/photo-1565693413579-8ff3fdc1b03d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
-    notes: ['Maglia 2023-2024'],
-    lastUpdated: new Date().toISOString()
+    sku: 'PAN-01',
+    image: '/assets/items/shorts.jpg',
+    notes: ['Lavare a 30°', 'Non usare candeggina'],
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '3',
-    name: 'Pantaloncino Gara',
-    category: 'Kit',
-    description: 'Pantaloncino ufficiale da gara',
-    brand: 'Nike',
-    sku: 'PG',
-    image: 'https://images.unsplash.com/photo-1515355758951-ba5f6bafc0b3?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3',
-    lastUpdated: new Date().toISOString()
+    id: 'item-3',
+    name: 'Pallone da allenamento',
+    category: 'palloni',
+    description: 'Pallone da allenamento resistente',
+    brand: 'Adidas',
+    sku: 'PAL-01',
+    image: '/assets/items/ball.jpg',
+    lastUpdated: '2024-04-10T14:20:00',
+    createdAt: createDate(120),
+    updatedAt: createDate(10)
   }
 ];
 
-// Mock data for item variants
+// Sample variants
 export const mockVariants: ItemVariant[] = [
   {
-    id: '1',
-    baseItemId: '1',
-    size: 'S',
-    color: '#0000FF',
-    uniqueSku: 'MG-HOME-S-BLUE',
-    quantity: 5,
-    minimumThreshold: 2,
-    location: 'Armadio A, Scaffale 1',
+    id: 'variant-1',
+    baseItemId: 'item-1',
+    size: 'M',
+    color: '#1976d2',
+    uniqueSku: 'MAG-01-M-BLU',
+    quantity: 10,
+    minimumThreshold: 3,
+    location: 'Armadio 1, Ripiano 2',
     status: 'available',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '2',
-    baseItemId: '1',
-    size: 'M',
-    color: '#0000FF',
-    uniqueSku: 'MG-HOME-M-BLUE',
+    id: 'variant-2',
+    baseItemId: 'item-1',
+    size: 'L',
+    color: '#1976d2',
+    uniqueSku: 'MAG-01-L-BLU',
     quantity: 8,
     minimumThreshold: 3,
-    location: 'Armadio A, Scaffale 1',
+    location: 'Armadio 1, Ripiano 2',
     status: 'available',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '3',
-    baseItemId: '1',
-    size: 'L',
-    color: '#0000FF',
-    uniqueSku: 'MG-HOME-L-BLUE',
-    quantity: 1,
-    minimumThreshold: 2,
-    location: 'Armadio A, Scaffale 1',
-    status: 'low',
-    lastUpdated: new Date().toISOString()
-  },
-  {
-    id: '4',
-    baseItemId: '1',
+    id: 'variant-3',
+    baseItemId: 'item-1',
     size: 'XL',
-    color: '#0000FF',
-    uniqueSku: 'MG-HOME-XL-BLUE',
+    color: '#1976d2',
+    uniqueSku: 'MAG-01-XL-BLU',
+    quantity: 2,
+    minimumThreshold: 3,
+    location: 'Armadio 1, Ripiano 2',
+    status: 'low',
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
+  },
+  {
+    id: 'variant-4',
+    baseItemId: 'item-1',
+    size: 'S',
+    color: '#1976d2',
+    uniqueSku: 'MAG-01-S-BLU',
     quantity: 0,
-    minimumThreshold: 2,
-    location: 'Armadio A, Scaffale 1',
+    minimumThreshold: 3,
+    location: 'Armadio 1, Ripiano 2',
     status: 'out',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '5',
-    baseItemId: '2',
-    size: 'S',
-    color: '#FFFFFF',
-    uniqueSku: 'MG-AWAY-S-WHITE',
-    quantity: 3,
-    minimumThreshold: 2,
-    location: 'Armadio A, Scaffale 2',
-    status: 'available',
-    lastUpdated: new Date().toISOString()
-  },
-  {
-    id: '6',
-    baseItemId: '2',
+    id: 'variant-5',
+    baseItemId: 'item-2',
     size: 'M',
-    color: '#FFFFFF',
-    uniqueSku: 'MG-AWAY-M-WHITE',
-    quantity: 4,
-    minimumThreshold: 2,
-    location: 'Armadio A, Scaffale 2',
+    color: '#1976d2',
+    uniqueSku: 'PAN-01-M-BLU',
+    quantity: 10,
+    minimumThreshold: 3,
+    location: 'Armadio 1, Ripiano 3',
     status: 'available',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '7',
-    baseItemId: '3',
-    size: 'S',
-    color: '#000000',
-    uniqueSku: 'PG-S-BLACK',
+    id: 'variant-6',
+    baseItemId: 'item-2',
+    size: 'L',
+    color: '#1976d2',
+    uniqueSku: 'PAN-01-L-BLU',
+    quantity: 8,
+    minimumThreshold: 3,
+    location: 'Armadio 1, Ripiano 3',
+    status: 'available',
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
+  },
+  {
+    id: 'variant-7',
+    baseItemId: 'item-2',
+    size: 'XL',
+    color: '#1976d2',
+    uniqueSku: 'PAN-01-XL-BLU',
     quantity: 6,
     minimumThreshold: 3,
-    location: 'Armadio B, Scaffale 1',
+    location: 'Armadio 1, Ripiano 3',
     status: 'available',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-15T10:30:00',
+    createdAt: createDate(90),
+    updatedAt: createDate(5)
   },
   {
-    id: '8',
-    baseItemId: '3',
-    size: 'M',
-    color: '#000000',
-    uniqueSku: 'PG-M-BLACK',
-    quantity: 6,
-    minimumThreshold: 3,
-    location: 'Armadio B, Scaffale 1',
+    id: 'variant-8',
+    baseItemId: 'item-3',
+    size: 'Taglia 5',
+    color: '#FFFFFF',
+    uniqueSku: 'PAL-01-5-BIA',
+    quantity: 15,
+    minimumThreshold: 5,
+    location: 'Armadio 2, Ripiano 1',
     status: 'available',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: '2024-04-10T14:20:00',
+    createdAt: createDate(120),
+    updatedAt: createDate(10)
   }
 ];
 
-// Mock data for movements
-export const mockMovements: InventoryMovement[] = [
+// Sample movements
+export const mockMovements: Movement[] = [
   {
-    id: '1',
-    variantId: '1',
+    id: 'mov-1',
+    baseItemId: 'item-1',
+    variantId: 'variant-1',
     type: 'in',
-    quantity: 10,
-    date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
-    notes: 'Ordine iniziale',
-    performedBy: 'Admin'
+    quantity: 5,
+    date: '2024-04-01T09:00:00',
+    note: 'Consegna fornitore'
   },
   {
-    id: '2',
-    variantId: '2',
-    type: 'in',
-    quantity: 10,
-    date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
-    notes: 'Ordine iniziale',
-    performedBy: 'Admin'
-  },
-  {
-    id: '3',
-    variantId: '1',
-    type: 'assign',
-    quantity: 2,
-    date: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-    notes: 'Consegna kit inizio stagione',
-    performedBy: 'Admin',
-    playerId: '1'
-  },
-  {
-    id: '4',
-    variantId: '2',
-    type: 'assign',
-    quantity: 2,
-    date: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-    notes: 'Consegna kit inizio stagione',
-    performedBy: 'Admin',
-    playerId: '2'
-  },
-  {
-    id: '5',
-    variantId: '1',
+    id: 'mov-2',
+    baseItemId: 'item-1',
+    variantId: 'variant-1',
     type: 'out',
-    quantity: 3,
-    date: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
-    notes: 'Danneggiati durante il trasporto',
-    performedBy: 'Admin'
+    quantity: 2,
+    date: '2024-04-05T14:30:00',
+    note: 'Prelevato per evento'
+  },
+  {
+    id: 'mov-3',
+    baseItemId: 'item-1',
+    variantId: 'variant-3',
+    type: 'assign',
+    quantity: 1,
+    date: '2024-04-10T10:15:00',
+    note: 'Assegnato a Marco Rossi',
+    playerId: '1',
+    playerName: 'Marco Rossi'
+  },
+  {
+    id: 'mov-4',
+    baseItemId: 'item-2',
+    variantId: 'variant-5',
+    type: 'assign',
+    quantity: 1,
+    date: '2024-04-10T10:20:00',
+    note: 'Assegnato a Marco Rossi',
+    playerId: '1',
+    playerName: 'Marco Rossi'
+  },
+  {
+    id: 'mov-5',
+    baseItemId: 'item-3',
+    variantId: 'variant-8',
+    type: 'out',
+    quantity: 2,
+    date: '2024-04-12T16:45:00',
+    note: 'Allenamento'
   }
 ];
 
-// Mock data for assignments
+// Mappa i movimenti a InventoryMovement
+export const mockInventoryMovements: InventoryMovement[] = mockMovements.map(mov => mov as InventoryMovement);
+
+// Sample assignments
 export const mockAssignments: ItemAssignment[] = [
   {
-    id: '1',
-    variantId: '1',
+    id: 'assign-1',
+    variantId: 'variant-3',
     playerId: '1',
     playerName: 'Marco Rossi',
-    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-    quantity: 2,
-    notes: 'Maglia gara numerata',
-    status: 'assigned'
-  },
-  {
-    id: '2',
-    variantId: '2',
-    playerId: '2',
-    playerName: 'Paolo Bianchi',
-    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-    quantity: 2,
-    notes: 'Maglia gara numerata',
-    status: 'assigned'
-  },
-  {
-    id: '3',
-    variantId: '7',
-    playerId: '1',
-    playerName: 'Marco Rossi',
-    assignDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-    returnDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
+    assignDate: '2024-04-10T10:15:00',
+    expectedReturnDate: '2024-04-20T18:00:00',
     quantity: 1,
-    notes: 'Pantaloncino gara',
-    status: 'returned'
+    notes: 'Kit da gara per partita del 15/04',
+    status: 'assigned'
+  },
+  {
+    id: 'assign-2',
+    variantId: 'variant-5',
+    playerId: '1',
+    playerName: 'Marco Rossi',
+    assignDate: '2024-04-10T10:20:00',
+    expectedReturnDate: '2024-04-20T18:00:00',
+    quantity: 1,
+    notes: 'Kit da gara per partita del 15/04',
+    status: 'assigned'
+  },
+  {
+    id: 'assign-3',
+    variantId: 'variant-6',
+    playerId: '5',
+    playerName: 'Luca Bianchi',
+    assignDate: '2024-04-10T10:25:00',
+    expectedReturnDate: '2024-04-20T18:00:00',
+    quantity: 1,
+    notes: 'Kit da gara per partita del 15/04',
+    status: 'assigned'
+  },
+  {
+    id: 'assign-4',
+    variantId: 'variant-7',
+    playerId: '6',
+    playerName: 'Alessandro Verdi',
+    assignDate: '2024-04-10T10:30:00',
+    returnDate: '2024-04-16T19:15:00',
+    quantity: 1,
+    notes: 'Kit da gara per partita del 15/04',
+    status: 'returned',
+    returnedCondition: 'good'
   }
 ];
+
+export const mockWarehousePlayers = mockPlayers;

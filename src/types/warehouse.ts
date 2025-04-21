@@ -1,82 +1,140 @@
 
-export interface ItemSize {
-  label: string;
-  quantity: number;
-  status?: 'available' | 'low' | 'out';
-}
-
 export interface BaseItem {
   id: string;
   name: string;
-  category: string;
   description?: string;
-  brand?: string;
+  imageUrl?: string;
+  category: string;
+  supplier?: string;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  sku?: string;
+  barcode?: string;
+  attributes?: { key: string; value: string }[];
+  createdAt: Date;
+  updatedAt: Date;
+  // Additional properties needed by the components
   image?: string;
-  sku: string;
+  brand?: string;
   notes?: string[];
   lastUpdated?: string;
+  status?: string;
+  quantity?: number;
+  color?: string;
+  hasSizes?: boolean;
+  location?: string;
+  material?: string;
+  features?: string[];
 }
 
 export interface ItemVariant {
   id: string;
   baseItemId: string;
-  size: string;
-  color: string;
-  uniqueSku: string;
+  color?: string;
+  size?: string;
   quantity: number;
-  minimumThreshold: number;
+  sku?: string;
+  barcode?: string;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  attributes?: { key: string; value: string }[];
+  createdAt: Date;
+  updatedAt: Date;
+  // Additional properties needed by the components
+  uniqueSku?: string;
+  minimumThreshold?: number;
   location?: string;
-  status: 'available' | 'low' | 'out';
+  status?: 'available' | 'low' | 'out' | 'low_stock' | 'out_of_stock';
   lastUpdated?: string;
+}
+
+// Movement type definition
+export interface Movement {
+  id: string;
+  baseItemId: string;
+  variantId?: string;
+  type: MovementType;
+  quantity: number;
+  date: string;
+  note?: string;
+  userId?: string;
+  assigneeId?: string;
+  color?: string;
+  size?: string;
+  status?: 'pending' | 'completed' | 'cancelled';
+  // Additional properties needed
+  variant?: ItemVariant;
+  baseItem?: BaseItem;
+  item?: BaseItem;
+  operator?: { name: string };
+  playerName?: string;
+  playerId?: string;
+  performedBy?: string;
 }
 
 export type MovementType = 'in' | 'out' | 'assign' | 'return' | 'lost' | 'damaged';
 
-export interface InventoryMovement {
+export interface Category {
   id: string;
-  variantId: string;
-  type: MovementType;
-  quantity: number;
-  date: string;
-  notes?: string;
-  performedBy?: string;
-  playerId?: string;
-  baseItem?: BaseItem;
-  variant?: ItemVariant;
-  playerName?: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ItemAssignment type
 export interface ItemAssignment {
   id: string;
   variantId: string;
   playerId: string;
   playerName: string;
   assignDate: string;
-  returnDate?: string;
   expectedReturnDate?: string;
-  returnedCondition?: 'good' | 'damaged' | 'lost';
-  notes?: string;
+  returnDate?: string;
   quantity: number;
-  status: 'assigned' | 'returned' | 'pending';
+  notes?: string;
+  status: 'assigned' | 'returned' | 'lost';
   baseItem?: BaseItem;
   variant?: ItemVariant;
+  returnedCondition?: string;
 }
 
-export interface WarehouseItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity?: number;
-  sizes?: ItemSize[];
+// ItemSize type
+export interface ItemSize {
+  id?: string;
+  name?: string;
+  order?: number;
+  label: string;
+  quantity: number;
   status?: 'available' | 'low' | 'out';
-  image?: string;
-  lastUpdated?: string;
-  location?: string;
-  supplier?: string;
+}
+
+// WarehouseItem type used by some components
+export interface WarehouseItem extends BaseItem {
+  variants: ItemVariant[];
+  sizes?: ItemSize[];
+  quantity?: number;
+  status?: string;
+  hasSizes?: boolean;
   color?: string;
   material?: string;
   features?: string[];
-  notes?: string[];
-  hasSizes?: boolean;
-  sizesType?: 'numeric' | 'letter' | 'standard' | 'custom';
+  location?: string;
+}
+
+// InventoryMovement type used in contexts - make it the same as Movement to resolve the errors
+export interface InventoryMovement extends Movement {
+  // Extends Movement with all the same properties
 }

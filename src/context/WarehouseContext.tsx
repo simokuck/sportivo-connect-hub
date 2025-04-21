@@ -1,22 +1,16 @@
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { toast } from 'sonner';
-import { 
-  BaseItem, 
-  ItemVariant, 
-  InventoryMovement, 
-  ItemAssignment, 
-} from '@/types/warehouse';
-import { Player } from '@/types';
-import { useNotifications } from '@/context/NotificationContext';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {toast} from 'sonner';
+import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant, MovementType} from '@/types/warehouse';
+import {Player} from '@/types';
+import {useNotifications} from '@/context/NotificationContext';
 
 // Mock data imports
-import { 
-  mockBaseItems, 
-  mockVariants, 
-  mockMovements, 
-  mockAssignments, 
-  mockPlayers 
+import {
+  mockAssignments,
+  mockBaseItems,
+  mockMovements,
+  mockVariants,
+  mockWarehousePlayers as mockPlayers
 } from '@/utils/warehouse/mockWarehouseData';
 
 type DialogType = 'addItem' | 'editItem' | 'addVariant' | 'editVariant' | 
@@ -136,7 +130,9 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const newItem: BaseItem = {
       ...data,
       id: `item-${Date.now()}`,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     setItems(prev => [...prev, { ...newItem, variants: [] }]);
@@ -156,7 +152,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return { 
           ...item, 
           ...data, 
-          lastUpdated: new Date().toISOString() 
+          lastUpdated: new Date().toISOString(),
+          updatedAt: new Date()
         };
       }
       return item;
@@ -211,7 +208,9 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: data.quantity === 0 ? 'out' : 
               data.quantity <= data.minimumThreshold ? 'low' : 
               'available' as 'available' | 'low' | 'out',
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     setItems(prev => prev.map(item => {
@@ -228,11 +227,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (data.quantity > 0) {
       const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
+        baseItemId: selectedItem.id,
         variantId: newVariant.id,
         type: 'in',
         quantity: data.quantity,
         date: new Date().toISOString(),
-        notes: 'Creazione variante',
+        note: 'Creazione variante',
         variant: newVariant,
         baseItem: selectedItem
       };
@@ -282,7 +282,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 status: data.quantity === 0 ? 'out' : 
                         data.quantity <= data.minimumThreshold ? 'low' : 
                         'available' as 'available' | 'low' | 'out',
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
+                updatedAt: new Date()
               };
             }
             return variant;
@@ -301,11 +302,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                                 
       const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
+        baseItemId: selectedItem.id,
         variantId: selectedVariant.id,
         type: quantityDifference > 0 ? 'in' : 'out',
         quantity: Math.abs(quantityDifference),
         date: new Date().toISOString(),
-        notes: 'Aggiornamento variante',
+        note: 'Aggiornamento variante',
         variant: updatedVariant,
         baseItem: selectedItem
       };
@@ -360,12 +362,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Create new movement
     const newMovement: InventoryMovement = {
       id: `mov-${Date.now()}`,
+      baseItemId: data.baseItemId,
       variantId: data.variantId,
-      type: data.type,
+      type: data.type as MovementType,
       quantity: data.quantity,
       date: data.date.toISOString(),
-      notes: data.notes,
-      performedBy: 'Admin', // In a real app, this would be the logged-in user
+      note: data.notes,
       playerId: data.playerId,
       playerName: player ? `${player.firstName} ${player.lastName}` : undefined,
       baseItem,
@@ -388,14 +390,15 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (v.id === variant.id) {
               const newQuantity = Math.max(0, v.quantity + quantityChange);
               const newStatus = newQuantity === 0 ? 'out' :
-                               newQuantity <= v.minimumThreshold ? 'low' :
+                               newQuantity <= (v.minimumThreshold || 0) ? 'low' :
                                'available' as 'available' | 'low' | 'out';
               
               return {
                 ...v,
                 quantity: newQuantity,
                 status: newStatus,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
+                updatedAt: new Date()
               };
             }
             return v;
@@ -487,12 +490,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Create movement for the assignment
     const newMovement: InventoryMovement = {
       id: `mov-${Date.now()}`,
+      baseItemId: baseItem.id,
       variantId: data.variantId,
       type: 'assign',
       quantity: data.quantity,
       date: data.assignDate.toISOString(),
-      notes: data.notes,
-      performedBy: 'Admin',
+      note: data.notes,
       playerId: data.playerId,
       playerName: `${player.firstName} ${player.lastName}`,
       baseItem,
@@ -517,7 +520,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 ...v,
                 quantity: newQuantity,
                 status: newStatus,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
+                updatedAt: new Date()
               };
             }
             return v;
@@ -563,12 +567,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
+        baseItemId: baseItem.id,
         variantId: selectedAssignment.variantId,
         type: 'return',
         quantity: selectedAssignment.quantity,
         date: data.returnDate.toISOString(),
-        notes: data.notes,
-        performedBy: 'Admin',
+        note: data.notes,
         playerId: selectedAssignment.playerId,
         playerName: selectedAssignment.playerName,
         baseItem,
@@ -593,7 +597,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   ...v,
                   quantity: newQuantity,
                   status: newStatus,
-                  lastUpdated: new Date().toISOString()
+                  lastUpdated: new Date().toISOString(),
+                  updatedAt: new Date()
                 };
               }
               return v;
@@ -613,12 +618,12 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       const newMovement: InventoryMovement = {
         id: `mov-${Date.now()}`,
+        baseItemId: baseItem.id,
         variantId: selectedAssignment.variantId,
         type: data.returnedCondition === 'damaged' ? 'damaged' : 'lost',
         quantity: selectedAssignment.quantity,
         date: data.returnDate.toISOString(),
-        notes: data.notes,
-        performedBy: 'Admin',
+        note: data.notes,
         playerId: selectedAssignment.playerId,
         playerName: selectedAssignment.playerName,
         baseItem,

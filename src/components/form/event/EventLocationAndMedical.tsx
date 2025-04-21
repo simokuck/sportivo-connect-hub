@@ -30,7 +30,6 @@ const EventLocationAndMedical = ({ form, handleLocationChange }: EventLocationAn
                   field.onChange(location);
                   handleLocationChange(location, coords);
                 }}
-                useOpenStreetMap={true}
               />
             </FormControl>
             <FormMessage />

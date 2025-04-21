@@ -1,114 +1,75 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import React, {useEffect, useState} from 'react';
+import {Input} from "@/components/ui/input";
 
 interface LocationPickerProps {
   value?: string;
-  onChange: (value: string, coords?: { lat: number; lng: number }) => void;
-  className?: string;
+  onChange: (location: string, coords?: { lat: number; lng: number }) => void;
   useOpenStreetMap?: boolean;
 }
 
-const LocationPicker = ({ 
-  value = '', 
-  onChange, 
-  className,
-  useOpenStreetMap = false
-}: LocationPickerProps) => {
-  const [inputValue, setInputValue] = useState(value);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange }) => {
+  const [inputValue, setInputValue] = useState(value || '');
+  const [suggestions, setSuggestions] = useState<Array<{label: string, lat: number, lng: number}>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setInputValue(value);
+    setInputValue(value || '');
   }, [value]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
     
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    if (newValue.length > 2 && useOpenStreetMap) {
-      setIsLoading(true);
-      
-      timeoutRef.current = setTimeout(() => {
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newValue)}`)
-          .then(response => response.json())
-          .then(data => {
-            setSuggestions(data);
-            setShowSuggestions(true);
-            setIsLoading(false);
-          })
-          .catch(error => {
-            console.error("Error fetching suggestions:", error);
-            setIsLoading(false);
-          });
-      }, 400);
+    if (newValue.length > 3) {
+      try {
+        // Chiamata all'API di Nominatim (OpenStreetMap)
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newValue)}&limit=5`);
+        const data = await response.json();
+        
+        const newSuggestions = data.map((item: any) => ({
+          label: item.display_name,
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon)
+        }));
+        
+        setSuggestions(newSuggestions);
+        setShowSuggestions(newSuggestions.length > 0);
+      } catch (error) {
+        console.error("Errore nella ricerca dell'indirizzo:", error);
+      }
     } else {
       setSuggestions([]);
+      setShowSuggestions(false);
     }
   };
 
-  const handleSelectSuggestion = (suggestion: any) => {
-    const location = suggestion.display_name;
-    setInputValue(location);
-    onChange(location, { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
-    setShowSuggestions(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent form submission from bubbling up
-    onChange(inputValue);
+  const handleSuggestionClick = (suggestion: {label: string, lat: number, lng: number}) => {
+    setInputValue(suggestion.label);
+    onChange(suggestion.label, { lat: suggestion.lat, lng: suggestion.lng });
     setShowSuggestions(false);
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="relative">
-        <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          className="pl-8"
-          placeholder="Cerca una posizione..."
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
-        />
-        {isLoading && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-          </div>
-        )}
-      </div>
+    <div className="relative">
+      <Input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        placeholder="Inserisci un indirizzo"
+        className="w-full"
+      />
       
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute mt-1 w-full rounded-md border bg-background shadow-lg z-50">
-          <ul className="py-1 max-h-60 overflow-auto">
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={index}
-                onClick={() => handleSelectSuggestion(suggestion)}
-                className="flex items-center px-3 py-2 hover:bg-accent cursor-pointer text-sm"
-              >
-                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{suggestion.display_name}</span>
-              </li>
-            ))}
-          </ul>
+      {showSuggestions && (
+        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+          {suggestions.map((suggestion, index) => (
+            <div
+              key={index}
+              className="px-4 py-2 text-sm cursor-pointer hover:bg-accent"
+              onClick={() => handleSuggestionClick(suggestion)}
+            >
+              {suggestion.label}
+            </div>
+          ))}
         </div>
       )}
     </div>

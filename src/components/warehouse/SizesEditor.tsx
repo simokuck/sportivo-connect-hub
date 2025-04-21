@@ -1,9 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { ItemSize } from '@/types/warehouse';
-import { UseFormReturn } from 'react-hook-form';
+import React, {useEffect} from 'react';
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Switch} from "@/components/ui/switch";
+import {ItemSize} from '@/types/warehouse';
+import {UseFormReturn} from 'react-hook-form';
 import SizeTypeSelector from './SizeTypeSelector';
 import SizesList from './SizesList';
 import CustomSizeInput from './CustomSizeInput';
@@ -12,7 +11,7 @@ interface SizesEditorProps {
   form: UseFormReturn<any>;
 }
 
-const defaultSizes = {
+const defaultSizes: Record<string, ItemSize[]> = {
   numeric: [
     { label: '36', quantity: 0 },
     { label: '38', quantity: 0 },
@@ -57,7 +56,7 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   // Add new custom size
   const handleAddSize = (newSizeLabel: string) => {
     const currentSizes = form.getValues('sizes') || [];
-    if (currentSizes.some(size => size.label.toLowerCase() === newSizeLabel.trim().toLowerCase())) {
+    if (currentSizes.some((size: ItemSize) => size.label.toLowerCase() === newSizeLabel.trim().toLowerCase())) {
       return;
     }
     
@@ -68,13 +67,13 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
   // Remove size
   const handleRemoveSize = (index: number) => {
     const currentSizes = form.getValues('sizes') || [];
-    const updatedSizes = currentSizes.filter((_, i) => i !== index);
+    const updatedSizes = currentSizes.filter((_: any, i: number) => i !== index);
     form.setValue('sizes', updatedSizes);
   };
 
   // Update quantity for a specific size
   const updateSizeQuantity = (index: number, quantity: number) => {
-    const currentSizes = form.getValues('sizes') || [];
+    const currentSizes: ItemSize[] = form.getValues('sizes') || [];
     const updatedSizes = [...currentSizes];
     
     // Status
@@ -93,7 +92,7 @@ const SizesEditor = ({ form }: SizesEditorProps) => {
     
     form.setValue('sizes', updatedSizes);
     
-    // Update general status
+    // Update general status based on sizes
     updateGeneralStatus(updatedSizes);
   };
   
