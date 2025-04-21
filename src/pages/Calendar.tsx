@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Event } from '@/types';
 import { useForm } from "react-hook-form";
@@ -152,7 +151,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
               end: event.end,
               type: event.type,
               location: event.location,
-              isPrivate: event.isPrivate,
+              recipients: event.recipients,
               teamId: event.teamId,
               requiresMedical: event.requiresMedical,
             });

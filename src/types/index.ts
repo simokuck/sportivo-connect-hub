@@ -1,4 +1,3 @@
-
 export type UserRole = 'player' | 'coach' | 'admin' | 'medical' | 'developer';
 
 export type Player = {
@@ -91,7 +90,7 @@ export type Event = {
   end: string;
   type: "training" | "match" | "medical" | "meeting";
   location?: string;
-  isPrivate: boolean;
+  recipients: string[];
   teamId?: string;
   requiresMedical?: boolean;
   lat?: number;
