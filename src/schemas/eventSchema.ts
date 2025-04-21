@@ -29,7 +29,7 @@ export const eventSchema = z.object({
   }),
   type: z.enum(["training", "match", "medical", "meeting"]),
   location: z.string().optional(),
-  isPrivate: z.boolean().default(false),
+  recipients: z.array(z.string()).default([]),
   teamId: z.string().optional(),
   requiresMedical: z.boolean().default(false),
   lat: z.number().optional(),

@@ -38,7 +38,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
       end: "",
       type: "training",
       location: "",
-      isPrivate: false,
+      recipients: [],
       requiresMedical: false,
     },
   });
@@ -68,7 +68,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
       end: new Date(data.end).toISOString(),
       type: data.type || "training",
       location: data.location,
-      isPrivate: data.isPrivate || false,
+      recipients: data.recipients || [],
       teamId: data.teamId,
       requiresMedical: data.requiresMedical || false,
       lat: data.lat,
