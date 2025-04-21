@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { mockTeams } from '@/data/mockData';
 
 // Mock data for users and groups
 const mockUsers = [
@@ -20,10 +21,18 @@ const mockUsers = [
   { id: "user5", name: "Luca Gialli", type: "user" },
 ];
 
+// Generate team groups from mockTeams
+const teamGroups = mockTeams.map(team => ({
+  id: `team-${team.id}`,
+  name: `Team ${team.name}`,
+  type: "group"
+}));
+
 const mockGroups = [
   { id: "group1", name: "Allenatori", type: "group" },
   { id: "group2", name: "Staff Medico", type: "group" },
   { id: "group3", name: "Dirigenti", type: "group" },
+  ...teamGroups
 ];
 
 // Combine users and groups for the recipient picker
@@ -56,8 +65,15 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
     );
   }, [searchValue]);
 
+  // Reset search value when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchValue("");
+    }
+  }, [open]);
+
   // Handle selecting a recipient
-  const handleSelectRecipient = (recipientId: string) => {
+  const handleSelectRecipient = React.useCallback((recipientId: string) => {
     const currentRecipients = form.getValues("recipients") || [];
     
     // Check if the recipient is already selected
@@ -70,19 +86,19 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
       const updatedRecipients = [...currentRecipients, recipientId];
       form.setValue("recipients", updatedRecipients, { shouldValidate: true });
     }
-  };
+  }, [form]);
 
   // Remove a recipient
-  const removeRecipient = (recipientId: string) => {
+  const removeRecipient = React.useCallback((recipientId: string) => {
     const currentRecipients = form.getValues("recipients") || [];
     const updatedRecipients = currentRecipients.filter(id => id !== recipientId);
     form.setValue("recipients", updatedRecipients, { shouldValidate: true });
-  };
+  }, [form]);
 
   // Get recipient details from id
-  const getRecipientDetails = (id: string) => {
+  const getRecipientDetails = React.useCallback((id: string) => {
     return allRecipients.find(recipient => recipient.id === id);
-  };
+  }, []);
 
   return (
     <>
@@ -175,6 +191,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
                   <Command>
                     <CommandInput 
                       placeholder="Cerca utenti o gruppi..." 
+                      value={searchValue}
                       onValueChange={setSearchValue}
                     />
                     <CommandList>
@@ -185,7 +202,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
                           .map((user) => (
                             <CommandItem
                               key={user.id}
-                              value={user.name}
+                              value={user.id}
                               onSelect={() => handleSelectRecipient(user.id)}
                             >
                               <div className="flex items-center">
@@ -207,7 +224,7 @@ const EventTypeAndPrivacy = ({ form, teams }: EventTypeAndPrivacyProps) => {
                           .map((group) => (
                             <CommandItem
                               key={group.id}
-                              value={group.name}
+                              value={group.id}
                               onSelect={() => handleSelectRecipient(group.id)}
                             >
                               <div className="flex items-center">
