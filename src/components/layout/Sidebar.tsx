@@ -1,196 +1,263 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  BarChart3, 
+  LayoutDashboard, 
   Calendar, 
-  ClipboardList, 
-  FileText, 
-  Home, 
   Users, 
-  Activity,
-  X,
-  CalendarDays,
-  Wrench,
+  Dumbbell, 
+  FileText, 
+  BarChart2, 
+  Package2, 
+  Video, 
+  Building, 
+  Settings, 
+  Code, 
+  LogOut,
+  User,
   UserRound,
-  Package,
-  Video
+  History,
+  ClipboardList,
+  FileCheck,
+  Users as UsersIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useTheme } from '@/context/ThemeContext';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface SidebarProps {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  collapsed: boolean;
 }
 
-interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-  roles: string[];
-}
-
-export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
-  const { user } = useAuth();
+const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
-  const { primaryColor } = useTheme();
+  const { user, logout, setRole } = useAuth();
+  const [playersOpen, setPlayersOpen] = React.useState(false);
 
-  const navItems: NavItem[] = [
-    { 
-      icon: Home, 
-      label: 'Dashboard', 
-      href: '/', 
-      roles: ['player', 'coach', 'admin', 'medical'] 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const navItems = [
+    {
+      name: 'Dashboard',
+      path: '/dashboard',
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
-    { 
-      icon: BarChart3, 
-      label: 'Statistiche', 
-      href: '/statistics', 
-      roles: ['player', 'coach'] 
+    {
+      name: 'Calendario',
+      path: '/calendar',
+      icon: <Calendar className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
-    { 
-      icon: Calendar, 
-      label: 'Calendario', 
-      href: '/calendar', 
-      roles: ['player', 'coach', 'admin', 'medical'] 
+    {
+      name: 'Giocatori',
+      icon: <UserRound className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'medical'],
+      submenu: [
+        {
+          name: 'Registrazioni',
+          path: '/player-registrations',
+          icon: <User className="w-4 h-4" />,
+          roles: ['admin', 'coach'],
+        },
+        {
+          name: 'Gruppi Squadra',
+          path: '/team-groups',
+          icon: <UsersIcon className="w-4 h-4" />,
+          roles: ['admin', 'coach'],
+        },
+        {
+          name: 'Storico',
+          path: '/player-history',
+          icon: <History className="w-4 h-4" />,
+          roles: ['admin', 'coach'],
+        },
+        {
+          name: 'Consensi',
+          path: '/player-consents',
+          icon: <FileCheck className="w-4 h-4" />,
+          roles: ['admin'],
+        },
+        {
+          name: 'Membri Team',
+          path: '/team-members',
+          icon: <ClipboardList className="w-4 h-4" />,
+          roles: ['admin', 'coach', 'medical'],
+        },
+      ],
     },
-    { 
-      icon: ClipboardList, 
-      label: 'Esercitazioni', 
-      href: '/exercises', 
-      roles: ['coach'] 
+    {
+      name: 'Teams',
+      path: '/teams',
+      icon: <Users className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
-    { 
-      icon: Video, 
-      label: 'Sessioni Video', 
-      href: '/video-sessions', 
-      roles: ['coach'] 
+    {
+      name: 'Allenamenti',
+      path: '/training',
+      icon: <Dumbbell className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical'],
     },
-    { 
-      icon: CalendarDays, 
-      label: 'Pianifica Allenamenti', 
-      href: '/training-planner', 
-      roles: ['coach'] 
+    {
+      name: 'Documenti',
+      path: '/documents',
+      icon: <FileText className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical'],
     },
-    { 
-      icon: Users, 
-      label: 'Squadre', 
-      href: '/teams', 
-      roles: ['coach', 'admin'] 
+    {
+      name: 'Statistiche',
+      path: '/statistics',
+      icon: <BarChart2 className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical'],
     },
-    { 
-      icon: UserRound, 
-      label: 'Membri', 
-      href: '/team-members', 
-      roles: ['coach', 'admin'] 
+    {
+      name: 'Magazzino',
+      path: '/warehouse',
+      icon: <Package2 className="w-5 h-5" />,
+      roles: ['admin', 'coach'],
     },
-    { 
-      icon: FileText, 
-      label: 'Documenti', 
-      href: '/documents', 
-      roles: ['admin', 'medical', 'player', 'coach'] 
+    {
+      name: 'Video',
+      path: '/videos',
+      icon: <Video className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player'],
     },
-    { 
-      icon: Activity, 
-      label: 'Area Medica', 
-      href: '/medical', 
-      roles: ['medical'] 
+    {
+      name: 'Società',
+      path: '/company',
+      icon: <Building className="w-5 h-5" />,
+      roles: ['admin'],
     },
-    { 
-      icon: Wrench, 
-      label: 'Impostazioni Dev', 
-      href: '/dev-settings', 
-      roles: ['admin'] 
+    {
+      name: 'Impostazioni',
+      path: '/dev-settings',
+      icon: <Settings className="w-5 h-5" />,
+      roles: ['admin', 'developer'],
     },
-    { 
-      icon: FileText, 
-      label: 'Anagrafica Società', 
-      href: '/company-info', 
-      roles: ['admin'] 
-    },
-    { 
-      icon: Package, 
-      label: 'Magazzino', 
-      href: '/warehouse', 
-      roles: ['admin'] 
+    {
+      name: 'Developer',
+      path: '/developer',
+      icon: <Code className="w-5 h-5" />,
+      roles: ['developer'],
     },
   ];
 
-  if (!user) return null;
+  // Demo role switcher per facilitare i test
+  const demoRoles = [
+    { id: '1', name: 'Marco Rossi', role: 'player' },
+    { id: '2', name: 'Paolo Bianchi', role: 'coach' },
+    { id: '3', name: 'Giuseppe Verdi', role: 'admin' },
+    { id: '4', name: 'Dott. Anna Ferrari', role: 'medical' },
+    { id: '5', name: 'Mario Neri', role: 'developer' },
+  ];
 
-  // Filtra gli elementi in base al ruolo e all'ordine salvato
-  const getFilteredAndOrderedNavItems = () => {
-    const savedOrderString = localStorage.getItem('sidebarNavOrder');
-    
-    if (savedOrderString) {
-      try {
-        const savedOrder = JSON.parse(savedOrderString);
-        const itemsCopy = [...navItems];
-        
-        // Ordina gli elementi in base all'ordine salvato
-        itemsCopy.sort((a, b) => {
-          // Trova gli ID in base al label che è univoco
-          const idA = savedOrder.indexOf(a.label.toLowerCase().replace(/\s+/g, '-'));
-          const idB = savedOrder.indexOf(b.label.toLowerCase().replace(/\s+/g, '-'));
-          
-          if (idA === -1) return 1;
-          if (idB === -1) return -1;
-          
-          return idA - idB;
-        });
-        
-        // Filtra per ruolo dopo l'ordinamento
-        return itemsCopy.filter(item => item.roles.includes(user.role));
-      } catch (e) {
-        console.error("Errore nel parsing dell'ordine salvato:", e);
-        return navItems.filter(item => item.roles.includes(user.role));
-      }
-    }
-    
-    return navItems.filter(item => item.roles.includes(user.role));
-  };
-
-  const filteredNavItems = getFilteredAndOrderedNavItems();
-
-  // Applica il colore principale alla sidebar
-  const sidebarStyle = {
-    backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
-  };
+  const filteredNavItems = navItems.filter(item =>
+    item.roles.includes(user?.role || '')
+  );
 
   return (
-    <aside 
-      style={sidebarStyle}
-      className={cn(
-        "fixed md:relative inset-y-0 left-0 z-40 w-64 text-white transform transition-transform duration-300 ease-in-out flex flex-col md:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-white/20">
-        <h2 className="text-xl font-bold">Sportivo</h2>
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="md:hidden text-white">
-          <X className="h-5 w-5" />
-        </Button>
+    <div className={cn(
+      "h-screen fixed top-0 left-0 z-40 flex flex-col bg-background border-r",
+      collapsed ? "w-16" : "w-64",
+      "transition-width duration-300 ease-in-out"
+    )}>
+      <div className="flex items-center justify-center h-16 border-b">
+        {collapsed ? (
+          <span className="text-2xl font-bold text-sportivo-blue">S</span>
+        ) : (
+          <span className="text-2xl font-bold text-sportivo-blue">Sportivo</span>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto py-4">
-        <ul className="space-y-2 px-3">
-          {filteredNavItems.map((item) => {
-            const isActive = location.pathname === item.href;
+        <ul className="space-y-1 px-2">
+          {filteredNavItems.map((item, index) => {
+            if (item.submenu) {
+              return (
+                <li key={index}>
+                  <Collapsible
+                    open={playersOpen}
+                    onOpenChange={setPlayersOpen}
+                    className="w-full"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start px-3 py-2 text-left",
+                          collapsed ? "px-2 justify-center" : ""
+                        )}
+                      >
+                        {item.icon}
+                        {!collapsed && <span className="ml-3">{item.name}</span>}
+                        {!collapsed && (
+                          <span className="ml-auto">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={`h-4 w-4 transition-transform ${
+                                playersOpen ? "rotate-180" : ""
+                              }`}
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                          </span>
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-4">
+                      {item.submenu.filter(subitem => 
+                        subitem.roles.includes(user?.role || '')
+                      ).map((subitem, subindex) => (
+                        <Link
+                          key={subindex}
+                          to={subitem.path}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm rounded-md",
+                            isActive(subitem.path)
+                              ? "bg-accent text-accent-foreground font-medium"
+                              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                            collapsed ? "justify-center px-2" : ""
+                          )}
+                        >
+                          {subitem.icon}
+                          {!collapsed && <span className="ml-3">{subitem.name}</span>}
+                        </Link>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </li>
+              );
+            }
             
             return (
-              <li key={item.href}>
+              <li key={index}>
                 <Link
-                  to={item.href}
+                  to={item.path}
                   className={cn(
-                    "flex items-center p-3 text-white hover:bg-white/10 rounded-lg transition-colors",
-                    isActive && "bg-white/20"
+                    "flex items-center px-3 py-2 text-sm rounded-md",
+                    isActive(item.path)
+                      ? "bg-accent text-accent-foreground font-medium"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    collapsed ? "justify-center px-2" : ""
                   )}
                 >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  <span>{item.label}</span>
+                  {item.icon}
+                  {!collapsed && <span className="ml-3">{item.name}</span>}
                 </Link>
               </li>
             );
@@ -198,12 +265,58 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </ul>
       </div>
 
-      <div className="p-4 border-t border-white/20">
-        <div className="text-sm opacity-70">
-          <p>Versione 1.0.0</p>
-          <p>© 2025 Sportivo Connect</p>
-        </div>
+      <div className="p-2 border-t">
+        <Link
+          to="/profile"
+          className={cn(
+            "flex items-center px-3 py-2 text-sm rounded-md",
+            isActive('/profile')
+              ? "bg-accent text-accent-foreground font-medium"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            collapsed ? "justify-center px-2" : ""
+          )}
+        >
+          <User className="w-5 h-5" />
+          {!collapsed && <span className="ml-3">Profilo</span>}
+        </Link>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full mt-2 justify-start px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            collapsed ? "justify-center px-2" : ""
+          )}
+          onClick={() => logout()}
+        >
+          <LogOut className="w-5 h-5" />
+          {!collapsed && <span className="ml-3">Logout</span>}
+        </Button>
       </div>
-    </aside>
+
+      {/* Demo role switcher, solo per facilitare lo sviluppo e i test */}
+      {process.env.NODE_ENV !== 'production' && !collapsed && (
+        <div className="p-2 border-t">
+          <div className="text-xs text-muted-foreground mb-2">Demo: Cambia Ruolo</div>
+          <div className="space-y-1">
+            {demoRoles.map(role => (
+              <Button
+                key={role.id}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "w-full justify-start text-xs",
+                  user?.id === role.id ? "bg-accent" : ""
+                )}
+                onClick={() => setRole(role.role as any)}
+              >
+                {role.name} ({role.role})
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
+
+export default Sidebar;
