@@ -17,6 +17,36 @@ const exerciseCategories = [
   { value: "goalkeeper", label: "Portieri" }
 ];
 
+// Function to get category badge color classes
+const getCategoryColorClass = (category: string): string => {
+  switch (category) {
+    case "technical":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "tactical":
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
+    case "physical":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    case "goalkeeper":
+      return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+  }
+};
+
+// Function to get intensity badge variant
+const getIntensityVariant = (intensity: string): string => {
+  switch (intensity) {
+    case "low":
+      return "success";
+    case "medium":
+      return "warning";
+    case "high":
+      return "danger";
+    default:
+      return "outline";
+  }
+};
+
 const ExercisesPage = () => {
   const [exercises, setExercises] = useState<TrainingExercise[]>(mockExercises);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +63,21 @@ const ExercisesPage = () => {
   const handleSelectExercise = (exercise: TrainingExercise) => {
     setSelectedExercise(exercise);
   };
+  
+  const handleCreateExercise = () => {
+    console.log("Create new exercise");
+    // Here you would implement the creation functionality
+  };
+  
+  const handleEditExercise = () => {
+    console.log("Edit exercise:", selectedExercise);
+    // Here you would implement the edit functionality
+  };
+  
+  const handleAddToPlan = () => {
+    console.log("Add to plan:", selectedExercise);
+    // Here you would implement the add to plan functionality
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -48,7 +93,7 @@ const ExercisesPage = () => {
             <Filter className="h-4 w-4" />
             Filtri avanzati
           </Button>
-          <Button>Nuova esercitazione</Button>
+          <Button onClick={handleCreateExercise}>Nuova esercitazione</Button>
         </div>
       </div>
 
@@ -85,14 +130,27 @@ const ExercisesPage = () => {
               >
                 <CardHeader className="p-4 pb-2">
                   <div className="flex justify-between">
-                    <Badge className="capitalize">{exercise.category}</Badge>
+                    <Badge className={`capitalize ${getCategoryColorClass(exercise.category)}`}>
+                      {exercise.category === "technical" ? "Tecnico" : 
+                       exercise.category === "tactical" ? "Tattico" : 
+                       exercise.category === "physical" ? "Fisico" : 
+                       exercise.category === "goalkeeper" ? "Portiere" : 
+                       exercise.category}
+                    </Badge>
                     {exercise.intensity && (
                       <Badge variant={
                         exercise.intensity === 'high' ? 'destructive' : 
                         exercise.intensity === 'medium' ? 'default' : 
                         'outline'
+                      } className={
+                        exercise.intensity === 'high' ? 'bg-red-500' : 
+                        exercise.intensity === 'medium' ? 'bg-orange-500' : 
+                        exercise.intensity === 'low' ? 'bg-green-500' : ''
                       }>
-                        {exercise.intensity}
+                        {exercise.intensity === 'high' ? 'Difficile' : 
+                         exercise.intensity === 'medium' ? 'Media' : 
+                         exercise.intensity === 'low' ? 'Facile' : 
+                         exercise.intensity}
                       </Badge>
                     )}
                   </div>
@@ -129,14 +187,27 @@ const ExercisesPage = () => {
                 <CardTitle>{selectedExercise.name || selectedExercise.title}</CardTitle>
                 <CardDescription>
                   <div className="flex gap-2 mt-1">
-                    <Badge className="capitalize">{selectedExercise.category}</Badge>
+                    <Badge className={`capitalize ${getCategoryColorClass(selectedExercise.category)}`}>
+                      {selectedExercise.category === "technical" ? "Tecnico" : 
+                       selectedExercise.category === "tactical" ? "Tattico" : 
+                       selectedExercise.category === "physical" ? "Fisico" : 
+                       selectedExercise.category === "goalkeeper" ? "Portiere" : 
+                       selectedExercise.category}
+                    </Badge>
                     {selectedExercise.intensity && (
                       <Badge variant={
                         selectedExercise.intensity === 'high' ? 'destructive' : 
                         selectedExercise.intensity === 'medium' ? 'default' : 
                         'outline'
+                      } className={
+                        selectedExercise.intensity === 'high' ? 'bg-red-500' : 
+                        selectedExercise.intensity === 'medium' ? 'bg-orange-500' : 
+                        selectedExercise.intensity === 'low' ? 'bg-green-500' : ''
                       }>
-                        {selectedExercise.intensity}
+                        {selectedExercise.intensity === 'high' ? 'Difficile' : 
+                         selectedExercise.intensity === 'medium' ? 'Media' : 
+                         selectedExercise.intensity === 'low' ? 'Facile' : 
+                         selectedExercise.intensity}
                       </Badge>
                     )}
                   </div>
@@ -169,7 +240,7 @@ const ExercisesPage = () => {
                 {selectedExercise.videoUrl && (
                   <div>
                     <h3 className="font-medium mb-2">Video dimostrazione</h3>
-                    <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                    <div className="aspect-video w-full bg-muted rounded-md flex items-center justify-center">
                       <Video className="h-8 w-8 text-muted-foreground" />
                       <span className="ml-2">Anteprima video</span>
                     </div>
@@ -199,8 +270,8 @@ const ExercisesPage = () => {
                 )}
               </CardContent>
               <CardFooter className="flex gap-2 justify-end">
-                <Button variant="outline">Modifica</Button>
-                <Button>Aggiungi a piano</Button>
+                <Button variant="outline" onClick={handleEditExercise}>Modifica</Button>
+                <Button onClick={handleAddToPlan}>Aggiungi a piano</Button>
               </CardFooter>
             </Card>
           </div>

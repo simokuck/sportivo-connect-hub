@@ -65,11 +65,11 @@ const RecipientPicker = ({ form }: RecipientPickerProps) => {
   }, [open]);
 
   // Handle selecting a recipient
-  const handleSelectRecipient = React.useCallback((recipientId: string) => {
+  const handleSelectRecipient = (recipientId: string) => {
     const currentRecipients = form.getValues("recipients") || [];
     
     // Check if the recipient is already selected
-    if (currentRecipients.some(r => r === recipientId)) {
+    if (currentRecipients.includes(recipientId)) {
       // If already selected, remove it
       const updatedRecipients = currentRecipients.filter(id => id !== recipientId);
       form.setValue("recipients", updatedRecipients, { shouldValidate: true });
@@ -78,19 +78,19 @@ const RecipientPicker = ({ form }: RecipientPickerProps) => {
       const updatedRecipients = [...currentRecipients, recipientId];
       form.setValue("recipients", updatedRecipients, { shouldValidate: true });
     }
-  }, [form]);
+  };
 
   // Remove a recipient
-  const removeRecipient = React.useCallback((recipientId: string) => {
+  const removeRecipient = (recipientId: string) => {
     const currentRecipients = form.getValues("recipients") || [];
     const updatedRecipients = currentRecipients.filter(id => id !== recipientId);
     form.setValue("recipients", updatedRecipients, { shouldValidate: true });
-  }, [form]);
+  };
 
   // Get recipient details from id
-  const getRecipientDetails = React.useCallback((id: string) => {
+  const getRecipientDetails = (id: string) => {
     return allRecipients.find(recipient => recipient.id === id);
-  }, []);
+  };
 
   return (
     <FormField
