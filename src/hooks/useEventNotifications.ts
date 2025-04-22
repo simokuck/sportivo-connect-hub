@@ -23,7 +23,7 @@ export const useEventNotifications = () => {
         "Nuovo evento aggiunto al tuo calendario",
         {
           description: `È stato aggiunto l'evento "${event.title}" al tuo calendario`,
-          recipients: event.recipients,
+          recipients: event.recipients.map(recipient => recipient.value),
           eventId: event.id,
           priority: "normal",
         }
@@ -49,7 +49,7 @@ export const useEventNotifications = () => {
         "Evento aggiornato nel tuo calendario",
         {
           description: `L'evento "${event.title}" è stato aggiornato`,
-          recipients: event.recipients,
+          recipients: event.recipients.map(recipient => recipient.value),
           eventId: event.id,
           priority: "normal",
         }
@@ -75,7 +75,7 @@ export const useEventNotifications = () => {
         "Evento rimosso dal tuo calendario",
         {
           description: `L'evento "${event.title}" è stato rimosso dal tuo calendario`,
-          recipients: event.recipients,
+          recipients: event.recipients.map(recipient => recipient.value),
           eventId: event.id,
           priority: "normal",
         }

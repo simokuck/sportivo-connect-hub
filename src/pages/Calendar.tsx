@@ -111,8 +111,9 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     form.reset({
       title: event.title,
       description: event.description || "",
-      start: event.start,
-      end: event.end,
+      // Ensure we set the dates correctly in ISO format for the input fields
+      start: new Date(event.start).toISOString().slice(0, 16),
+      end: new Date(event.end).toISOString().slice(0, 16),
       type: event.type,
       location: event.location || "",
       recipients: event.recipients || [],
@@ -131,10 +132,12 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         setDate={setDate}
         onImportClick={() => setImportDialogOpen(true)}
         onAddEventClick={() => setIsCreateDialogOpen(true)}
+        showDatePicker={activeView === "list"} // Only show date picker in list view
       />
 
       <Tabs 
         defaultValue="advanced" 
+        value={activeView}
         onValueChange={setActiveView}
         className="flex-1 flex flex-col"
       >
