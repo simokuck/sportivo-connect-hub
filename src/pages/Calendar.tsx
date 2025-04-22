@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { eventSchema } from "@/schemas/eventSchema";
+import { eventSchema, EventFormValues } from "@/schemas/eventSchema";
 import { Event } from '@/types';
 import { cn } from "@/lib/utils";
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -26,17 +26,20 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
   const { events, setEvents, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
 
-  const form = useForm({
+  const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: "",
       description: "",
       start: "",
       end: "",
-      type: "training",
+      type: "training" as const,
       location: "",
       recipients: [],
       requiresMedical: false,
+      lat: undefined,
+      lng: undefined,
+      teamId: undefined,
     },
   });
 
@@ -48,18 +51,42 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     }
   }, [form]);
 
-  const handleCreateEvent = (data: any) => {
+  const handleCreateEvent = (data: EventFormValues) => {
     createEvent(data);
     setIsCreateDialogOpen(false);
-    form.reset();
+    form.reset({
+      title: "",
+      description: "",
+      start: "",
+      end: "",
+      type: "training" as const,
+      location: "",
+      recipients: [],
+      requiresMedical: false,
+      lat: undefined,
+      lng: undefined,
+      teamId: undefined,
+    });
   };
 
-  const handleUpdateEvent = (data: any) => {
+  const handleUpdateEvent = (data: EventFormValues) => {
     if (!selectedEvent) return;
     updateEvent(selectedEvent.id, data);
     setIsEditDialogOpen(false);
     setSelectedEvent(null);
-    form.reset();
+    form.reset({
+      title: "",
+      description: "",
+      start: "",
+      end: "",
+      type: "training" as const,
+      location: "",
+      recipients: [],
+      requiresMedical: false,
+      lat: undefined,
+      lng: undefined,
+      teamId: undefined,
+    });
   };
 
   const handleDeleteEvent = () => {
@@ -87,14 +114,16 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
             setSelectedEvent(event);
             form.reset({
               title: event.title,
-              description: event.description,
+              description: event.description || "",
               start: event.start,
               end: event.end,
               type: event.type,
-              location: event.location,
-              recipients: event.recipients,
+              location: event.location || "",
+              recipients: event.recipients || [],
               teamId: event.teamId,
-              requiresMedical: event.requiresMedical,
+              requiresMedical: event.requiresMedical || false,
+              lat: event.lat,
+              lng: event.lng,
             });
             setIsEditDialogOpen(true);
           }}
