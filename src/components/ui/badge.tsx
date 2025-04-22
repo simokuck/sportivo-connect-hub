@@ -16,14 +16,16 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
-        success: "border-transparent bg-green-500 text-white hover:bg-green-600",
-        warning: "border-transparent bg-orange-500 text-white hover:bg-orange-600",
-        danger: "border-transparent bg-red-500 text-white hover:bg-red-600",
+        // Colori fissi per status
+        success: "border-transparent bg-[hsl(var(--color-easy))] text-white hover:bg-[hsl(var(--color-easy))/90]",
+        warning: "border-transparent bg-[hsl(var(--color-medium))] text-white hover:bg-[hsl(var(--color-medium))/90]",
+        danger: "border-transparent bg-[hsl(var(--color-hard))] text-white hover:bg-[hsl(var(--color-hard))/90]",
         info: "border-transparent bg-blue-500 text-white hover:bg-blue-600",
-        technical: "border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-        tactical: "border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-        physical: "border-transparent bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-        goalkeeper: "border-transparent bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300",
+        // Colori fissi per categorie
+        technical: "badge-technical border-transparent",
+        tactical: "badge-tactical border-transparent",
+        physical: "badge-physical border-transparent",
+        goalkeeper: "badge-goalkeeper border-transparent",
       },
     },
     defaultVariants: {

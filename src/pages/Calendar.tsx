@@ -11,6 +11,10 @@ import EventsList from '@/components/calendar/EventsList';
 import ImportDialog from '@/components/calendar/ImportDialog';
 import CreateEventDialog from '@/components/calendar/dialogs/CreateEventDialog';
 import EditEventDialog from '@/components/calendar/dialogs/EditEventDialog';
+import CalendarView from '@/components/calendar/advanced/CalendarView';
+import { useEventNotifications } from '@/hooks/useEventNotifications';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar as CalendarIcon, List } from "lucide-react";
 
 interface CalendarProps {
   className?: string;
@@ -23,8 +27,10 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [teams] = useState<any[]>([]);
+  const [activeView, setActiveView] = useState<string>("advanced");
 
   const { events, setEvents, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
+  const { notifyEventCreated, notifyEventUpdated, notifyEventDeleted } = useEventNotifications();
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -52,8 +58,9 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   }, [form]);
 
   const handleCreateEvent = (data: EventFormValues) => {
-    createEvent(data);
+    const newEvent = createEvent(data);
     setIsCreateDialogOpen(false);
+    notifyEventCreated(newEvent);
     form.reset({
       title: "",
       description: "",
@@ -73,6 +80,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     if (!selectedEvent) return;
     updateEvent(selectedEvent.id, data);
     setIsEditDialogOpen(false);
+    notifyEventUpdated({...selectedEvent, ...data});
     setSelectedEvent(null);
     form.reset({
       title: "",
@@ -92,9 +100,28 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const handleDeleteEvent = () => {
     if (!selectedEvent) return;
     deleteEvent(selectedEvent.id);
+    notifyEventDeleted(selectedEvent);
     setIsEditDialogOpen(false);
     setSelectedEvent(null);
     form.reset();
+  };
+
+  const handleEventSelect = (event: Event) => {
+    setSelectedEvent(event);
+    form.reset({
+      title: event.title,
+      description: event.description || "",
+      start: event.start,
+      end: event.end,
+      type: event.type,
+      location: event.location || "",
+      recipients: event.recipients || [],
+      teamId: event.teamId,
+      requiresMedical: event.requiresMedical || false,
+      lat: event.lat,
+      lng: event.lng,
+    });
+    setIsEditDialogOpen(true);
   };
 
   return (
@@ -106,29 +133,37 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         onAddEventClick={() => setIsCreateDialogOpen(true)}
       />
 
-      <div className="flex-1 overflow-y-auto p-4">
-        <EventsList 
-          events={events}
-          setEvents={setEvents}
-          onEventSelect={(event) => {
-            setSelectedEvent(event);
-            form.reset({
-              title: event.title,
-              description: event.description || "",
-              start: event.start,
-              end: event.end,
-              type: event.type,
-              location: event.location || "",
-              recipients: event.recipients || [],
-              teamId: event.teamId,
-              requiresMedical: event.requiresMedical || false,
-              lat: event.lat,
-              lng: event.lng,
-            });
-            setIsEditDialogOpen(true);
-          }}
-        />
-      </div>
+      <Tabs 
+        defaultValue="advanced" 
+        onValueChange={setActiveView}
+        className="flex-1 flex flex-col"
+      >
+        <TabsList className="mx-auto mb-2">
+          <TabsTrigger value="advanced" className="flex items-center gap-1">
+            <CalendarIcon className="h-4 w-4" />
+            <span>Calendario</span>
+          </TabsTrigger>
+          <TabsTrigger value="list" className="flex items-center gap-1">
+            <List className="h-4 w-4" />
+            <span>Lista</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="advanced" className="flex-1 overflow-y-auto data-[state=active]:flex-1">
+          <CalendarView 
+            events={events}
+            onEventSelect={handleEventSelect}
+          />
+        </TabsContent>
+        
+        <TabsContent value="list" className="flex-1 overflow-y-auto p-4">
+          <EventsList 
+            events={events}
+            setEvents={setEvents}
+            onEventSelect={handleEventSelect}
+          />
+        </TabsContent>
+      </Tabs>
 
       <CreateEventDialog
         isOpen={isCreateDialogOpen}

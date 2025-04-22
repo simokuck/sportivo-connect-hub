@@ -67,7 +67,7 @@ const RecipientPicker = ({ form }: RecipientPickerProps) => {
       control={form.control}
       name="recipients"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="col-span-2">
           <FormLabel>Destinatari</FormLabel>
           <FormControl>
             <Select

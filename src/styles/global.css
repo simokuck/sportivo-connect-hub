@@ -32,6 +32,17 @@
     --status-out: 0 100% 50%; /* Rosso */
     --status-assigned: 60 100% 50%; /* Giallo */
     --status-returned: 120 61% 50%; /* Verde */
+    
+    /* Fixed category colors */
+    --color-technical: 142 76% 36%;   /* Verde */
+    --color-tactical: 262 51% 47%;    /* Viola */
+    --color-physical: 0 72% 51%;      /* Rosso */
+    --color-goalkeeper: 199 89% 48%;  /* Azzurro */
+    
+    /* Fixed difficulty colors */
+    --color-easy: 120 61% 50%;       /* Verde */
+    --color-medium: 30 100% 50%;     /* Arancione */
+    --color-hard: 0 100% 50%;        /* Rosso */
   }
  
   .dark {
@@ -54,6 +65,54 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    
+    /* Fixed category colors - same in dark mode */
+    --color-technical: 142 76% 36%;   /* Verde */
+    --color-tactical: 262 51% 47%;    /* Viola */
+    --color-physical: 0 72% 51%;      /* Rosso */
+    --color-goalkeeper: 199 89% 48%;  /* Azzurro */
+    
+    /* Fixed difficulty colors - same in dark mode */
+    --color-easy: 120 61% 50%;       /* Verde */
+    --color-medium: 30 100% 50%;     /* Arancione */
+    --color-hard: 0 100% 50%;        /* Rosso */
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  /* Fix per i contrasti in modalità scura */
+  .dark .react-select__menu {
+    @apply bg-popover border border-border;
+  }
+  
+  .dark .react-select__option {
+    @apply text-popover-foreground;
+  }
+  
+  .dark .react-select__option--is-focused {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  .dark .react-select__control {
+    @apply bg-background border-input;
+  }
+  
+  .dark .react-select__single-value {
+    @apply text-foreground;
+  }
+  
+  .dark .react-select__placeholder {
+    @apply text-muted-foreground;
+  }
+  
+  .dark .react-select__multi-value {
+    @apply bg-secondary text-secondary-foreground;
   }
 }
 
@@ -63,22 +122,66 @@
   }
   
   .status-badge-available {
-    @apply bg-green-100 text-green-800;
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
   }
   
   .status-badge-low {
-    @apply bg-orange-100 text-orange-800;
+    @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300;
   }
   
   .status-badge-out {
-    @apply bg-red-100 text-red-800;
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
   }
   
   .status-badge-assigned {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
   }
   
   .status-badge-returned {
-    @apply bg-green-100 text-green-800;
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
   }
+}
+
+/* Stili fissi per i badge di categoria */
+.badge-technical {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+  background-color: hsl(var(--color-technical) / 0.1);
+  color: hsl(var(--color-technical));
+}
+
+.badge-tactical {
+  @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300;
+  background-color: hsl(var(--color-tactical) / 0.1); 
+  color: hsl(var(--color-tactical));
+}
+
+.badge-physical {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+  background-color: hsl(var(--color-physical) / 0.1);
+  color: hsl(var(--color-physical));
+}
+
+.badge-goalkeeper {
+  @apply bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300;
+  background-color: hsl(var(--color-goalkeeper) / 0.1);
+  color: hsl(var(--color-goalkeeper));
+}
+
+/* Stili fissi per i badge di difficoltà */
+.badge-easy {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+  background-color: hsl(var(--color-easy) / 0.1);
+  color: hsl(var(--color-easy));
+}
+
+.badge-medium {
+  @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300;
+  background-color: hsl(var(--color-medium) / 0.1);
+  color: hsl(var(--color-medium));
+}
+
+.badge-hard {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+  background-color: hsl(var(--color-hard) / 0.1);
+  color: hsl(var(--color-hard));
 }
