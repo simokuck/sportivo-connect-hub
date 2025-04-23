@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { toast } from 'sonner';
@@ -19,10 +18,8 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       return null;
     }
 
-    // Fix: Create a new variable instead of reassigning a constant
     let finalProfile = profileData;
     
-    // If profile doesn't exist, try to create it
     if (!finalProfile) {
       console.log('Profile not found, attempting to create one');
       const { data: authUser } = await supabase.auth.getUser();
