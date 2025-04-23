@@ -18,7 +18,7 @@ const TeamGroupsPage = () => {
   
   const { 
     teamGroups, 
-    teamCategories, 
+    categories, // This was the error - using categories instead of teamCategories
     seasons, 
     playerRegistrations,
     createTeamGroup,
@@ -53,14 +53,43 @@ const TeamGroupsPage = () => {
   };
 
   const getCategoriesBySeason = (seasonId: string) => {
-    return teamCategories.filter(c => c.seasonId === seasonId);
+    return categories.filter(c => c.seasonId === seasonId);
   };
 
   // Group teams by category
-  const teamsByCategory = teamCategories.reduce((acc, category) => {
+  const teamsByCategory = categories.reduce((acc, category) => {
     acc[category.id] = teamGroups.filter(team => team.categoryId === category.id);
     return acc;
   }, {} as Record<string, typeof teamGroups>);
+
+  // Helper functions for TeamGroupsList
+  const getCategoryName = (id: string): string => {
+    const category = categories.find(c => c.id === id);
+    return category?.name || "Categoria sconosciuta";
+  };
+  
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+  
+  const handleShowPlayers = (team: any) => {
+    console.log('View players for team:', team);
+    // Implement view players logic
+  };
+  
+  const handleArchive = (teamId: string) => {
+    console.log('Archive team:', teamId);
+    // Implement archive team logic
+  };
+
+  const handleCreateTeam = () => {
+    setCreateTeamOpen(true);
+  };
 
   return (
     <div className="container py-8">
@@ -85,14 +114,15 @@ const TeamGroupsPage = () => {
 
       <TeamGroupsList 
         teamsByCategory={teamsByCategory}
-        categories={teamCategories}
+        categories={categories}
         playerRegistrations={playerRegistrations}
         currentSeason={currentSeason}
-        seasons={seasons}
-        onViewPlayers={() => {}}
-        onEditTeam={() => {}}
-        onArchiveTeam={() => {}}
-        onDeleteTeam={() => {}}
+        onShowPlayers={handleShowPlayers}
+        onArchive={handleArchive}
+        onCreateTeam={handleCreateTeam}
+        getCategoryName={getCategoryName}
+        getInitials={getInitials}
+        getCategoriesBySeason={getCategoriesBySeason}
       />
 
       <CreateTeamDialog 
