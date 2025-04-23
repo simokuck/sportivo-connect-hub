@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     return location.pathname === path;
   };
 
+  // Only show team management for coaches and admins
+  const showTeamManagement = ['coach', 'admin', 'developer'].includes(user?.role || '');
+  
+  // Only allow admin and developer to access user creation
+  const canManageUsers = ['admin', 'developer'].includes(user?.role || '');
+
   const navItems = [
     {
       name: 'Dashboard',
@@ -60,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       name: 'Utenze',
       path: '/user-management',
       icon: <Users className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'medical', 'developer'],
+      roles: ['admin', 'developer'],
     },
     {
       name: 'Giocatori',
@@ -71,30 +78,30 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           name: 'Registrazioni',
           path: '/player-registrations',
           icon: <User className="w-4 h-4" />,
-          roles: ['admin', 'coach'],
+          roles: ['admin', 'coach', 'developer'],
         },
         {
           name: 'Gruppi Squadra',
           path: '/team-groups',
           icon: <UsersIcon className="w-4 h-4" />,
-          roles: ['admin', 'coach'],
+          roles: ['admin', 'coach', 'developer'],
         },
         {
           name: 'Storico',
           path: '/player-history',
           icon: <History className="w-4 h-4" />,
-          roles: ['admin', 'coach'],
+          roles: ['admin', 'coach', 'developer'],
         },
         {
           name: 'Consensi',
           path: '/player-consents',
           icon: <FileCheck className="w-4 h-4" />,
-          roles: ['admin'],
+          roles: ['admin', 'developer'],
         },
       ],
     },
     {
-      name: 'Teams',
+      name: 'Squadre',
       path: '/teams',
       icon: <Users className="w-5 h-5" />,
       roles: ['admin', 'coach', 'player', 'medical', 'developer'],
@@ -103,37 +110,37 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       name: 'Allenamenti',
       path: '/training',
       icon: <Dumbbell className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'player', 'medical'],
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
     {
       name: 'Documenti',
       path: '/documents',
       icon: <FileText className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'player', 'medical'],
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
     {
       name: 'Statistiche',
       path: '/statistics',
       icon: <BarChart2 className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'player', 'medical'],
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
     {
       name: 'Magazzino',
       path: '/warehouse',
       icon: <Package2 className="w-5 h-5" />,
-      roles: ['admin', 'coach'],
+      roles: ['admin', 'coach', 'developer'],
     },
     {
       name: 'Video',
       path: '/videos',
       icon: <Video className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'player'],
+      roles: ['admin', 'coach', 'player', 'developer'],
     },
     {
       name: 'Società',
       path: '/company',
       icon: <Building className="w-5 h-5" />,
-      roles: ['admin'],
+      roles: ['admin', 'developer'],
     },
     {
       name: 'Impostazioni',
@@ -146,12 +153,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       path: '/developer',
       icon: <Code className="w-5 h-5" />,
       roles: ['developer'],
-    },
-    {
-      name: 'Segnala Bug',
-      path: '/report-bug',
-      icon: <Bug className="w-5 h-5" />,
-      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
   ];
 
@@ -270,11 +271,24 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </ul>
       </div>
 
+      {/* Report Bug Button */}
       <div className="p-2 border-t">
+        <Link
+          to="/report-bug"
+          className={cn(
+            "flex items-center px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            isActive('/report-bug') ? "bg-accent text-accent-foreground font-medium" : "",
+            collapsed ? "justify-center px-2" : ""
+          )}
+        >
+          <Bug className="w-5 h-5" />
+          {!collapsed && <span className="ml-3">Segnala Bug</span>}
+        </Link>
+
         <Link
           to="/profile"
           className={cn(
-            "flex items-center px-3 py-2 text-sm rounded-md",
+            "flex items-center px-3 py-2 text-sm rounded-md mt-2",
             isActive('/profile')
               ? "bg-accent text-accent-foreground font-medium"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",

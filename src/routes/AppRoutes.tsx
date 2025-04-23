@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
@@ -26,6 +27,7 @@ import PlayerConsents from '@/pages/PlayerConsents';
 import Medical from '@/pages/Medical';
 import UserManagementOverview from '@/pages/UserManagementOverview';
 import ReportBug from '@/pages/ReportBug';
+import Users from '@/pages/Users';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -37,6 +39,7 @@ const AppRoutes: React.FC = () => {
         <Route path="profile" element={<UserProfile />} />
         <Route path="teams" element={<Teams />} />
         <Route path="user-management" element={<UserManagementOverview />} />
+        <Route path="users" element={<Users />} />
         <Route path="report-bug" element={<ReportBug />} />
         <Route path="team-members" element={<TeamMembers />} />
         <Route path="player-registrations" element={<PlayerRegistrations />} />

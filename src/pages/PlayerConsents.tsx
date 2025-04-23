@@ -1,5 +1,8 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { usePlayerManagement } from '@/context/PlayerManagementContext';
 import { Badge } from "@/components/ui/badge";
 
@@ -10,10 +13,14 @@ interface PlayerConsentsProps {
 
 const PlayerConsents: React.FC<PlayerConsentsProps> = ({ playerId, onlyCurrentPlayer }) => {
   const { playerConsents } = usePlayerManagement();
+  const navigate = useNavigate();
   
   const filteredConsents = playerId 
     ? playerConsents.filter(consent => consent.playerId === playerId)
     : playerConsents;
+    
+  // Only show the back button if we're not embedded in another component
+  const showBackButton = !onlyCurrentPlayer;
 
   const getConsentTypeLabel = (type: string) => {
     switch (type) {
@@ -29,6 +36,21 @@ const PlayerConsents: React.FC<PlayerConsentsProps> = ({ playerId, onlyCurrentPl
 
   return (
     <div className="space-y-4">
+      {showBackButton && (
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/user-management')} 
+            className="mr-2"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Indietro
+          </Button>
+          <h1 className="text-3xl font-bold">Consensi Giocatori</h1>
+        </div>
+      )}
+      
       {filteredConsents.length === 0 ? (
         <p className="text-muted-foreground italic">Nessun consenso registrato</p>
       ) : (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +11,6 @@ import {
   Users, 
   Activity,
   X,
-  CalendarDays,
   Settings,
   Wrench,
   UserRound,
@@ -20,7 +20,8 @@ import {
   GripVertical,
   Video,
   Code,
-  Building
+  Building,
+  Bug
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -60,7 +61,7 @@ export const CollapsibleSidebar = () => {
         icon: BarChart3, 
         label: 'Statistiche', 
         href: '/statistics', 
-        roles: ['player', 'coach'] 
+        roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
       { 
         id: 'calendar',
@@ -74,28 +75,28 @@ export const CollapsibleSidebar = () => {
         icon: ClipboardList, 
         label: 'Allenamenti', 
         href: '/training', 
-        roles: ['coach'] 
+        roles: ['coach', 'admin', 'player', 'developer'] 
       },
       { 
         id: 'videos',
         icon: Video, 
         label: 'Video', 
         href: '/videos', 
-        roles: ['coach'] 
+        roles: ['coach', 'admin', 'player', 'developer'] 
       },
       { 
         id: 'teams',
         icon: Users, 
         label: 'Squadre', 
         href: '/teams', 
-        roles: ['coach', 'admin'] 
+        roles: ['coach', 'admin', 'player', 'medical', 'developer'] 
       },
       { 
-        id: 'team-members',
+        id: 'user-management',
         icon: UserRound, 
-        label: 'Membri', 
-        href: '/team-members', 
-        roles: ['coach', 'admin'] 
+        label: 'Gestione Utenze', 
+        href: '/user-management', 
+        roles: ['admin', 'developer'] 
       },
       { 
         id: 'documents',
@@ -109,28 +110,28 @@ export const CollapsibleSidebar = () => {
         icon: Activity, 
         label: 'Area Medica', 
         href: '/medical', 
-        roles: ['medical'] 
+        roles: ['medical', 'admin', 'developer'] 
       },
       { 
         id: 'dev-settings',
         icon: Wrench, 
         label: 'Impostazioni Dev', 
         href: '/dev-settings', 
-        roles: ['developer'] 
+        roles: ['developer', 'admin'] 
       },
       { 
         id: 'company',
         icon: Building, 
         label: 'Anagrafica Società', 
         href: '/company', 
-        roles: ['admin'] 
+        roles: ['admin', 'developer'] 
       },
       { 
         id: 'warehouse',
         icon: Package, 
         label: 'Magazzino', 
         href: '/warehouse', 
-        roles: ['admin'] 
+        roles: ['admin', 'coach', 'developer'] 
       },
       { 
         id: 'developer',
@@ -138,6 +139,13 @@ export const CollapsibleSidebar = () => {
         label: 'Area Developer', 
         href: '/developer', 
         roles: ['developer'] 
+      },
+      { 
+        id: 'report-bug',
+        icon: Bug, 
+        label: 'Segnala Bug', 
+        href: '/report-bug', 
+        roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
     ];
     
