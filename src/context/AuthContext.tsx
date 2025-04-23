@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userProfile);
         } else {
           console.log('No session found');
+          if (!window.location.pathname.includes('/login')) {
+            navigate('/login');
+          }
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -112,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       loading, 
-      login, 
-      logout, 
+      login: loginUser, 
+      logout: logoutUser, 
       setRole: handleSetRole 
     }}>
       {children}

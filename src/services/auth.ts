@@ -11,7 +11,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
-      .maybeSingle();
+      .single();
 
     if (profileError) {
       console.error('Error fetching user profile:', profileError);
@@ -19,16 +19,40 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       return null;
     }
 
+    // If profile doesn't exist, try to create it
     if (!profile) {
-      console.error('No profile found for user:', userId);
-      toast.error('Profilo utente non trovato');
-      return null;
+      console.log('Profile not found, attempting to create one');
+      const { data: authUser } = await supabase.auth.getUser();
+      if (!authUser?.user) {
+        console.error('No auth user found');
+        return null;
+      }
+
+      const { data: newProfile, error: createError } = await supabase
+        .from('user_profiles')
+        .insert([{
+          id: userId,
+          email: authUser.user.email,
+          first_name: '',
+          last_name: ''
+        }])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        toast.error('Errore nella creazione del profilo');
+        return null;
+      }
+
+      profile = newProfile;
     }
 
+    // Fetch user role
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select(`
-        roles:roles (
+        roles (
           name
         )
       `)
@@ -43,7 +67,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
     
     return {
       id: profile.id,
-      name: `${profile.first_name} ${profile.last_name}`.trim(),
+      name: `${profile.first_name} ${profile.last_name}`.trim() || 'Utente',
       firstName: profile.first_name,
       lastName: profile.last_name,
       email: profile.email,
