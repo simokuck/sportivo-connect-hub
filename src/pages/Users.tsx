@@ -9,21 +9,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRoles } from '@/hooks/useRoles';
+import { useSystemRoles } from '@/hooks/useSystemRoles';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const CreateUserDialog = () => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const { roles } = useRoles();
+  const { roles, isLoading } = useSystemRoles();
+  const [isOpen, setIsOpen] = useState(false);
   
   const handleCreateUser = async () => {
     try {
+      if (!email || !role) {
+        toast.error('Inserisci email e ruolo');
+        return;
+      }
+
       // Step 1: Create user account
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: 'temp_password_123!', // Temporary password, user should reset
+        password: 'temp_password_123!', // Password temporanea, l'utente dovrà cambiarla
       });
 
       if (error) throw error;
@@ -39,16 +45,19 @@ const CreateUserDialog = () => {
 
         if (roleError) throw roleError;
 
-        toast.success('User created successfully');
+        toast.success('Utente creato con successo');
+        setIsOpen(false);
+        setEmail('');
+        setRole('');
       }
     } catch (err) {
-      toast.error('Error creating user');
       console.error(err);
+      toast.error('Errore durante la creazione dell\'utente');
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="default">
           <Plus className="mr-2 h-4 w-4" />
@@ -66,9 +75,11 @@ const CreateUserDialog = () => {
             </Label>
             <Input
               id="email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="col-span-3"
+              placeholder="email@esempio.com"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -80,11 +91,17 @@ const CreateUserDialog = () => {
                 <SelectValue placeholder="Seleziona ruolo" />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.name}
+                {isLoading ? (
+                  <SelectItem value="loading" disabled>
+                    Caricamento ruoli...
                   </SelectItem>
-                ))}
+                ) : (
+                  roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
