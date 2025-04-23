@@ -13,7 +13,18 @@ export const useSystemRoles = () => {
         .order('name');
       
       if (error) throw error;
-      return data as Role[];
+      
+      // Map the database response to match our Role interface
+      const mappedRoles: Role[] = data.map(role => ({
+        id: role.id,
+        name: role.name,
+        description: role.description || '',
+        isSystemRole: role.is_system_role || false,
+        createdAt: role.created_at || '',
+        updatedAt: role.updated_at || ''
+      }));
+      
+      return mappedRoles;
     }
   });
 
