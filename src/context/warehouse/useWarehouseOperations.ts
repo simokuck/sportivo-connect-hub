@@ -1,67 +1,11 @@
-import React, {createContext, useContext, useState} from 'react';
-import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant} from '@/types/warehouse';
-import {Player} from '@/types';
-import {useNotifications} from '@/context/NotificationContext';
-import {useWarehouseData} from '@/hooks/useWarehouseData';
 
-// We're using the players mock data since we haven't migrated that to the database yet
-import { mockWarehousePlayers as mockPlayers } from '@/utils/warehouse/mockWarehouseData';
+import { useState } from 'react';
+import { useWarehouseData } from '@/hooks/useWarehouseData';
+import { useNotifications } from '@/context/NotificationContext';
+import { BaseItem, ItemVariant, ItemAssignment } from '@/types/warehouse';
+import { DialogType, DeleteTarget } from './types';
 
-type DialogType = 'addItem' | 'editItem' | 'addVariant' | 'editVariant' | 
-                 'addMovement' | 'addAssignment' | 'returnItem' | 'none';
-
-interface DeleteTarget {
-  id: string;
-  type: 'item' | 'variant';
-}
-
-interface WarehouseContextType {
-  // Data states
-  items: (BaseItem & { variants: ItemVariant[] })[];
-  movements: InventoryMovement[];
-  assignments: ItemAssignment[];
-  players: Player[];
-  
-  // View management
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  selectedItem: BaseItem | null;
-  setSelectedItem: (item: BaseItem | null) => void;
-  selectedVariant: ItemVariant | null;
-  setSelectedVariant: (variant: ItemVariant | null) => void;
-  selectedAssignment: ItemAssignment | null;
-  setSelectedAssignment: (assignment: ItemAssignment | null) => void;
-  showVariants: boolean;
-  setShowVariants: (show: boolean) => void;
-  
-  // Dialog management
-  dialogType: DialogType;
-  setDialogType: (type: DialogType) => void;
-  isDeleteModalOpen: boolean;
-  setIsDeleteModalOpen: (isOpen: boolean) => void;
-  deleteTarget: DeleteTarget | null;
-  setDeleteTarget: (target: DeleteTarget | null) => void;
-  
-  // Operations
-  handleCreateBaseItem: (data: any) => void;
-  handleUpdateBaseItem: (data: any) => void;
-  handleDeleteBaseItem: (itemId: string) => void;
-  handleCreateVariant: (data: any) => void;
-  handleUpdateVariant: (data: any) => void;
-  handleDeleteVariant: (variantId: string) => void;
-  handleAddMovement: (data: any) => void;
-  handleAddAssignment: (data: any) => void;
-  handleMarkReturned: (data: any) => void;
-  onEditItem: (item: any) => void;
-  
-  // Dashboard data
-  lowStockItems: (BaseItem & { variants: ItemVariant[] })[];
-  recentAssignments: ItemAssignment[];
-}
-
-const WarehouseContext = createContext<WarehouseContextType | undefined>(undefined);
-
-export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function useWarehouseOperations() {
   const { showNotification } = useNotifications();
   
   // Get data from the useWarehouseData hook
@@ -91,10 +35,7 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [dialogType, setDialogType] = useState<DialogType>('none');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
-  
-  // Initialize data
-  const [players] = useState<Player[]>(mockPlayers);
-  
+
   // Handle create base item
   const handleCreateBaseItem = async (data: any) => {
     await createBaseItem.mutateAsync(data);
@@ -178,7 +119,7 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDeleteTarget(null);
   };
   
-  // Handle stock adjustment (new movement)
+  // Handle new movement
   const handleAddMovement = async (data: any) => {
     await addMovement.mutateAsync(data);
     setDialogType('none');
@@ -203,49 +144,33 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSelectedAssignment(null);
   };
 
-  // Find the problematic onEditItem handler and update it
   const onEditItem = (item: any) => {
     setSelectedItem(item);
     setDialogType('editItem');
   };
 
-  // Get low stock items for dashboard
-  const lowStockItems = items.filter(item => 
-    item.variants.some(v => v.status === 'low' || v.status === 'out')
-  );
-  
-  // Get recent assignments for dashboard
-  const recentAssignments = assignments
-    .sort((a, b) => new Date(b.assignDate).getTime() - new Date(a.assignDate).getTime())
-    .slice(0, 5);
-    
-  const value = {
-    // Data states
+  return {
+    // States
     items,
     movements,
     assignments,
-    players,
-    
-    // View management
     activeTab,
     setActiveTab,
     selectedItem,
     setSelectedItem,
     selectedVariant,
-    setSelectedVariant, 
+    setSelectedVariant,
     selectedAssignment,
     setSelectedAssignment,
     showVariants,
     setShowVariants,
-    
-    // Dialog management
     dialogType,
     setDialogType,
     isDeleteModalOpen,
     setIsDeleteModalOpen,
     deleteTarget,
     setDeleteTarget,
-    
+
     // Operations
     handleCreateBaseItem,
     handleUpdateBaseItem,
@@ -257,24 +182,13 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleAddAssignment,
     handleMarkReturned,
     onEditItem,
-    
-    // Dashboard data
-    lowStockItems,
-    recentAssignments
-  };
-  
-  return (
-    <WarehouseContext.Provider value={value}>
-      {children}
-    </WarehouseContext.Provider>
-  );
-};
 
-// Custom hook to use the warehouse context
-export const useWarehouse = () => {
-  const context = useContext(WarehouseContext);
-  if (context === undefined) {
-    throw new Error('useWarehouse must be used within a WarehouseProvider');
-  }
-  return context;
-};
+    // Dashboard data
+    lowStockItems: items.filter(item => 
+      item.variants.some(v => v.status === 'low' || v.status === 'out')
+    ),
+    recentAssignments: assignments
+      .sort((a, b) => new Date(b.assignDate).getTime() - new Date(a.assignDate).getTime())
+      .slice(0, 5)
+  };
+}
