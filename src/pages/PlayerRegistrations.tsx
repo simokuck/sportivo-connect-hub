@@ -126,7 +126,14 @@ const PlayerRegistrationsPage: React.FC = () => {
   const onSubmit: SubmitHandler<PlayerRegistrationFormValues> = async (data) => {
     try {
       const playerData = {
-        ...data,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate,
+        isMinor: data.isMinor,
+        contactEmail: data.contactEmail,
+        guardianName: data.guardianName,
+        guardianRelationship: data.guardianRelationship,
+        seasonId: data.seasonId,
         playerId: data.playerId || `player-${Date.now()}`,
         teamGroupsIds: data.teamGroupsIds || []
       };
