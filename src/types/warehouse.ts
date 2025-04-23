@@ -1,4 +1,3 @@
-
 export interface BaseItem {
   id: string;
   name: string;
@@ -137,4 +136,17 @@ export interface WarehouseItem extends BaseItem {
 // InventoryMovement type used in contexts - make it the same as Movement to resolve the errors
 export interface InventoryMovement extends Movement {
   // Extends Movement with all the same properties
+}
+
+// Add Player type that was missing
+export interface Player {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  position?: string;
+  strong_foot?: string;
+  avatar_url?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

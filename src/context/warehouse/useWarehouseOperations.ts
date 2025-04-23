@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import { useWarehouseData } from '@/hooks/useWarehouseData';
 import { useNotifications } from '@/context/NotificationContext';
-import { BaseItem, ItemVariant, ItemAssignment } from '@/types/warehouse';
+import { BaseItem, ItemVariant, ItemAssignment, Player } from '@/types/warehouse';
 import { DialogType, DeleteTarget } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 export function useWarehouseOperations() {
   const { showNotification } = useNotifications();
@@ -23,6 +25,29 @@ export function useWarehouseOperations() {
     addAssignment,
     markAssignmentReturned
   } = useWarehouseData();
+  
+  // Get players data
+  const { data: players = [] } = useQuery({
+    queryKey: ['players'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .order('last_name');
+      
+      if (error) throw error;
+      
+      return (data || []).map(player => ({
+        id: player.id,
+        first_name: player.first_name,
+        last_name: player.last_name,
+        email: player.email,
+        position: player.position,
+        strong_foot: player.strong_foot,
+        avatar_url: player.avatar_url,
+      })) as Player[];
+    }
+  });
   
   // State management
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -154,6 +179,7 @@ export function useWarehouseOperations() {
     items,
     movements,
     assignments,
+    players,
     activeTab,
     setActiveTab,
     selectedItem,
