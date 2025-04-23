@@ -61,6 +61,55 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
   }
 }
 
+export async function updateUserProfile(userId: string, data: Partial<User>): Promise<User> {
+  try {
+    console.log('Updating user profile:', userId, data);
+    
+    const { data: updatedProfile, error } = await supabase
+      .from('user_profiles')
+      .update({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        birth_date: data.birthDate,
+        address: data.address,
+        city: data.city,
+        avatar: data.avatar,
+        biometric_enabled: data.biometricEnabled
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+
+    if (!updatedProfile) {
+      throw new Error('Profile not found');
+    }
+
+    // Convert database model to User type
+    return {
+      id: updatedProfile.id,
+      name: `${updatedProfile.first_name} ${updatedProfile.last_name}`.trim() || 'Utente',
+      firstName: updatedProfile.first_name,
+      lastName: updatedProfile.last_name,
+      email: updatedProfile.email,
+      role: updatedProfile.role,
+      avatar: updatedProfile.avatar,
+      birthDate: updatedProfile.birth_date,
+      address: updatedProfile.address,
+      city: updatedProfile.city,
+      biometricEnabled: updatedProfile.biometric_enabled
+    };
+  } catch (error) {
+    console.error('Error in updateUserProfile:', error);
+    throw error;
+  }
+}
+
 export async function loginUser(email: string, password: string) {
   console.log('Attempting login for:', email);
   const { data, error } = await supabase.auth.signInWithPassword({

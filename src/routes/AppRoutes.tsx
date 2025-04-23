@@ -44,6 +44,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
+  // Show restriction page for pending users on all routes except profile
+  if (user.role === 'pending' && !window.location.pathname.includes('/profile')) {
+    const PendingUserRestriction = React.lazy(() => import('@/components/auth/PendingUserRestriction').then(m => ({ default: m.PendingUserRestriction })));
+    return <PendingUserRestriction />;
+  }
   
   return <>{children}</>;
 };

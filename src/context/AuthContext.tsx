@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
 import { useAuthState } from '@/hooks/useAuthState';
-import { fetchUserProfile, loginUser, logoutUser, setUserRole } from '@/services/auth';
+import { fetchUserProfile, loginUser, logoutUser, setUserRole, updateUserProfile } from '@/services/auth';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -13,9 +12,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   setRole: (role: string) => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
-// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -23,13 +22,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Checking session...');
+    console.log('Setting up auth listener...');
     let mounted = true;
     
     const checkSession = async () => {
       try {
         if (mounted) setLoading(true);
         console.log('Session check started');
+        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         
-        if (session && mounted) {
+        if (session) {
           console.log('Session found, fetching user profile');
           const userProfile = await fetchUserProfile(session.user.id);
           if (!userProfile) {
@@ -47,9 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             navigate('/login');
             return;
           }
+          
           if (mounted) {
             setUser(userProfile);
-            if (window.location.pathname === '/login') {
+            if (window.location.pathname === '/') {
               navigate('/dashboard');
             }
           }
@@ -88,9 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             if (mounted) {
               setUser(userProfile);
-              if (window.location.pathname === '/login') {
-                navigate('/dashboard');
-              }
+              navigate('/dashboard');
             }
           } else if (event === 'SIGNED_OUT') {
             console.log('User signed out');
@@ -107,9 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    const refreshInterval = setInterval(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          console.log('Refreshing session...');
+          supabase.auth.refreshSession();
+        }
+      });
+    }, 4 * 60 * 1000);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearInterval(refreshInterval);
     };
   }, [navigate, setUser, setLoading]);
 
@@ -149,13 +158,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Ensure we're providing a complete context value
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      if (!user) return;
+      setLoading(true);
+      const updatedProfile = await updateUserProfile(user.id, data);
+      setUser(updatedProfile);
+      toast.success('Profilo aggiornato con successo');
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error('Errore durante l\'aggiornamento del profilo');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const contextValue: AuthContextType = {
-    user, 
-    loading, 
-    login, 
-    logout, 
-    setRole: handleSetRole
+    user,
+    loading,
+    login,
+    logout,
+    setRole: handleSetRole,
+    updateProfile
   };
 
   return (
