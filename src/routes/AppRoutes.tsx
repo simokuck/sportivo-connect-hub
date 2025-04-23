@@ -29,8 +29,8 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<Index />} />
+      <Route path="/" element={<Index />} />
+      <Route element={<AppLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<UserProfile />} />
         <Route path="teams" element={<Teams />} />

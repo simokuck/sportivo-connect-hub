@@ -16,7 +16,7 @@ const Index = () => {
     }
   }, [user, navigate]);
 
-  // This is just a loading state while redirecting
+  // Aggiungiamo un rendering esplicito per evitare problemi di schermata bianca
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">

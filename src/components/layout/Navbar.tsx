@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Menu, User } from 'lucide-react';
@@ -35,6 +36,7 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
     navigate('/login');
   };
 
+  // Aggiungiamo una protezione per assicurarci che user non sia null
   if (!user) return null;
 
   return (
@@ -52,7 +54,7 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                {roleLabels[user.role]}
+                {roleLabels[user.role] || 'Utente'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -69,7 +71,6 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
           <Button variant="outline" size="icon" className="text-gray-500 dark:text-gray-300 dark:border-gray-600">
             <Bell className="h-5 w-5" />
           </Button>
-          {/* Rimuoviamo l'icona del calendario poiché è già presente nella sidebar */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
