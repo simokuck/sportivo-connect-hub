@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { eventSchema, EventFormValues } from "@/schemas/eventSchema";
@@ -15,6 +14,8 @@ import CalendarView from '@/components/calendar/advanced/CalendarView';
 import { useEventNotifications } from '@/hooks/useEventNotifications';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, List } from "lucide-react";
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CalendarProps {
   className?: string;
@@ -28,8 +29,57 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [teams] = useState<any[]>([]);
   const [activeView, setActiveView] = useState<string>("advanced");
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
 
-  const { events, setEvents, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!user) return;
+
+      let query = supabase
+        .from('calendar_events')
+        .select('*');
+
+      // Check user's role and filter events accordingly
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role_id, roles(name)')
+        .eq('user_id', user.id);
+
+      const isAdmin = userRoles?.some(r => r.roles?.name === 'Administrator');
+      const isCoach = userRoles?.some(r => r.roles?.name === 'Coach');
+      const isPlayer = userRoles?.some(r => r.roles?.name === 'Player');
+
+      if (isAdmin) {
+        // Admins see all events
+      } else if (isCoach) {
+        // Coaches see events for their teams
+        query = query.or(`team_id.in.(
+          SELECT id FROM teams WHERE user_id = '${user.id}'
+        )`);
+      } else if (isPlayer) {
+        // Players see events for their team
+        query = query.or(`team_id.in.(
+          SELECT team_id FROM players WHERE id = '${user.id}'
+        )`);
+      } else {
+        // Default: no events
+        query = query.eq('id', 'none');
+      }
+
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching events:', error);
+        return;
+      }
+
+      setEvents(data || []);
+    };
+
+    fetchEvents();
+  }, [user]);
+
   const { notifyEventCreated, notifyEventUpdated, notifyEventDeleted } = useEventNotifications();
 
   const form = useForm<EventFormValues>({
