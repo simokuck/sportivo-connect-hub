@@ -1,10 +1,8 @@
-
 import React, {createContext, useContext, useState} from 'react';
-import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant, MovementType} from '@/types/warehouse';
+import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant} from '@/types/warehouse';
 import {Player} from '@/types';
 import {useNotifications} from '@/context/NotificationContext';
 import {useWarehouseData} from '@/hooks/useWarehouseData';
-import { toast } from 'sonner';
 
 // We're using the players mock data since we haven't migrated that to the database yet
 import { mockWarehousePlayers as mockPlayers } from '@/utils/warehouse/mockWarehouseData';
@@ -66,14 +64,20 @@ const WarehouseContext = createContext<WarehouseContextType | undefined>(undefin
 export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { showNotification } = useNotifications();
   
-  // Get data from the new hook
+  // Get data from the useWarehouseData hook
   const { 
     items, 
     movements, 
     assignments,
     createBaseItem,
     updateBaseItem,
-    deleteBaseItem 
+    deleteBaseItem,
+    createVariant,
+    updateVariant,
+    deleteVariant,
+    addMovement,
+    addAssignment,
+    markAssignmentReturned
   } = useWarehouseData();
   
   // State management
@@ -95,7 +99,6 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const handleCreateBaseItem = async (data: any) => {
     await createBaseItem.mutateAsync(data);
     setDialogType('none');
-    
     showNotification('success', 'Articolo creato', {
       description: "Il nuovo articolo è stato aggiunto al magazzino",
     });
@@ -105,7 +108,6 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const handleUpdateBaseItem = async (data: any) => {
     await updateBaseItem.mutateAsync(data);
     setDialogType('none');
-    
     showNotification('success', 'Articolo aggiornato', {
       description: "Le modifiche all'articolo sono state salvate",
     });
@@ -114,17 +116,15 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Handle delete base item
   const handleDeleteBaseItem = async (itemId: string) => {
     await deleteBaseItem.mutateAsync(itemId);
-    
     setIsDeleteModalOpen(false);
     setDeleteTarget(null);
-    
     showNotification('success', 'Articolo eliminato', {
       description: "L'articolo e tutte le sue varianti sono stati eliminati",
     });
   };
   
   // Handle create variant
-  const handleCreateVariant = (data: any) => {
+  const handleCreateVariant = async (data: any) => {
     if (!selectedItem) return;
     
     // Check if variant with same size and color already exists
@@ -133,20 +133,22 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
     
     if (isDuplicate) {
-      toast.error("Esiste già una variante con questa taglia e colore");
+      showNotification('error', 'Errore', {
+        description: "Esiste già una variante con questa taglia e colore"
+      });
       return;
     }
     
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement createVariant mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "La creazione di varianti è in fase di implementazione",
+    await createVariant.mutateAsync({
+      ...data,
+      baseItemId: selectedItem.id
     });
+    
     setDialogType('none');
   };
   
   // Handle update variant
-  const handleUpdateVariant = (data: any) => {
+  const handleUpdateVariant = async (data: any) => {
     if (!selectedItem || !selectedVariant) return;
     
     // Check for duplicate size and color, excluding the current variant
@@ -155,60 +157,46 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
     
     if (isDuplicate) {
-      toast.error("Esiste già una variante con questa taglia e colore");
+      showNotification('error', 'Errore', {
+        description: "Esiste già una variante con questa taglia e colore"
+      });
       return;
     }
     
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement updateVariant mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "L'aggiornamento delle varianti è in fase di implementazione",
+    await updateVariant.mutateAsync({
+      id: selectedVariant.id,
+      ...data
     });
+    
     setDialogType('none');
   };
   
   // Handle delete variant
-  const handleDeleteVariant = (variantId: string) => {
-    if (!selectedItem) return;
-    
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement deleteVariant mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "L'eliminazione delle varianti è in fase di implementazione",
-    });
-    
+  const handleDeleteVariant = async (variantId: string) => {
+    await deleteVariant.mutateAsync(variantId);
     setIsDeleteModalOpen(false);
     setDeleteTarget(null);
   };
   
   // Handle stock adjustment (new movement)
-  const handleAddMovement = (data: any) => {
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement addMovement mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "La registrazione dei movimenti è in fase di implementazione",
-    });
+  const handleAddMovement = async (data: any) => {
+    await addMovement.mutateAsync(data);
     setDialogType('none');
   };
   
   // Handle new assignment
-  const handleAddAssignment = (data: any) => {
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement addAssignment mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "La creazione di assegnazioni è in fase di implementazione",
-    });
+  const handleAddAssignment = async (data: any) => {
+    await addAssignment.mutateAsync(data);
     setDialogType('none');
   };
   
   // Handle mark assignment as returned
-  const handleMarkReturned = (data: any) => {
+  const handleMarkReturned = async (data: any) => {
     if (!selectedAssignment) return;
     
-    // This needs to be updated to use a mutation instead of directly modifying state
-    // TODO: Implement markAssignmentReturned mutation in the useWarehouseData hook
-    showNotification('info', 'Funzionalità in sviluppo', {
-      description: "La registrazione delle restituzioni è in fase di implementazione",
+    await markAssignmentReturned.mutateAsync({
+      id: selectedAssignment.id,
+      returnedCondition: data.returnedCondition
     });
     
     setDialogType('none');

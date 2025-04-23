@@ -7,11 +7,11 @@ import { toast } from 'sonner';
 export function useWarehouseData() {
   const queryClient = useQueryClient();
 
-  // Query per ottenere gli articoli base con le loro varianti
+  // Query degli articoli base con le loro varianti
   const { data: items = [] } = useQuery({
     queryKey: ['warehouse-items'],
     queryFn: async () => {
-      // Fetch base items
+      // Fetch degli articoli base
       const { data: baseItems, error: baseItemsError } = await supabase
         .from('warehouse_items')
         .select('*')
@@ -19,14 +19,14 @@ export function useWarehouseData() {
       
       if (baseItemsError) throw baseItemsError;
 
-      // Fetch variants for all items
+      // Fetch delle varianti per tutti gli articoli
       const { data: variants, error: variantsError } = await supabase
         .from('item_variants')
         .select('*');
       
       if (variantsError) throw variantsError;
 
-      // Map database columns to our interface and combine items with their variants
+      // Combina gli articoli con le loro varianti
       return (baseItems || []).map(item => ({
         id: item.id,
         name: item.name,
@@ -58,7 +58,7 @@ export function useWarehouseData() {
     }
   });
 
-  // Query per ottenere i movimenti
+  // Query dei movimenti
   const { data: movements = [] } = useQuery({
     queryKey: ['inventory-movements'],
     queryFn: async () => {
@@ -89,7 +89,7 @@ export function useWarehouseData() {
     }
   });
 
-  // Query per ottenere le assegnazioni
+  // Query delle assegnazioni
   const { data: assignments = [] } = useQuery({
     queryKey: ['item-assignments'],
     queryFn: async () => {
@@ -144,9 +144,6 @@ export function useWarehouseData() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
       toast.success('Articolo creato con successo');
-    },
-    onError: (error) => {
-      toast.error(`Errore durante la creazione dell'articolo: ${error.message}`);
     }
   });
 
@@ -174,9 +171,6 @@ export function useWarehouseData() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
       toast.success('Articolo aggiornato con successo');
-    },
-    onError: (error) => {
-      toast.error(`Errore durante l'aggiornamento dell'articolo: ${error.message}`);
     }
   });
 
@@ -193,19 +187,171 @@ export function useWarehouseData() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
       toast.success('Articolo eliminato con successo');
+    }
+  });
+
+  // Mutation per creare una nuova variante
+  const createVariant = useMutation({
+    mutationFn: async (variant: Omit<ItemVariant, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const { data, error } = await supabase
+        .from('item_variants')
+        .insert({
+          base_item_id: variant.baseItemId,
+          color: variant.color,
+          size: variant.size,
+          quantity: variant.quantity,
+          minimum_threshold: variant.minimumThreshold,
+          location: variant.location,
+          status: variant.status,
+          unique_sku: variant.uniqueSku
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
-    onError: (error) => {
-      toast.error(`Errore durante l'eliminazione dell'articolo: ${error.message}`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Variante creata con successo');
+    }
+  });
+
+  // Mutation per aggiornare una variante
+  const updateVariant = useMutation({
+    mutationFn: async ({ id, ...variant }: ItemVariant) => {
+      const { data, error } = await supabase
+        .from('item_variants')
+        .update({
+          color: variant.color,
+          size: variant.size,
+          quantity: variant.quantity,
+          minimum_threshold: variant.minimumThreshold,
+          location: variant.location,
+          status: variant.status,
+          unique_sku: variant.uniqueSku
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Variante aggiornata con successo');
+    }
+  });
+
+  // Mutation per eliminare una variante
+  const deleteVariant = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('item_variants')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Variante eliminata con successo');
+    }
+  });
+
+  // Mutation per aggiungere un movimento
+  const addMovement = useMutation({
+    mutationFn: async (movement: Omit<InventoryMovement, 'id' | 'date'>) => {
+      const { data, error } = await supabase
+        .from('inventory_movements')
+        .insert({
+          base_item_id: movement.baseItemId,
+          variant_id: movement.variantId,
+          type: movement.type,
+          quantity: movement.quantity,
+          note: movement.note,
+          player_id: movement.playerId
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Movimento registrato con successo');
+    }
+  });
+
+  // Mutation per aggiungere un'assegnazione
+  const addAssignment = useMutation({
+    mutationFn: async (assignment: Omit<ItemAssignment, 'id' | 'assignDate' | 'returnDate'>) => {
+      const { data, error } = await supabase
+        .from('item_assignments')
+        .insert({
+          variant_id: assignment.variantId,
+          player_id: assignment.playerId,
+          expected_return_date: assignment.expectedReturnDate,
+          quantity: assignment.quantity,
+          notes: assignment.notes,
+          status: assignment.status
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['item-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Assegnazione creata con successo');
+    }
+  });
+
+  // Mutation per registrare una restituzione
+  const markAssignmentReturned = useMutation({
+    mutationFn: async ({ id, returnedCondition }: { id: string; returnedCondition: string }) => {
+      const { data, error } = await supabase
+        .from('item_assignments')
+        .update({
+          status: 'returned',
+          return_date: new Date().toISOString(),
+          returned_condition: returnedCondition
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['item-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-items'] });
+      toast.success('Restituzione registrata con successo');
     }
   });
 
   return {
+    // Queries
     items,
     movements,
     assignments,
+    
+    // Mutations
     createBaseItem,
     updateBaseItem,
     deleteBaseItem,
-    // ... altre mutation per varianti e movimenti verranno aggiunte qui
+    createVariant,
+    updateVariant,
+    deleteVariant,
+    addMovement,
+    addAssignment,
+    markAssignmentReturned
   };
 }
+
