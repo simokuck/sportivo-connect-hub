@@ -5,26 +5,30 @@ import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [debugInfo, setDebugInfo] = useState<string>('Inizializzazione...');
 
   useEffect(() => {
-    console.log('Index page - User state:', user);
+    console.log('Index page - User state:', user, 'Loading:', loading);
     
     // Aggiorniamo le informazioni di debug
-    setDebugInfo(`Stato utente: ${user ? 'Autenticato' : 'Non autenticato'}`);
+    setDebugInfo(`Stato utente: ${user ? 'Autenticato' : 'Non autenticato'}\nCaricamento: ${loading ? 'Sì' : 'No'}`);
     
-    // Redirect to dashboard if logged in, otherwise to login
-    if (user) {
-      console.log('User is authenticated, redirecting to dashboard');
-      setDebugInfo(prevState => `${prevState}\nReindirizzamento al dashboard...`);
-      navigate('/dashboard', { replace: true });
+    // Aspettiamo che il processo di autenticazione sia completato prima di reindirizzare
+    if (!loading) {
+      if (user) {
+        console.log('User is authenticated, redirecting to dashboard');
+        setDebugInfo(prevState => `${prevState}\nReindirizzamento al dashboard...`);
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log('User is not authenticated, redirecting to login');
+        setDebugInfo(prevState => `${prevState}\nReindirizzamento al login...`);
+        navigate('/login', { replace: true });
+      }
     } else {
-      console.log('User is not authenticated, redirecting to login');
-      setDebugInfo(prevState => `${prevState}\nReindirizzamento al login...`);
-      navigate('/login', { replace: true });
+      setDebugInfo(prevState => `${prevState}\nIn attesa del caricamento...`);
     }
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
 
   // Aggiungiamo un rendering esplicito per evitare problemi di schermata bianca
   // e mostrare le informazioni di debug

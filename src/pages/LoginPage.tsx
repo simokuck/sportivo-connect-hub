@@ -15,6 +15,7 @@ const LoginPage = () => {
   const { login, loading, user } = useAuth();
   const navigate = useNavigate();
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
   // Check if biometric authentication is supported
   useEffect(() => {
@@ -33,32 +34,40 @@ const LoginPage = () => {
     checkBiometricSupport();
   }, []);
 
-  // Redirect to dashboard if already logged in
+  // Redirect to dashboard if already logged in, but avoid redirecting during login attempt
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (user && !loginAttempted) {
+      console.log('User already logged in, redirecting to dashboard');
+      navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, loginAttempted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setLoginAttempted(true);
+      console.log('Login attempted with:', email);
       await login(email, password);
+      // Il reindirizzamento sarà gestito in AuthContext dopo un login riuscito
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error in component:', error);
+      setLoginAttempted(false);
       // Toast message handled in the auth context
     }
   };
 
   const handleBiometricLogin = async () => {
     try {
+      setLoginAttempted(true);
       toast.info('Autenticazione biometrica in corso...');
       // Here you would implement the actual WebAuthn/FIDO2 authentication
       // This is just a placeholder for demonstration
       toast.error('Funzionalità biometrica in sviluppo');
+      setLoginAttempted(false);
     } catch (error) {
       console.error('Biometric auth error:', error);
       toast.error('Autenticazione biometrica fallita');
+      setLoginAttempted(false);
     }
   };
 

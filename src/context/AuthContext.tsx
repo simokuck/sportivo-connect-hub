@@ -15,16 +15,32 @@ interface AuthContextType {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);  // Inizia come true per indicare il caricamento iniziale
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check initial session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        await fetchUserProfile(session.user.id);
+      try {
+        console.log('Checking session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session check error:', sessionError);
+          setLoading(false);
+          return;
+        }
+        
+        if (session) {
+          console.log('Session found, fetching user profile');
+          await fetchUserProfile(session.user.id);
+        } else {
+          console.log('No session found');
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        setLoading(false);
       }
     };
 
@@ -33,10 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        
         if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in, fetching profile');
           await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
           setUser(null);
+          setLoading(false);
           navigate('/login');
         }
       }
@@ -48,7 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const fetchUserProfile = async (userId: string) => {
+    setLoading(true);
     try {
+      console.log('Fetching user profile for:', userId);
+      
       // Fetch the user profile
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
@@ -58,19 +82,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
-        throw profileError;
+        toast.error('Errore durante il caricamento del profilo utente');
+        setLoading(false);
+        return;
       }
 
       if (!profileData) {
         console.error('User profile not found');
         toast.error('Profilo utente non trovato');
+        setLoading(false);
         return;
       }
 
-      // Fetch user role from user_roles table
+      console.log('Profile data retrieved:', profileData);
+
+      // Query user roles in a single, simpler query
       const { data: userRoleData, error: userRoleError } = await supabase
         .from('user_roles')
-        .select('role_id')
+        .select(`
+          role_id,
+          roles:roles(name)
+        `)
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -81,19 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Default role
       let roleName = 'player' as UserRole;
       
-      // If we have a role_id, fetch the role name
-      if (userRoleData && userRoleData.role_id) {
-        const { data: roleData, error: roleError } = await supabase
-          .from('roles')
-          .select('name')
-          .eq('id', userRoleData.role_id)
-          .maybeSingle();
-          
-        if (roleError) {
-          console.error('Error fetching role:', roleError);
-        } else if (roleData) {
-          roleName = validateUserRole(roleData.name);
-        }
+      // If we have role data, use it
+      if (userRoleData && userRoleData.roles) {
+        roleName = validateUserRole(userRoleData.roles.name);
+        console.log('User role found:', roleName);
+      } else {
+        console.log('No role found, using default:', roleName);
       }
 
       const userProfile: User = {
@@ -115,11 +140,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // If we're on the login page, redirect to dashboard
       if (window.location.pathname.includes('/login')) {
+        console.log('Redirecting to dashboard from login');
         navigate('/');
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       toast.error('Errore durante il caricamento del profilo utente');
+    } finally {
+      setLoading(false);  // Assicuriamo che loading venga sempre impostato a false alla fine
     }
   };
 
@@ -132,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      console.log('Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -142,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
+      console.log('Login successful, session:', data.session?.user.id);
       toast.success('Login effettuato');
       // fetchUserProfile will be called by the onAuthStateChange listener
     } catch (error: any) {
@@ -155,14 +185,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         toast.error(`Errore durante il login: ${error.message || 'Errore sconosciuto'}`);
       }
+      setLoading(false);  // Importante: imposta loading a false in caso di errore
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      console.log('Attempting logout');
+      setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       toast.success('Logout effettuato con successo');
@@ -170,6 +201,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('Logout error:', error);
       toast.error(`Errore durante il logout: ${error.message || 'Errore sconosciuto'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -177,16 +210,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
+      setLoading(true);
+      console.log('Setting role to:', role);
+      
       // Validate the role before proceeding
       const validRole = validateUserRole(role);
       
-      // In a real app, you'd check if the user has this role assigned
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('role_id', (await supabase.from('roles').select('id').eq('name', validRole).single()).data?.id)
-        .maybeSingle();
+      // Semplifichiamo la query per verificare se l'utente ha il ruolo
+      const { data: roles, error } = await supabase
+        .from('roles')
+        .select('id, name')
+        .eq('name', validRole)
+        .single();
 
       if (error) {
         console.error('Error checking role:', error);
@@ -194,7 +229,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!data) {
+      if (!roles) {
+        toast.error('Ruolo non trovato');
+        return;
+      }
+      
+      // Verifica se l'utente ha già il ruolo assegnato
+      const { data: userRole, error: userRoleError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('role_id', roles.id)
+        .maybeSingle();
+
+      if (userRoleError) {
+        console.error('Error checking user role:', userRoleError);
+        toast.error('Errore durante la verifica del ruolo utente');
+        return;
+      }
+
+      if (!userRole) {
         toast.error('Ruolo non assegnato all\'utente');
         return;
       }
@@ -204,6 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('Error setting role:', error);
       toast.error(`Errore durante il cambio di ruolo: ${error.message || 'Errore sconosciuto'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
