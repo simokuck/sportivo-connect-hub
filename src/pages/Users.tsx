@@ -17,7 +17,7 @@ const CreateUserDialog = () => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const { roles } = useRoles();
-
+  
   const handleCreateUser = async () => {
     try {
       // Step 1: Create user account

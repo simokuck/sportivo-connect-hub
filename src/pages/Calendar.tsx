@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,42 +33,30 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
 
-  // Import event manipulation functions from useCalendarEvents
   const { createEvent, updateEvent, deleteEvent } = useCalendarEvents();
 
   useEffect(() => {
     const fetchEvents = async () => {
       if (!user) return;
 
-      let query = supabase
-        .from('calendar_events')
-        .select('*');
-
-      // Check user's role and filter events accordingly
       const { data: userRoles } = await supabase
         .from('user_roles')
         .select('role_id, roles(name)')
         .eq('user_id', user.id);
 
-      const isAdmin = userRoles?.some(r => r.roles?.name === 'Administrator');
-      const isCoach = userRoles?.some(r => r.roles?.name === 'Coach');
-      
-      // We'll avoid using any explicit filtering that might lead to invalid UUIDs
-      // Let the RLS policies handle access control instead
-      
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*');
       
       if (error) {
         console.error('Error fetching events:', error);
         return;
       }
 
-      // Transform database events to match the Event type
       const transformedEvents = (data || []).map(event => ({
         id: event.id,
         title: event.title,
         description: event.description || "",
-        // Map start_time to start and end_time to end
         start: new Date(event.start_time).toISOString(),
         end: new Date(event.end_time).toISOString(),
         type: event.type as "training" | "match" | "medical" | "meeting",
@@ -115,7 +102,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
   const handleCreateEvent = async (data: EventFormValues) => {
     try {
-      // Create event in database
       const { data: newEventData, error } = await supabase
         .from('calendar_events')
         .insert({
@@ -133,7 +119,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
       if (error) throw error;
 
-      // Transform to Event type and add to state
       const newEvent = {
         id: newEventData.id,
         title: newEventData.title,
@@ -142,7 +127,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         end: new Date(newEventData.end_time).toISOString(),
         type: newEventData.type as "training" | "match" | "medical" | "meeting",
         location: newEventData.location || "",
-        recipients: [],
+        recipients: data.recipients || [],
         teamId: newEventData.team_id,
         requiresMedical: newEventData.requires_medical || false,
         canEdit: newEventData.can_edit ?? true
@@ -152,20 +137,8 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
       setIsCreateDialogOpen(false);
       notifyEventCreated(newEvent);
       toast.success("Evento creato con successo");
-
-      form.reset({
-        title: "",
-        description: "",
-        start: "",
-        end: "",
-        type: "training" as const,
-        location: "",
-        recipients: [],
-        requiresMedical: false,
-        lat: undefined,
-        lng: undefined,
-        teamId: undefined,
-      });
+      
+      form.reset();
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error("Errore nella creazione dell'evento");
@@ -176,7 +149,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     if (!selectedEvent) return;
     
     try {
-      // Update event in database
       const { error } = await supabase
         .from('calendar_events')
         .update({
@@ -193,7 +165,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
       if (error) throw error;
 
-      // Update in local state
       const updatedEvent = {
         ...selectedEvent,
         title: data.title,
@@ -238,7 +209,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     if (!selectedEvent) return;
     
     try {
-      // Delete from database
       const { error } = await supabase
         .from('calendar_events')
         .delete()
@@ -246,7 +216,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
       if (error) throw error;
       
-      // Remove from local state
       setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
       notifyEventDeleted(selectedEvent);
       setIsEditDialogOpen(false);
@@ -264,7 +233,6 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     form.reset({
       title: event.title,
       description: event.description || "",
-      // Ensure we set the dates correctly in ISO format for the input fields
       start: new Date(event.start).toISOString().slice(0, 16),
       end: new Date(event.end).toISOString().slice(0, 16),
       type: event.type,
@@ -285,7 +253,7 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         setDate={setDate}
         onImportClick={() => setImportDialogOpen(true)}
         onAddEventClick={() => setIsCreateDialogOpen(true)}
-        showDatePicker={activeView === "list"} // Only show date picker in list view
+        showDatePicker={activeView === "list"}
       />
 
       <Tabs 
