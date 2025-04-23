@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,9 @@ interface AuthContextType {
   logout: () => void;
   setRole: (role: string) => void;
 }
+
+// Create the context with a default undefined value
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, setUser, loading, setLoading } = useAuthState();
@@ -145,20 +149,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Ensure we're providing a complete context value
+  const contextValue: AuthContextType = {
+    user, 
+    loading, 
+    login, 
+    logout, 
+    setRole: handleSetRole
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
-      setRole: handleSetRole 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
   const context = useContext(AuthContext);

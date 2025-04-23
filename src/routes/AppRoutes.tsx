@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import LoginPage from '@/pages/LoginPage';
 import Dashboard from '@/pages/Dashboard';
@@ -28,13 +28,36 @@ import Medical from '@/pages/Medical';
 import UserManagementOverview from '@/pages/UserManagementOverview';
 import ReportBug from '@/pages/ReportBug';
 import Users from '@/pages/Users';
+import { useAuth } from '@/context/AuthContext';
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-xl text-gray-600">Caricamento...</p>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Index />} />
-      <Route element={<AppLayout />}>
+      <Route element={
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+      }>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<UserProfile />} />
         <Route path="teams" element={<Teams />} />
