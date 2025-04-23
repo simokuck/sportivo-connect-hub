@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePlayerManagement } from '@/context/PlayerManagementContext';
@@ -27,10 +26,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import it from 'date-fns/locale/it';
+import { it } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Schema per la validazione del form
 const playerRegistrationSchema = z.object({
   firstName: z.string().min(1, "Il nome è richiesto"),
   lastName: z.string().min(1, "Il cognome è richiesto"),
@@ -41,6 +39,7 @@ const playerRegistrationSchema = z.object({
   guardianRelationship: z.string().optional(),
   seasonId: z.string().min(1, "La stagione è richiesta"),
   teamGroupsIds: z.array(z.string()).optional(),
+  playerId: z.string().optional(),
 });
 
 type PlayerRegistrationFormValues = z.infer<typeof playerRegistrationSchema>;
@@ -86,33 +85,27 @@ const PlayerRegistrationsPage: React.FC = () => {
     }
   });
   
-  // Effetto per aggiornare il valore della stagione nel form quando cambia la stagione corrente
   useEffect(() => {
     if (currentSeason) {
       form.setValue('seasonId', currentSeason.id);
     }
   }, [currentSeason, form]);
   
-  // Filtra le registrazioni in base ai filtri applicati
   const filteredRegistrations = playerRegistrations.filter(registration => {
-    // Filtra per tab attivo
     if (activeTab === 'pending' && registration.status !== 'pending') return false;
     if (activeTab === 'active' && registration.status !== 'active') return false;
     if (activeTab === 'inactive' && registration.status !== 'inactive') return false;
     if (activeTab === 'to_reassign' && registration.status !== 'to_reassign') return false;
     
-    // Filtra per ricerca
     const fullName = `${registration.firstName} ${registration.lastName}`.toLowerCase();
     const searchLower = searchQuery.toLowerCase();
     if (searchQuery && !fullName.includes(searchLower)) return false;
     
-    // Filtra per status
     if (statusFilter !== 'all' && registration.status !== statusFilter) return false;
     
     return true;
   });
   
-  // Verifica se l'utente ha i permessi di amministrazione
   const hasAdminAccess = user?.role === 'admin' || user?.role === 'coach';
   
   if (!hasAdminAccess) {
@@ -132,7 +125,12 @@ const PlayerRegistrationsPage: React.FC = () => {
   
   const onSubmit: SubmitHandler<PlayerRegistrationFormValues> = async (data) => {
     try {
-      await createPlayerRegistration(data);
+      const playerData = {
+        ...data,
+        playerId: data.playerId || `player-${Date.now()}`,
+        teamGroupsIds: data.teamGroupsIds || []
+      };
+      await createPlayerRegistration(playerData);
       setIsAddDialogOpen(false);
       form.reset();
     } catch (error) {
@@ -329,28 +327,256 @@ const PlayerRegistrationsPage: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="active">
-              {/* Contenuto uguale a "all" ma filtrato automaticamente */}
               <div className="border rounded-md overflow-hidden">
                 <Table>
-                  {/* ... stesso contenuto della tabella precedente ... */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Data di nascita</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Squadre</TableHead>
+                      <TableHead className="text-right">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistrations.filter(registration => registration.status === 'active').length > 0 ? (
+                      filteredRegistrations.filter(registration => registration.status === 'active').map((registration) => (
+                        <TableRow key={registration.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>{getInitials(`${registration.firstName} ${registration.lastName}`)}</AvatarFallback>
+                            </Avatar>
+                            {registration.firstName} {registration.lastName}
+                            {registration.isMinor && (
+                              <Badge variant="secondary" className="ml-2">Minorenne</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{registration.contactEmail}</TableCell>
+                          <TableCell>
+                            {format(new Date(registration.birthDate), 'dd/MM/yyyy', { locale: it })}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(registration.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {registration.teamGroupsIds.map((teamId) => {
+                                const team = teamGroups.find(t => t.id === teamId);
+                                return team ? (
+                                  <Badge key={teamId} variant="outline">
+                                    {team.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                              {registration.teamGroupsIds.length === 0 && (
+                                <span className="text-sm text-muted-foreground">Nessuna squadra</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {registration.status === 'pending' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleSendInvitation(registration.id)}
+                                >
+                                  <Mail className="h-4 w-4 mr-1" /> Invia invito
+                                </Button>
+                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                  setSelectedRegistration(registration);
+                                  setIsAssignDialogOpen(true);
+                                }}
+                              >
+                                <UserCog className="h-4 w-4 mr-1" /> Gestisci
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          Nessun giocatore trovato.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
                 </Table>
               </div>
             </TabsContent>
             
             <TabsContent value="pending">
-              {/* Contenuto uguale a "all" ma filtrato automaticamente */}
               <div className="border rounded-md overflow-hidden">
                 <Table>
-                  {/* ... stesso contenuto della tabella precedente ... */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Data di nascita</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Squadre</TableHead>
+                      <TableHead className="text-right">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistrations.filter(registration => registration.status === 'pending').length > 0 ? (
+                      filteredRegistrations.filter(registration => registration.status === 'pending').map((registration) => (
+                        <TableRow key={registration.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>{getInitials(`${registration.firstName} ${registration.lastName}`)}</AvatarFallback>
+                            </Avatar>
+                            {registration.firstName} {registration.lastName}
+                            {registration.isMinor && (
+                              <Badge variant="secondary" className="ml-2">Minorenne</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{registration.contactEmail}</TableCell>
+                          <TableCell>
+                            {format(new Date(registration.birthDate), 'dd/MM/yyyy', { locale: it })}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(registration.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {registration.teamGroupsIds.map((teamId) => {
+                                const team = teamGroups.find(t => t.id === teamId);
+                                return team ? (
+                                  <Badge key={teamId} variant="outline">
+                                    {team.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                              {registration.teamGroupsIds.length === 0 && (
+                                <span className="text-sm text-muted-foreground">Nessuna squadra</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {registration.status === 'pending' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleSendInvitation(registration.id)}
+                                >
+                                  <Mail className="h-4 w-4 mr-1" /> Invia invito
+                                </Button>
+                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                  setSelectedRegistration(registration);
+                                  setIsAssignDialogOpen(true);
+                                }}
+                              >
+                                <UserCog className="h-4 w-4 mr-1" /> Gestisci
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          Nessun giocatore trovato.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
                 </Table>
               </div>
             </TabsContent>
             
             <TabsContent value="to_reassign">
-              {/* Contenuto uguale a "all" ma filtrato automaticamente */}
               <div className="border rounded-md overflow-hidden">
                 <Table>
-                  {/* ... stesso contenuto della tabella precedente ... */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Data di nascita</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Squadre</TableHead>
+                      <TableHead className="text-right">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistrations.filter(registration => registration.status === 'to_reassign').length > 0 ? (
+                      filteredRegistrations.filter(registration => registration.status === 'to_reassign').map((registration) => (
+                        <TableRow key={registration.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>{getInitials(`${registration.firstName} ${registration.lastName}`)}</AvatarFallback>
+                            </Avatar>
+                            {registration.firstName} {registration.lastName}
+                            {registration.isMinor && (
+                              <Badge variant="secondary" className="ml-2">Minorenne</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{registration.contactEmail}</TableCell>
+                          <TableCell>
+                            {format(new Date(registration.birthDate), 'dd/MM/yyyy', { locale: it })}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(registration.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {registration.teamGroupsIds.map((teamId) => {
+                                const team = teamGroups.find(t => t.id === teamId);
+                                return team ? (
+                                  <Badge key={teamId} variant="outline">
+                                    {team.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                              {registration.teamGroupsIds.length === 0 && (
+                                <span className="text-sm text-muted-foreground">Nessuna squadra</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {registration.status === 'pending' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleSendInvitation(registration.id)}
+                                >
+                                  <Mail className="h-4 w-4 mr-1" /> Invia invito
+                                </Button>
+                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                  setSelectedRegistration(registration);
+                                  setIsAssignDialogOpen(true);
+                                }}
+                              >
+                                <UserCog className="h-4 w-4 mr-1" /> Gestisci
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          Nessun giocatore trovato.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
                 </Table>
               </div>
             </TabsContent>
@@ -358,7 +584,6 @@ const PlayerRegistrationsPage: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Dialog per creare un nuovo giocatore */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
@@ -536,7 +761,6 @@ const PlayerRegistrationsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per gestire un giocatore */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           {selectedRegistration && (

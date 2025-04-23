@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Search, CheckCircle, XCircle, RefreshCw, FileText, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from 'date-fns';
-import it from 'date-fns/locale/it';
+import { it } from 'date-fns/locale'; // Fixed import
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Checkbox } from "@/components/ui/checkbox";

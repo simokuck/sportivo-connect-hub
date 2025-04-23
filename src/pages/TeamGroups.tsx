@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePlayerManagement } from '@/context/PlayerManagementContext';
@@ -26,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TeamGroup, Season, TeamCategory, PlayerRegistration } from '@/types/player-management';
 
-// Schema per la validazione del form di creazione squadra
+// Schema for team group creation form
 const teamGroupSchema = z.object({
   name: z.string().min(1, "Il nome è richiesto"),
   categoryId: z.string().min(1, "La categoria è richiesta"),
@@ -35,7 +34,7 @@ const teamGroupSchema = z.object({
 
 type TeamGroupFormValues = z.infer<typeof teamGroupSchema>;
 
-// Schema per la validazione del form di creazione categoria
+// Schema for category creation form
 const categorySchema = z.object({
   name: z.string().min(1, "Il nome è richiesto"),
   ageMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
@@ -45,7 +44,7 @@ const categorySchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
-// Schema per la validazione del form di creazione stagione
+// Schema for season creation form
 const seasonSchema = z.object({
   name: z.string().min(1, "Il nome è richiesto"),
   startDate: z.string().min(1, "La data di inizio è richiesta"),
@@ -78,7 +77,7 @@ const TeamGroupsPage: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<TeamGroup | null>(null);
   const [isPlayersDialogOpen, setIsPlayersDialogOpen] = useState(false);
   
-  // Form per la creazione di una squadra
+  // Form for team group creation
   const teamForm = useForm<TeamGroupFormValues>({
     resolver: zodResolver(teamGroupSchema),
     defaultValues: {
@@ -88,7 +87,7 @@ const TeamGroupsPage: React.FC = () => {
     }
   });
   
-  // Form per la creazione di una categoria
+  // Form for category creation
   const categoryForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -97,7 +96,7 @@ const TeamGroupsPage: React.FC = () => {
     }
   });
   
-  // Form per la creazione di una stagione
+  // Form for season creation
   const seasonForm = useForm<SeasonFormValues>({
     resolver: zodResolver(seasonSchema),
     defaultValues: {
@@ -146,7 +145,11 @@ const TeamGroupsPage: React.FC = () => {
   
   const onSubmitTeam = teamForm.handleSubmit(async (data) => {
     try {
-      await createTeamGroup(data);
+      await createTeamGroup({
+        name: data.name,
+        categoryId: data.categoryId,
+        seasonId: data.seasonId
+      });
       setIsTeamDialogOpen(false);
       teamForm.reset();
     } catch (error) {
@@ -156,7 +159,12 @@ const TeamGroupsPage: React.FC = () => {
   
   const onSubmitCategory = categoryForm.handleSubmit(async (data) => {
     try {
-      await createTeamCategory(data);
+      await createTeamCategory({
+        name: data.name,
+        ageMin: data.ageMin,
+        ageMax: data.ageMax,
+        seasonId: data.seasonId
+      });
       setIsCategoryDialogOpen(false);
       categoryForm.reset();
     } catch (error) {
@@ -166,7 +174,12 @@ const TeamGroupsPage: React.FC = () => {
   
   const onSubmitSeason = seasonForm.handleSubmit(async (data) => {
     try {
-      await createSeason(data);
+      await createSeason({
+        name: data.name,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        isActive: data.isActive
+      });
       setIsSeasonDialogOpen(false);
       seasonForm.reset();
     } catch (error) {
@@ -357,7 +370,7 @@ const TeamGroupsPage: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Dialog per creare una nuova squadra */}
+      {/* Dialog for creating a new team */}
       <Dialog open={isTeamDialogOpen} onOpenChange={setIsTeamDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -446,7 +459,7 @@ const TeamGroupsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per creare una nuova categoria */}
+      {/* Dialog for creating a new category */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -539,7 +552,7 @@ const TeamGroupsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per creare una nuova stagione */}
+      {/* Dialog for creating a new season */}
       <Dialog open={isSeasonDialogOpen} onOpenChange={setIsSeasonDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -622,7 +635,7 @@ const TeamGroupsPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per visualizzare i giocatori di una squadra */}
+      {/* Dialog for viewing players of a team */}
       <Dialog open={isPlayersDialogOpen} onOpenChange={setIsPlayersDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           {selectedTeam && (

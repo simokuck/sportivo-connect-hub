@@ -3,6 +3,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type ThemeType = 'light' | 'dark' | 'system';
 
+interface ThemeProviderProps {
+  children: React.ReactNode;
+  defaultTheme?: ThemeType;
+  storageKey?: string;
+}
+
 interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
@@ -12,10 +18,14 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ 
+  children, 
+  defaultTheme = 'system',
+  storageKey = 'theme'
+}) => {
   const [theme, setThemeState] = useState<ThemeType>(() => {
-    const savedTheme = localStorage.getItem('theme') as ThemeType;
-    return savedTheme || 'system';
+    const savedTheme = localStorage.getItem(storageKey) as ThemeType;
+    return savedTheme || defaultTheme;
   });
   
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
@@ -24,7 +34,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem(storageKey, newTheme);
   };
   
   const setPrimaryColor = (color: string) => {

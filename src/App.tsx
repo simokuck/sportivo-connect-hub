@@ -34,7 +34,7 @@ import PlayerConsents from './pages/PlayerConsents';
 
 import './App.css';
 
-// Crea un client per React Query
+// Create a client for React Query
 const queryClient = new QueryClient();
 
 function App() {

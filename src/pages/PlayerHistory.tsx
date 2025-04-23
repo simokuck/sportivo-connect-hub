@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Calendar, User, CheckCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from 'date-fns';
-import it from 'date-fns/locale/it';
+import { it } from 'date-fns/locale'; // Fixed import
 import { 
   Table, 
   TableBody, 
