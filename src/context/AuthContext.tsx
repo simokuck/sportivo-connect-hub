@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profileError) throw profileError;
 
       // Fetch role information if there's a role_id
-      let roleName = 'player'; // Default role
-      if (profileData.user_roles && profileData.user_roles.length > 0) {
+      let roleName = 'player' as UserRole; // Default role
+      if (profileData.user_roles && Array.isArray(profileData.user_roles) && profileData.user_roles.length > 0) {
         const { data: roleData } = await supabase
           .from('roles')
           .select('name')
@@ -67,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
           
         if (roleData) {
-          roleName = roleData.name;
+          // Ensure the role name is a valid UserRole
+          roleName = validateUserRole(roleData.name);
         }
       }
 
@@ -90,6 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error);
       toast.error('Errore durante il caricamento del profilo utente');
     }
+  };
+
+  // Helper function to validate if a string is a valid UserRole
+  const validateUserRole = (role: string): UserRole => {
+    const validRoles: UserRole[] = ['player', 'coach', 'admin', 'medical', 'developer'];
+    return validRoles.includes(role as UserRole) ? (role as UserRole) : 'player';
   };
 
   const login = async (email: string, password: string) => {
@@ -141,7 +148,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setUser(prev => prev ? { ...prev, role } : null);
+      // Ensure we're using a valid UserRole type
+      const validRole = validateUserRole(role);
+      
+      setUser(prev => prev ? { ...prev, role: validRole } : null);
     } catch (error) {
       console.error('Error setting role:', error);
       toast.error('Errore durante il cambio di ruolo');
