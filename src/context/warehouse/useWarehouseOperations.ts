@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useWarehouseData } from '@/hooks/useWarehouseData';
 import { useNotifications } from '@/context/NotificationContext';
@@ -22,7 +23,8 @@ export function useWarehouseOperations() {
     deleteVariant,
     addMovement,
     addAssignment,
-    markAssignmentReturned
+    markAssignmentReturned,
+    lowStockItems
   } = useWarehouseData();
   
   // Get players data
@@ -44,7 +46,6 @@ export function useWarehouseOperations() {
         position: player.position,
         strong_foot: player.strong_foot,
         avatar_url: player.avatar_url,
-        // Required properties for compatibility with src/types/index.ts Player interface
         name: `${player.first_name} ${player.last_name}`,
         firstName: player.first_name,
         lastName: player.last_name,
@@ -214,9 +215,7 @@ export function useWarehouseOperations() {
     onEditItem,
 
     // Dashboard data
-    lowStockItems: items.filter(item => 
-      item.variants.some(v => v.status === 'low' || v.status === 'out')
-    ),
+    lowStockItems,
     recentAssignments: assignments
       .sort((a, b) => new Date(b.assignDate).getTime() - new Date(a.assignDate).getTime())
       .slice(0, 5)
