@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from '@/context/AuthContext';
@@ -48,7 +48,7 @@ function App() {
                 <Router>
                   <Routes>
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/" element={<AppLayout children={''} />}>
+                    <Route path="/" element={<AppLayout />}>
                       <Route index element={<Index />} />
                       <Route path="dashboard" element={<Dashboard />} />
                       <Route path="profile" element={<UserProfile />} />
