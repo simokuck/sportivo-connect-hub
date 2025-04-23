@@ -4,8 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Shield, ShieldAlert, User, Users } from "lucide-react";
+import { Check, Shield, ShieldAlert, User, Users, ChevronLeft } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const roles = [
   { 
@@ -91,16 +93,33 @@ const permissions = [
 ];
 
 const RolesAndPermissions = () => {
+  const navigate = useNavigate();
+  
+  const handleEdit = (roleName: string) => {
+    toast.info(`Modifica del ruolo ${roleName} non ancora implementata.`);
+  };
+
+  const handleDelete = (roleName: string) => {
+    toast.info(`Eliminazione del ruolo ${roleName} non ancora implementata.`);
+  };
+
+  const handleNewRole = () => {
+    toast.info("Creazione di un nuovo ruolo non ancora implementata.");
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
+      <div className="flex items-center mb-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mr-4">
+          <ChevronLeft className="h-5 w-5 mr-1" /> Indietro
+        </Button>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold mb-2">Ruoli e Permessi</h1>
           <p className="text-muted-foreground">
             Gestisci ruoli, permessi e controllo accessi per gli utenti della piattaforma
           </p>
         </div>
-        <Button className="mt-4 md:mt-0">
+        <Button className="mt-4 md:mt-0" onClick={handleNewRole}>
           <Shield className="mr-2 h-4 w-4" />
           Nuovo Ruolo
         </Button>
@@ -138,11 +157,19 @@ const RolesAndPermissions = () => {
                       {role.users} utenti
                     </div>
                     <div className="space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEdit(role.name)}
+                      >
                         Modifica
                       </Button>
                       {!role.isSystemRole && (
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDelete(role.name)}
+                        >
                           Elimina
                         </Button>
                       )}

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockPlayers, mockTeams } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 const Statistics = () => {
@@ -117,27 +117,28 @@ const Statistics = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Minutaggio</CardTitle>
-                  <CardDescription>Partite complete equivalenti</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ChartContainer config={chartConfig}>
-                      <BarChart data={minutesData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis allowDecimals={false} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="minuti" fill="#93C5FD" name="Partite (90 min)" />
-                      </BarChart>
-                    </ChartContainer>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
+
+            {/* Reduced height for minutaggio chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Minutaggio</CardTitle>
+                <CardDescription>Partite complete equivalenti</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48">
+                  <ChartContainer config={chartConfig}>
+                    <BarChart data={minutesData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="minuti" fill="#93C5FD" name="Partite (90 min)" />
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

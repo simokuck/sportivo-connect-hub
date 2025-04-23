@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Player, Team } from '@/types';
+import { Team } from '@/types';
 import TeamStatistics from '@/components/team/TeamStatistics';
 
 const TeamsPage = () => {
@@ -19,11 +20,13 @@ const TeamsPage = () => {
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [activeView, setActiveView] = useState<'teams' | 'team-details'>('teams');
 
+  // Ensure user is defined before filtering
+  if (!user) return <div className="p-4">Loading...</div>;
+
   const filteredTeams = mockTeams.filter(team => {
-    if (!user) return false;
-    
     switch (user.role) {
       case 'admin':
+      case 'developer':
       case 'medical':
         return true;
       case 'coach':
