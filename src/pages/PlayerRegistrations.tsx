@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import PlayerRegistrationTable from './player-registrations/PlayerRegistrationTable';
+import { PlayerRegistrationTable } from './player-registrations/PlayerRegistrationTable';
 
 const PlayerRegistrations = () => {
   const navigate = useNavigate();

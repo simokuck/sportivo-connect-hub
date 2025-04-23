@@ -7,12 +7,60 @@ import CreateTeamDialog from './CreateTeamDialog';
 import CreateCategoryDialog from './CreateCategoryDialog';
 import CreateSeasonDialog from './CreateSeasonDialog';
 import TeamGroupsList from './TeamGroupsList';
+import { usePlayerManagement } from '@/context/PlayerManagementContext';
+import { useForm } from 'react-hook-form';
 
 const TeamGroupsPage = () => {
   const navigate = useNavigate();
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
   const [createSeasonOpen, setCreateSeasonOpen] = useState(false);
+  
+  const { 
+    teamGroups, 
+    teamCategories, 
+    seasons, 
+    playerRegistrations,
+    createTeamGroup,
+    createTeamCategory,
+    createSeason
+  } = usePlayerManagement();
+
+  const currentSeason = seasons.find(s => s.isActive) || seasons[0];
+
+  // Forms
+  const teamForm = useForm();
+  const categoryForm = useForm();
+  const seasonForm = useForm();
+
+  // Handler functions
+  const onSubmitTeam = (data: any) => {
+    createTeamGroup(data);
+    setCreateTeamOpen(false);
+    teamForm.reset();
+  };
+
+  const onSubmitCategory = (data: any) => {
+    createTeamCategory(data);
+    setCreateCategoryOpen(false);
+    categoryForm.reset();
+  };
+
+  const onSubmitSeason = (data: any) => {
+    createSeason(data);
+    setCreateSeasonOpen(false);
+    seasonForm.reset();
+  };
+
+  const getCategoriesBySeason = (seasonId: string) => {
+    return teamCategories.filter(c => c.seasonId === seasonId);
+  };
+
+  // Group teams by category
+  const teamsByCategory = teamCategories.reduce((acc, category) => {
+    acc[category.id] = teamGroups.filter(team => team.categoryId === category.id);
+    return acc;
+  }, {} as Record<string, typeof teamGroups>);
 
   return (
     <div className="container py-8">
@@ -35,11 +83,43 @@ const TeamGroupsPage = () => {
         <Button variant="outline" onClick={() => setCreateSeasonOpen(true)}>Gestisci Stagioni</Button>
       </div>
 
-      <TeamGroupsList />
+      <TeamGroupsList 
+        teamsByCategory={teamsByCategory}
+        categories={teamCategories}
+        playerRegistrations={playerRegistrations}
+        currentSeason={currentSeason}
+        seasons={seasons}
+        onViewPlayers={() => {}}
+        onEditTeam={() => {}}
+        onArchiveTeam={() => {}}
+        onDeleteTeam={() => {}}
+      />
 
-      <CreateTeamDialog open={createTeamOpen} onOpenChange={setCreateTeamOpen} />
-      <CreateCategoryDialog open={createCategoryOpen} onOpenChange={setCreateCategoryOpen} />
-      <CreateSeasonDialog open={createSeasonOpen} onOpenChange={setCreateSeasonOpen} />
+      <CreateTeamDialog 
+        open={createTeamOpen} 
+        onOpenChange={setCreateTeamOpen} 
+        teamForm={teamForm}
+        onSubmitTeam={onSubmitTeam}
+        getCategoriesBySeason={getCategoriesBySeason}
+        currentSeason={currentSeason}
+        seasons={seasons}
+      />
+      
+      <CreateCategoryDialog 
+        open={createCategoryOpen} 
+        onOpenChange={setCreateCategoryOpen} 
+        categoryForm={categoryForm}
+        onSubmitCategory={onSubmitCategory}
+        currentSeason={currentSeason}
+        seasons={seasons}
+      />
+      
+      <CreateSeasonDialog 
+        open={createSeasonOpen} 
+        onOpenChange={setCreateSeasonOpen} 
+        seasonForm={seasonForm}
+        onSubmitSeason={onSubmitSeason}
+      />
     </div>
   );
 };
