@@ -1,13 +1,11 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Shield, ShieldAlert, User, Users, ChevronLeft } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Shield, ShieldAlert, Users, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import RoleCard from '@/components/roles/RoleCard';
+import PermissionsMatrix from '@/components/roles/PermissionsMatrix';
 
 const roles = [
   { 
@@ -139,96 +137,22 @@ const RolesAndPermissions = () => {
 
         <TabsContent value="roles" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.map(role => (
-              <Card key={role.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle>{role.name}</CardTitle>
-                    {role.isSystemRole && (
-                      <Badge variant="secondary">Sistema</Badge>
-                    )}
-                  </div>
-                  <CardDescription>{role.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <User className="mr-2 h-4 w-4" />
-                      {role.users} utenti
-                    </div>
-                    <div className="space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleEdit(role.name)}
-                      >
-                        Modifica
-                      </Button>
-                      {!role.isSystemRole && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDelete(role.name)}
-                        >
-                          Elimina
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {roles.map((role) => (
+              <RoleCard
+                key={role.id}
+                {...role}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         </TabsContent>
 
         <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Matrice dei Permessi</CardTitle>
-              <CardDescription>
-                Visualizza quali permessi sono assegnati a ciascun ruolo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[300px]">Permesso</TableHead>
-                      {roles.map(role => (
-                        <TableHead key={role.id} className="text-center">
-                          {role.name}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {permissions.map(permission => (
-                      <TableRow key={permission.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            {permission.name}
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {permission.description}
-                            </div>
-                          </div>
-                        </TableCell>
-                        {roles.map(role => (
-                          <TableCell key={role.id} className="text-center">
-                            {permission.roles.includes(role.name) ? (
-                              <Check className="h-5 w-5 mx-auto text-green-600" />
-                            ) : (
-                              <span className="block h-5 w-5"></span>
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          <PermissionsMatrix
+            permissions={permissions}
+            roles={roles}
+          />
         </TabsContent>
       </Tabs>
     </div>
