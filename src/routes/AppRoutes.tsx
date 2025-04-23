@@ -24,6 +24,7 @@ import PlayerRegistrations from '@/pages/PlayerRegistrations';
 import TeamGroups from '@/pages/TeamGroups';
 import PlayerHistory from '@/pages/PlayerHistory';
 import PlayerConsents from '@/pages/PlayerConsents';
+import Medical from '@/pages/Medical';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -46,6 +47,7 @@ const AppRoutes: React.FC = () => {
         <Route path="training" element={<TrainingPlanner />} />
         <Route path="videos" element={<VideoSessions />} />
         <Route path="company" element={<CompanyInfo />} />
+        <Route path="medical" element={<Medical />} />
         <Route path="audit-log" element={<AuditLog />} />
         <Route path="roles" element={<RolesAndPermissions />} />
         <Route path="dev-settings" element={<DevSettings />} />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -20,7 +19,8 @@ import {
   ChevronRight,
   GripVertical,
   Video,
-  Code
+  Code,
+  Building
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -44,17 +44,15 @@ export const CollapsibleSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   
-  // Recupera l'ordine salvato dal localStorage o usa quello di default
   const getInitialNavItems = (): NavItem[] => {
     const savedOrderString = localStorage.getItem('sidebarNavOrder');
     
-    // Definizione di default degli elementi della navbar
     const defaultNavItems: NavItem[] = [
       { 
         id: 'dashboard',
         icon: Home, 
         label: 'Dashboard', 
-        href: '/', 
+        href: '/dashboard', 
         roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
       { 
@@ -72,24 +70,17 @@ export const CollapsibleSidebar = () => {
         roles: ['player', 'coach', 'admin', 'medical', 'developer'] 
       },
       { 
-        id: 'exercises',
+        id: 'training',
         icon: ClipboardList, 
-        label: 'Esercitazioni', 
-        href: '/exercises', 
+        label: 'Allenamenti', 
+        href: '/training', 
         roles: ['coach'] 
       },
       { 
-        id: 'video-sessions',
+        id: 'videos',
         icon: Video, 
-        label: 'Sessioni Video', 
-        href: '/video-sessions', 
-        roles: ['coach'] 
-      },
-      { 
-        id: 'training-planner',
-        icon: CalendarDays, 
-        label: 'Pianifica Allenamenti', 
-        href: '/training-planner', 
+        label: 'Video', 
+        href: '/videos', 
         roles: ['coach'] 
       },
       { 
@@ -128,10 +119,10 @@ export const CollapsibleSidebar = () => {
         roles: ['developer'] 
       },
       { 
-        id: 'company-info',
-        icon: FileText, 
+        id: 'company',
+        icon: Building, 
         label: 'Anagrafica Società', 
-        href: '/company-info', 
+        href: '/company', 
         roles: ['admin'] 
       },
       { 
@@ -152,11 +143,8 @@ export const CollapsibleSidebar = () => {
     
     if (savedOrderString) {
       try {
-        // Ottiene l'ordine salvato
         const savedOrder = JSON.parse(savedOrderString);
         
-        // Crea un nuovo array con l'ordine salvato
-        // Se ci sono nuovi item che non erano nell'ordine salvato, li aggiunge alla fine
         const reorderedItems = [...defaultNavItems];
         reorderedItems.sort((a, b) => {
           const indexA = savedOrder.indexOf(a.id);
@@ -184,12 +172,10 @@ export const CollapsibleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
-  // Close mobile sidebar when route changes
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
   
-  // Gestori per il drag and drop - solo per developer
   const handleDragStart = (e: React.DragEvent, id: string) => {
     if (user?.role !== 'developer') return;
     
@@ -208,23 +194,17 @@ export const CollapsibleSidebar = () => {
     
     if (!draggedItemId || draggedItemId === targetId) return;
     
-    // Ottieni l'indice dell'elemento trascinato e dell'elemento di destinazione
     const itemsCopy = [...navItems];
     const draggedItemIndex = itemsCopy.findIndex(item => item.id === draggedItemId);
     const targetItemIndex = itemsCopy.findIndex(item => item.id === targetId);
     
     if (draggedItemIndex === -1 || targetItemIndex === -1) return;
     
-    // Rimuovi l'elemento trascinato dalla sua posizione corrente
     const [draggedItem] = itemsCopy.splice(draggedItemIndex, 1);
-    
-    // Inserisci l'elemento trascinato nella nuova posizione
     itemsCopy.splice(targetItemIndex, 0, draggedItem);
     
-    // Aggiorna lo stato
     setNavItems(itemsCopy);
     
-    // Salva il nuovo ordine nel localStorage
     const newOrder = itemsCopy.map(item => item.id);
     localStorage.setItem('sidebarNavOrder', JSON.stringify(newOrder));
     
@@ -242,22 +222,18 @@ export const CollapsibleSidebar = () => {
 
   if (!user) return null;
 
-  // Filtra gli elementi della navbar in base al ruolo dell'utente
   const filteredNavItems = navItems.filter(item => 
     item.roles.includes(user.role)
   );
 
-  // Applica il colore principale alla sidebar
   const sidebarStyle = {
-    backgroundColor: primaryColor || '#1976d2', // Usa il colore primario o un blu di default
+    backgroundColor: primaryColor || '#1976d2',
   };
 
-  // Determina se l'utente può riordinare la sidebar (solo developer)
   const canReorderSidebar = user.role === 'developer';
 
   return (
     <>
-      {/* Mobile backdrop */}
       {mobileOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
@@ -265,7 +241,6 @@ export const CollapsibleSidebar = () => {
         />
       )}
       
-      {/* Mobile toggle button */}
       <button
         className="fixed left-4 top-4 z-30 rounded-md border bg-background p-2 md:hidden"
         onClick={() => setMobileOpen(true)}
@@ -287,7 +262,6 @@ export const CollapsibleSidebar = () => {
         </svg>
       </button>
 
-      {/* Sidebar component */}
       <aside 
         style={sidebarStyle}
         className={cn(
@@ -312,7 +286,7 @@ export const CollapsibleSidebar = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={toggleSidebar} 
+              onClick={() => setIsOpen(!isOpen)} 
               className="text-white hidden md:flex"
             >
               {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
