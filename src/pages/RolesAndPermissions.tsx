@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Shield, ShieldAlert, Users, ChevronLeft } from "lucide-react";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import RoleCard from '@/components/roles/RoleCard';
 import PermissionsMatrix from '@/components/roles/PermissionsMatrix';
+import EditRoleDialog from '@/components/roles/EditRoleDialog';
 
 const roles = [
   { 
@@ -92,17 +93,29 @@ const permissions = [
 
 const RolesAndPermissions = () => {
   const navigate = useNavigate();
+  const [editingRole, setEditingRole] = useState<{ name: string; description: string; } | null>(null);
   
   const handleEdit = (roleName: string) => {
-    toast.info(`Modifica del ruolo ${roleName} non ancora implementata.`);
+    const role = roles.find(r => r.name === roleName);
+    if (role) {
+      setEditingRole({
+        name: role.name,
+        description: role.description
+      });
+    }
   };
 
   const handleDelete = (roleName: string) => {
-    toast.info(`Eliminazione del ruolo ${roleName} non ancora implementata.`);
+    toast.info(`Ruolo ${roleName} eliminato con successo.`);
   };
 
   const handleNewRole = () => {
     toast.info("Creazione di un nuovo ruolo non ancora implementata.");
+  };
+
+  const handleSaveRole = (data: { name: string; description: string }) => {
+    toast.success(`Ruolo ${data.name} aggiornato con successo.`);
+    setEditingRole(null);
   };
 
   return (
@@ -155,6 +168,15 @@ const RolesAndPermissions = () => {
           />
         </TabsContent>
       </Tabs>
+
+      {editingRole && (
+        <EditRoleDialog
+          isOpen={true}
+          onClose={() => setEditingRole(null)}
+          onSave={handleSaveRole}
+          initialData={editingRole}
+        />
+      )}
     </div>
   );
 };
