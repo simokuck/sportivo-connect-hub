@@ -577,6 +577,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          address: string | null
+          avatar: string | null
+          biometric_enabled: boolean | null
+          birth_date: string | null
+          city: string | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          avatar?: string | null
+          biometric_enabled?: boolean | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          avatar?: string | null
+          biometric_enabled?: boolean | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string | null

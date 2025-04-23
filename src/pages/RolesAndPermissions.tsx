@@ -9,32 +9,65 @@ import PermissionsMatrix from '@/components/roles/PermissionsMatrix';
 import EditRoleDialog from '@/components/roles/EditRoleDialog';
 import { useRoles } from '@/hooks/useRoles';
 import { Role } from '@/types/roles';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const RolesAndPermissions = () => {
   const navigate = useNavigate();
   const { roles, permissions, createRole, updateRole, deleteRole } = useRoles();
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [showNewRoleDialog, setShowNewRoleDialog] = useState(false);
+  const [usersCount, setUsersCount] = useState<{[roleId: string]: number}>({});
+
+  React.useEffect(() => {
+    const fetchUsersCount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role_id, count(user_id)', { count: 'exact' })
+          .groupBy('role_id');
+
+        if (error) throw error;
+
+        const counts = data.reduce((acc, item) => {
+          acc[item.role_id] = item.count;
+          return acc;
+        }, {});
+
+        setUsersCount(counts);
+      } catch (error) {
+        console.error('Error fetching users count:', error);
+        toast.error('Impossibile caricare il numero di utenti per ruolo');
+      }
+    };
+
+    fetchUsersCount();
+  }, [roles]);
 
   const handleEdit = (role: Role) => {
     setEditingRole(role);
   };
 
   const handleSave = async (data: { name: string; description: string }) => {
-    if (editingRole) {
-      await updateRole.mutateAsync({
-        id: editingRole.id,
-        ...data
-      });
-    } else {
-      await createRole.mutateAsync({
-        name: data.name,
-        description: data.description,
-        isSystemRole: false
-      });
+    try {
+      if (editingRole) {
+        await updateRole.mutateAsync({
+          id: editingRole.id,
+          ...data
+        });
+      } else {
+        await createRole.mutateAsync({
+          name: data.name,
+          description: data.description,
+          isSystemRole: false
+        });
+      }
+      setEditingRole(null);
+      setShowNewRoleDialog(false);
+    } catch (error) {
+      console.error('Error saving role:', error);
+      toast.error('Errore durante il salvataggio del ruolo');
     }
-    setEditingRole(null);
-    setShowNewRoleDialog(false);
   };
 
   return (
@@ -73,7 +106,7 @@ const RolesAndPermissions = () => {
               <RoleCard
                 key={role.id}
                 role={role}
-                usersCount={0} // TODO: Implement user count
+                usersCount={usersCount[role.id] || 0}
                 onEdit={handleEdit}
                 onDelete={deleteRole.mutate}
               />
@@ -93,7 +126,7 @@ const RolesAndPermissions = () => {
               id: parseInt(r.id),
               name: r.name,
               description: r.description,
-              users: 0, // TODO: Implement user count
+              users: usersCount[r.id] || 0,
               isSystemRole: r.isSystemRole
             }))}
           />
