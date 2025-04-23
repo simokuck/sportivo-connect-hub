@@ -13,7 +13,8 @@ export type TeamCategory = {
   name: string;  // es. "Allievi", "Juniores"
   ageMin?: number;
   ageMax?: number;
-  seasonId: string;
+  seasonId: string | null;
+  createdAt?: string;
 };
 
 export type TeamGroup = {
@@ -60,7 +61,7 @@ export type PlayerRegistration = {
   playerId: string;
   firstName: string;
   lastName: string;
-  birthDate: string;
+  birthDate: string | null;
   isMinor: boolean;
   contactEmail: string;
   guardianName?: string;

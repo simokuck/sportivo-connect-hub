@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useState } from 'react';
 import { useTeamGroups } from '@/hooks/useTeamGroups';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useTeamCategories } from '@/hooks/useTeamCategories';
 import { useSeasons } from '@/hooks/useSeasons';
-import { Player, TeamCategory, TeamGroup, Season, PlayerRegistration } from '@/types';
+import { Player, TeamCategory, TeamGroup, Season } from '@/types';
+import { PlayerRegistration, PlayerConsent, PlayerTeamHistory } from '@/types/player-management';
 import { usePlayerRegistrations } from '@/hooks/usePlayerRegistrations';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,9 +17,12 @@ interface PlayerManagementContextType {
   categories: TeamCategory[];
   seasons: Season[];
   playerRegistrations: PlayerRegistration[];
+  playerConsents: PlayerConsent[];
+  playerHistory: PlayerTeamHistory[];
   createTeamGroup: (team: Omit<TeamGroup, 'id' | 'createdAt' | 'updatedAt'>) => void;
   createTeamCategory: (category: Omit<TeamCategory, 'id' | 'createdAt' | 'updatedAt'>) => void;
   createSeason: (season: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  getPlayerHistory: (playerId: string) => PlayerTeamHistory[];
 }
 
 const PlayerManagementContext = createContext<PlayerManagementContextType | undefined>(undefined);
@@ -28,11 +33,13 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
   const { data: categories = [] } = useTeamCategories();
   const { data: seasons = [] } = useSeasons();
   const { data: playerRegistrations = [] } = usePlayerRegistrations();
+  const [playerConsents, setPlayerConsents] = useState<PlayerConsent[]>([]);
+  const [playerHistory, setPlayerHistory] = useState<PlayerTeamHistory[]>([]);
   const queryClient = useQueryClient();
 
   // Mutation to create a new team group
   const createTeamGroupMutation = useMutation({
-    mutationFn: async (team: Omit<TeamGroup, 'id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (team: { name: string, category: string }) => {
       const { data, error } = await supabase
         .from('teams')
         .insert(team)
@@ -48,17 +55,20 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     },
   });
 
-  // Mutation to create a new team category
+  // Mutation to create a new team category - this is just a placeholder until we have a categories table
   const createTeamCategoryMutation = useMutation({
-    mutationFn: async (category: Omit<TeamCategory, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const { data, error } = await supabase
-        .from('team_categories')
-        .insert(category)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+    mutationFn: async (category: { name: string }) => {
+      // This is a mock implementation since we don't have a team_categories table
+      // In the future, replace this with a real database insert
+      console.log('Creating category (mock):', category);
+      
+      // Return mock data with an ID
+      return { 
+        id: `cat-${Date.now()}`,
+        name: category.name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-categories'] });
@@ -66,17 +76,22 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     },
   });
 
-  // Mutation to create a new season
+  // Mutation to create a new season - placeholder
   const createSeasonMutation = useMutation({
-    mutationFn: async (season: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const { data, error } = await supabase
-        .from('seasons')
-        .insert(season)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+    mutationFn: async (season: { name: string, startDate: string, endDate: string, isActive: boolean }) => {
+      // This is a mock implementation since we don't have a seasons table
+      // In the future, replace this with a real database insert
+      console.log('Creating season (mock):', season);
+      
+      // Return mock data with an ID
+      return { 
+        id: `season-${Date.now()}`,
+        name: season.name,
+        startDate: season.startDate,
+        endDate: season.endDate,
+        isActive: season.isActive,
+        created_at: new Date().toISOString(),
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seasons'] });
@@ -85,16 +100,21 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
   });
 
   // Handler functions to trigger mutations
-  const createTeamGroup = (team: Omit<TeamGroup, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createTeamGroup = (team: { name: string, category: string }) => {
     createTeamGroupMutation.mutate(team);
   };
 
-  const createTeamCategory = (category: Omit<TeamCategory, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createTeamCategory = (category: { name: string }) => {
     createTeamCategoryMutation.mutate(category);
   };
 
-  const createSeason = (season: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createSeason = (season: { name: string, startDate: string, endDate: string, isActive: boolean }) => {
     createSeasonMutation.mutate(season);
+  };
+
+  // Utility function to get player history
+  const getPlayerHistory = (playerId: string) => {
+    return playerHistory.filter(history => history.playerId === playerId);
   };
   
   return (
@@ -105,9 +125,12 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
         categories,
         seasons,
         playerRegistrations,
+        playerConsents,
+        playerHistory,
         createTeamGroup,
         createTeamCategory,
         createSeason,
+        getPlayerHistory
       }}
     >
       {children}

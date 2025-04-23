@@ -27,7 +27,15 @@ export function usePlayers() {
         position: player.position,
         strongFoot: player.strong_foot,
         avatar: player.avatar_url,
-        stats: player.player_stats?.[0] || null,
+        stats: player.player_stats?.[0] ? {
+          games: player.player_stats[0].games || 0,
+          minutesPlayed: player.player_stats[0].minutes_played || 0,
+          goals: player.player_stats[0].goals || 0,
+          assists: player.player_stats[0].assists || 0,
+          yellowCards: player.player_stats[0].yellow_cards || 0,
+          redCards: player.player_stats[0].red_cards || 0,
+          absences: player.player_stats[0].absences || 0
+        } : null,
         medicalInfo: player.medical_info?.[0] || null,
         createdAt: new Date(player.created_at),
         updatedAt: new Date(player.updated_at)
