@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Team, Player } from '@/types';
 import { 
   BarChart, 
-  Bar, 
+  Bar,
+  CartesianGrid, 
   XAxis, 
   YAxis, 
-  CartesianGrid, 
   Tooltip, 
   Legend, 
   ResponsiveContainer,
@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Goal, Clock, Award, AlertTriangle } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface TeamStatisticsProps {
   team: Team;
@@ -68,6 +69,18 @@ const TeamStatistics = ({ team }: TeamStatisticsProps) => {
 
   // Colors for pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  
+  // Chart configuration
+  const chartConfig = {
+    goals: {
+      label: "Gol",
+      color: "#8884d8"
+    },
+    assists: {
+      label: "Assist",
+      color: "#82ca9d"
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -108,7 +121,7 @@ const TeamStatistics = ({ team }: TeamStatisticsProps) => {
           </CardHeader>
           <CardContent>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig}>
                 <BarChart
                   data={topScorers}
                   margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
@@ -116,11 +129,10 @@ const TeamStatistics = ({ team }: TeamStatisticsProps) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
-                  <Legend />
+                  <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="goals" name="Gol" fill="#8884d8" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
@@ -131,7 +143,7 @@ const TeamStatistics = ({ team }: TeamStatisticsProps) => {
           </CardHeader>
           <CardContent>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig}>
                 <BarChart
                   data={topAssisters}
                   margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
@@ -139,11 +151,10 @@ const TeamStatistics = ({ team }: TeamStatisticsProps) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
-                  <Legend />
+                  <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="assists" name="Assist" fill="#82ca9d" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>

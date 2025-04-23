@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockPlayers, mockTeams } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 const Statistics = () => {
   const { user } = useAuth();
@@ -32,6 +33,22 @@ const Statistics = () => {
     name: player.name.split(' ')[0],
     minuti: Math.round(player.stats.minutesPlayed / 90) // Minutes in match equivalent
   }));
+
+  // Chart configuration
+  const chartConfig = {
+    goals: {
+      label: "Gol",
+      color: "#1E40AF"
+    },
+    assists: {
+      label: "Assist",
+      color: "#047857"
+    },
+    minuti: {
+      label: "Partite (90 min)",
+      color: "#93C5FD"
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -68,15 +85,15 @@ const Statistics = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <BarChart data={goalsData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis allowDecimals={false} />
-                        <Tooltip />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="goals" fill="#1E40AF" name="Gol" />
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -88,15 +105,15 @@ const Statistics = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <BarChart data={assistsData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis allowDecimals={false} />
-                        <Tooltip />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="assists" fill="#047857" name="Assist" />
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -108,15 +125,15 @@ const Statistics = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <BarChart data={minutesData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis allowDecimals={false} />
-                        <Tooltip />
+                        <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="minuti" fill="#93C5FD" name="Partite (90 min)" />
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -168,15 +185,15 @@ const Statistics = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ChartContainer config={chartConfig}>
                     <BarChart data={goalsData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
-                      <Tooltip />
+                      <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="goals" fill="#1E40AF" name="Gol" />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 </div>
               </CardContent>
             </Card>
@@ -190,15 +207,15 @@ const Statistics = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ChartContainer config={chartConfig}>
                     <BarChart data={minutesData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
-                      <Tooltip />
+                      <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="minuti" fill="#93C5FD" name="Partite (90 min)" />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 </div>
               </CardContent>
             </Card>
@@ -211,6 +228,14 @@ const Statistics = () => {
 
 // Component for individual player statistics view
 const PlayerStatistics = ({ player }: { player: typeof mockPlayers[0] }) => {
+  // Chart configuration for player stats
+  const chartConfig = {
+    value: {
+      label: "Contributo",
+      color: "#1E40AF"
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -249,7 +274,7 @@ const PlayerStatistics = ({ player }: { player: typeof mockPlayers[0] }) => {
             <div>
               <p className="text-xl font-semibold mb-2">Contributo alla Squadra</p>
               <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig}>
                   <BarChart
                     data={[
                       { name: 'Gol', value: player.stats.goals },
@@ -259,10 +284,10 @@ const PlayerStatistics = ({ player }: { player: typeof mockPlayers[0] }) => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis allowDecimals={false} />
-                    <Tooltip />
+                    <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="value" fill="#1E40AF" />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </div>
           </div>
