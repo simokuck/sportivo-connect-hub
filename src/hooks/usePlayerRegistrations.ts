@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { PlayerRegistration } from '@/types/player-management';
+import { PlayerRegistration, PlayerRegistrationStatus } from '@/types/player-management';
 
 export function usePlayerRegistrations() {
   return useQuery({

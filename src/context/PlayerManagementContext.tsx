@@ -1,11 +1,10 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { useTeamGroups } from '@/hooks/useTeamGroups';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useTeamCategories } from '@/hooks/useTeamCategories';
 import { useSeasons } from '@/hooks/useSeasons';
-import { Player, TeamCategory, TeamGroup, Season } from '@/types';
-import { PlayerRegistration, PlayerConsent, PlayerTeamHistory } from '@/types/player-management';
+import { Player } from '@/types';
+import { PlayerRegistration, PlayerConsent, PlayerTeamHistory, TeamCategory, TeamGroup, Season } from '@/types/player-management';
 import { usePlayerRegistrations } from '@/hooks/usePlayerRegistrations';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,7 +36,6 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
   const [playerHistory, setPlayerHistory] = useState<PlayerTeamHistory[]>([]);
   const queryClient = useQueryClient();
 
-  // Mutation to create a new team group
   const createTeamGroupMutation = useMutation({
     mutationFn: async (team: { name: string, category: string }) => {
       const { data, error } = await supabase
@@ -55,14 +53,9 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     },
   });
 
-  // Mutation to create a new team category - this is just a placeholder until we have a categories table
   const createTeamCategoryMutation = useMutation({
     mutationFn: async (category: { name: string }) => {
-      // This is a mock implementation since we don't have a team_categories table
-      // In the future, replace this with a real database insert
       console.log('Creating category (mock):', category);
-      
-      // Return mock data with an ID
       return { 
         id: `cat-${Date.now()}`,
         name: category.name,
@@ -76,14 +69,9 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     },
   });
 
-  // Mutation to create a new season - placeholder
   const createSeasonMutation = useMutation({
     mutationFn: async (season: { name: string, startDate: string, endDate: string, isActive: boolean }) => {
-      // This is a mock implementation since we don't have a seasons table
-      // In the future, replace this with a real database insert
       console.log('Creating season (mock):', season);
-      
-      // Return mock data with an ID
       return { 
         id: `season-${Date.now()}`,
         name: season.name,
@@ -99,7 +87,6 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     },
   });
 
-  // Handler functions to trigger mutations
   const createTeamGroup = (team: { name: string, category: string }) => {
     createTeamGroupMutation.mutate(team);
   };
@@ -112,11 +99,10 @@ export function PlayerManagementProvider({ children }: { children: React.ReactNo
     createSeasonMutation.mutate(season);
   };
 
-  // Utility function to get player history
   const getPlayerHistory = (playerId: string) => {
     return playerHistory.filter(history => history.playerId === playerId);
   };
-  
+
   return (
     <PlayerManagementContext.Provider
       value={{
