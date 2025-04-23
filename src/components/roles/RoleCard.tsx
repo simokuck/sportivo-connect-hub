@@ -6,31 +6,26 @@ import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { Role } from '@/types/roles';
 
 interface RoleCardProps {
-  id: number;
-  name: string;
-  description: string;
-  users: number;
-  isSystemRole: boolean;
-  onEdit: (name: string) => void;
-  onDelete: (name: string) => void;
+  role: Role;
+  usersCount: number;
+  onEdit: (role: Role) => void;
+  onDelete: (id: string) => void;
 }
 
 const RoleCard = ({ 
-  name, 
-  description, 
-  users, 
-  isSystemRole, 
-  onEdit, 
-  onDelete 
+  role,
+  usersCount,
+  onEdit,
+  onDelete
 }: RoleCardProps) => {
   const { showNotification } = useNotifications();
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   const handleDelete = () => {
-    onDelete(name);
-    showNotification("success", `Ruolo ${name} eliminato con successo`);
+    onDelete(role.id);
     setShowDeleteConfirm(false);
   };
 
@@ -39,28 +34,28 @@ const RoleCard = ({
       <Card>
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle>{name}</CardTitle>
-            {isSystemRole && (
+            <CardTitle>{role.name}</CardTitle>
+            {role.isSystemRole && (
               <Badge variant="secondary">Sistema</Badge>
             )}
           </div>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription>{role.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center">
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="mr-2 h-4 w-4" />
-              {users} utenti
+              {usersCount} utenti
             </div>
             <div className="space-x-2">
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onEdit(name)}
+                onClick={() => onEdit(role)}
               >
                 Modifica
               </Button>
-              {!isSystemRole && (
+              {!role.isSystemRole && (
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -79,7 +74,7 @@ const RoleCard = ({
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDelete}
         title="Elimina Ruolo"
-        description={`Sei sicuro di voler eliminare il ruolo "${name}"? Questa azione non può essere annullata.`}
+        description={`Sei sicuro di voler eliminare il ruolo "${role.name}"? Questa azione non può essere annullata.`}
         confirmText="Elimina"
         cancelText="Annulla"
       />

@@ -1,121 +1,40 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Shield, ShieldAlert, Users, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import RoleCard from '@/components/roles/RoleCard';
 import PermissionsMatrix from '@/components/roles/PermissionsMatrix';
 import EditRoleDialog from '@/components/roles/EditRoleDialog';
-
-const roles = [
-  { 
-    id: 1, 
-    name: "Administrator", 
-    description: "Accesso completo a tutte le funzionalità del sistema",
-    users: 3,
-    isSystemRole: true 
-  },
-  { 
-    id: 2, 
-    name: "Coach", 
-    description: "Gestione team, allenamenti e statistiche",
-    users: 8,
-    isSystemRole: true 
-  },
-  { 
-    id: 3, 
-    name: "Manager", 
-    description: "Gestione amministrativa e documentale",
-    users: 5,
-    isSystemRole: true 
-  },
-  { 
-    id: 4, 
-    name: "Medical Staff", 
-    description: "Accesso a dati medici e certificati",
-    users: 4,
-    isSystemRole: true 
-  },
-  { 
-    id: 5, 
-    name: "Custom Role", 
-    description: "Ruolo personalizzato con permessi specifici",
-    users: 2,
-    isSystemRole: false 
-  }
-];
-
-const permissions = [
-  { 
-    id: "dashboard", 
-    name: "Dashboard", 
-    description: "Accesso alla dashboard e statistiche",
-    roles: ["Administrator", "Coach", "Manager", "Medical Staff", "Custom Role"]
-  },
-  { 
-    id: "teams", 
-    name: "Team", 
-    description: "Gestione dei team e giocatori",
-    roles: ["Administrator", "Coach", "Manager"]
-  },
-  { 
-    id: "calendar", 
-    name: "Calendario", 
-    description: "Visualizzazione e gestione eventi",
-    roles: ["Administrator", "Coach", "Manager", "Medical Staff"]
-  },
-  { 
-    id: "warehouse", 
-    name: "Magazzino", 
-    description: "Gestione inventario e attrezzature",
-    roles: ["Administrator", "Manager"]
-  },
-  { 
-    id: "documents", 
-    name: "Documenti", 
-    description: "Gestione e upload documenti",
-    roles: ["Administrator", "Manager"]
-  },
-  { 
-    id: "medical", 
-    name: "Dati Medici", 
-    description: "Accesso a dati sanitari e certificati",
-    roles: ["Administrator", "Medical Staff"]
-  },
-  { 
-    id: "settings", 
-    name: "Impostazioni", 
-    description: "Configurazione sistema e preferenze",
-    roles: ["Administrator"]
-  }
-];
+import { useRoles } from '@/hooks/useRoles';
+import { Role } from '@/types/roles';
 
 const RolesAndPermissions = () => {
   const navigate = useNavigate();
-  const [editingRole, setEditingRole] = useState<{ name: string; description: string; } | null>(null);
-  
-  const handleEdit = (roleName: string) => {
-    const role = roles.find(r => r.name === roleName);
-    if (role) {
-      setEditingRole({
-        name: role.name,
-        description: role.description
+  const { roles, permissions, createRole, updateRole, deleteRole } = useRoles();
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [showNewRoleDialog, setShowNewRoleDialog] = useState(false);
+
+  const handleEdit = (role: Role) => {
+    setEditingRole(role);
+  };
+
+  const handleSave = async (data: { name: string; description: string }) => {
+    if (editingRole) {
+      await updateRole.mutateAsync({
+        id: editingRole.id,
+        ...data
+      });
+    } else {
+      await createRole.mutateAsync({
+        name: data.name,
+        description: data.description,
+        isSystemRole: false
       });
     }
-  };
-
-  const handleDelete = (roleName: string) => {
-    toast.info(`Ruolo ${roleName} eliminato con successo.`);
-  };
-
-  const handleNewRole = () => {
-    toast.info("Creazione di un nuovo ruolo non ancora implementata.");
-  };
-
-  const handleSaveRole = (data: { name: string; description: string }) => {
-    toast.success(`Ruolo ${data.name} aggiornato con successo.`);
     setEditingRole(null);
+    setShowNewRoleDialog(false);
   };
 
   return (
@@ -130,7 +49,7 @@ const RolesAndPermissions = () => {
             Gestisci ruoli, permessi e controllo accessi per gli utenti della piattaforma
           </p>
         </div>
-        <Button className="mt-4 md:mt-0" onClick={handleNewRole}>
+        <Button onClick={() => setShowNewRoleDialog(true)}>
           <Shield className="mr-2 h-4 w-4" />
           Nuovo Ruolo
         </Button>
@@ -153,9 +72,10 @@ const RolesAndPermissions = () => {
             {roles.map((role) => (
               <RoleCard
                 key={role.id}
-                {...role}
+                role={role}
+                usersCount={0} // TODO: Implement user count
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={deleteRole.mutate}
               />
             ))}
           </div>
@@ -163,20 +83,32 @@ const RolesAndPermissions = () => {
 
         <TabsContent value="permissions">
           <PermissionsMatrix
-            permissions={permissions}
-            roles={roles}
+            permissions={permissions.map(p => ({
+              id: p.id,
+              name: p.name,
+              description: p.description,
+              roles: [] // TODO: Implement role permissions mapping
+            }))}
+            roles={roles.map(r => ({
+              id: parseInt(r.id),
+              name: r.name,
+              description: r.description,
+              users: 0, // TODO: Implement user count
+              isSystemRole: r.isSystemRole
+            }))}
           />
         </TabsContent>
       </Tabs>
 
-      {editingRole && (
-        <EditRoleDialog
-          isOpen={true}
-          onClose={() => setEditingRole(null)}
-          onSave={handleSaveRole}
-          initialData={editingRole}
-        />
-      )}
+      <EditRoleDialog
+        isOpen={editingRole !== null || showNewRoleDialog}
+        onClose={() => {
+          setEditingRole(null);
+          setShowNewRoleDialog(false);
+        }}
+        onSave={handleSave}
+        role={editingRole || undefined}
+      />
     </div>
   );
 };
