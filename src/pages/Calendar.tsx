@@ -53,25 +53,10 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
 
       const isAdmin = userRoles?.some(r => r.roles?.name === 'Administrator');
       const isCoach = userRoles?.some(r => r.roles?.name === 'Coach');
-      const isPlayer = userRoles?.some(r => r.roles?.name === 'Player');
-
-      if (isAdmin) {
-        // Admins see all events
-      } else if (isCoach) {
-        // Coaches see events for their teams
-        query = query.or(`team_id.in.(
-          SELECT id FROM teams WHERE user_id = '${user.id}'
-        )`);
-      } else if (isPlayer) {
-        // Players see events for their team
-        query = query.or(`team_id.in.(
-          SELECT team_id FROM players WHERE id = '${user.id}'
-        )`);
-      } else {
-        // Default: no events
-        query = query.eq('id', 'none');
-      }
-
+      
+      // We'll avoid using any explicit filtering that might lead to invalid UUIDs
+      // Let the RLS policies handle access control instead
+      
       const { data, error } = await query;
       
       if (error) {
