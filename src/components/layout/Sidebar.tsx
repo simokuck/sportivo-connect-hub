@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -44,10 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     return location.pathname === path;
   };
 
-  // Only show team management for coaches and admins
   const showTeamManagement = ['coach', 'admin', 'developer'].includes(user?.role || '');
-  
-  // Only allow admin and developer to access user creation
   const canManageUsers = ['admin', 'developer'].includes(user?.role || '');
 
   const navItems = [
@@ -271,7 +267,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </ul>
       </div>
 
-      {/* Report Bug Button */}
       <div className="p-2 border-t">
         <Link
           to="/report-bug"

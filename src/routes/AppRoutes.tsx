@@ -55,7 +55,7 @@ const AppRoutes: React.FC = () => {
         <Route path="company" element={<CompanyInfo />} />
         <Route path="medical" element={<Medical />} />
         <Route path="audit-log" element={<AuditLog />} />
-        <Route path="roles" element={<RolesAndPermissions />} />
+        <Route path="roles-and-permissions" element={<RolesAndPermissions />} />
         <Route path="dev-settings" element={<DevSettings />} />
         <Route path="developer" element={<Developer />} />
         <Route path="*" element={<NotFound />} />
