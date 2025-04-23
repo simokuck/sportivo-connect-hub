@@ -75,27 +75,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
         setLoading(false);
+        toast.error('Errore nel caricamento del profilo');
+        return;
+      }
+
+      if (!profile) {
+        console.error('No profile found for user:', userId);
+        setLoading(false);
+        toast.error('Profilo utente non trovato');
         return;
       }
 
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select(`
-          role_id,
-          roles:roles (name)
+          roles:roles (
+            name
+          )
         `)
         .eq('user_id', userId)
         .maybeSingle();
 
       if (roleError) {
         console.error('Error fetching user role:', roleError);
-        setLoading(false);
-        return;
       }
 
       const userRole = roleData?.roles?.name as UserRole || 'player';
@@ -125,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       setLoading(false);
+      toast.error('Errore nel caricamento del profilo utente');
     }
   };
 
@@ -144,7 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('Login successful, session:', data.session?.user.id);
       toast.success('Login effettuato');
-      // fetchUserProfile will be called by the onAuthStateChange listener
     } catch (error: any) {
       console.error('Login error:', error);
       
