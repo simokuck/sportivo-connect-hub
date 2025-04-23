@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
@@ -28,6 +27,7 @@ import Medical from '@/pages/Medical';
 import UserManagementOverview from '@/pages/UserManagementOverview';
 import ReportBug from '@/pages/ReportBug';
 import Users from '@/pages/Users';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import { useAuth } from '@/context/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -58,6 +58,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/" element={<Index />} />
       <Route element={
         <ProtectedRoute>

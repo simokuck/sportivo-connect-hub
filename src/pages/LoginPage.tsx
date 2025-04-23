@@ -72,6 +72,29 @@ const LoginPage = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error('Inserisci la tua email per resettare la password');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Se l\'email esiste, riceverai le istruzioni per il reset della password');
+    } catch (error: any) {
+      console.error('Password reset request error:', error);
+      toast.error(error.message || 'Errore durante la richiesta di reset password');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sportivo-blue to-sportivo-green p-4">
       <div className="w-full max-w-md">
@@ -131,6 +154,15 @@ const LoginPage = () => {
                   Accedi con riconoscimento biometrico
                 </Button>
               )}
+              <Button
+                type="button"
+                variant="link"
+                className="w-full"
+                onClick={handleForgotPassword}
+                disabled={isSubmitting}
+              >
+                Password dimenticata?
+              </Button>
             </CardFooter>
           </form>
         </Card>
