@@ -1,8 +1,8 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {toast} from 'sonner';
+import React, {createContext, useContext, useState} from 'react';
 import {BaseItem, InventoryMovement, ItemAssignment, ItemVariant, MovementType} from '@/types/warehouse';
 import {Player} from '@/types';
 import {useNotifications} from '@/context/NotificationContext';
+import {useWarehouseData} from '@/hooks/useWarehouseData';
 
 // Mock data imports
 import {
@@ -70,14 +70,18 @@ const WarehouseContext = createContext<WarehouseContextType | undefined>(undefin
 export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { showNotification } = useNotifications();
   
+  // Get data from the new hook
+  const { 
+    items, 
+    movements, 
+    assignments,
+    createBaseItem,
+    updateBaseItem,
+    deleteBaseItem 
+  } = useWarehouseData();
+  
   // State management
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [items, setItems] = useState<(BaseItem & { variants: ItemVariant[] })[]>([]);
-  const [movements, setMovements] = useState<InventoryMovement[]>([]);
-  const [assignments, setAssignments] = useState<ItemAssignment[]>([]);
-  const [players] = useState<Player[]>(mockPlayers);
-  
-  // View management
   const [selectedItem, setSelectedItem] = useState<BaseItem | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ItemVariant | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<ItemAssignment | null>(null);
@@ -89,53 +93,11 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   
   // Initialize data
-  useEffect(() => {
-    // Create objects with relationships
-    const itemsWithVariants = mockBaseItems.map(item => ({
-      ...item,
-      variants: mockVariants.filter(v => v.baseItemId === item.id)
-    }));
-    
-    const movementsWithRelations = mockMovements.map(movement => {
-      const variant = mockVariants.find(v => v.id === movement.variantId);
-      const baseItem = variant ? mockBaseItems.find(item => item.id === variant.baseItemId) : undefined;
-      const player = movement.playerId ? mockPlayers.find(p => p.id === movement.playerId) : undefined;
-      
-      return {
-        ...movement,
-        variant,
-        baseItem,
-        playerName: player ? `${player.firstName} ${player.lastName}` : undefined
-      };
-    });
-    
-    const assignmentsWithRelations = mockAssignments.map(assignment => {
-      const variant = mockVariants.find(v => v.id === assignment.variantId);
-      const baseItem = variant ? mockBaseItems.find(item => item.id === variant.baseItemId) : undefined;
-      
-      return {
-        ...assignment,
-        variant,
-        baseItem
-      };
-    });
-    
-    setItems(itemsWithVariants);
-    setMovements(movementsWithRelations);
-    setAssignments(assignmentsWithRelations);
-  }, []);
+  const [players] = useState<Player[]>(mockPlayers);
   
   // Handle create base item
-  const handleCreateBaseItem = (data: any) => {
-    const newItem: BaseItem = {
-      ...data,
-      id: `item-${Date.now()}`,
-      lastUpdated: new Date().toISOString(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    setItems(prev => [...prev, { ...newItem, variants: [] }]);
+  const handleCreateBaseItem = async (data: any) => {
+    await createBaseItem.mutateAsync(data);
     setDialogType('none');
     
     showNotification('success', 'Articolo creato', {
@@ -144,22 +106,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   // Handle update base item
-  const handleUpdateBaseItem = (data: any) => {
-    if (!selectedItem) return;
-    
-    const updatedItems = items.map(item => {
-      if (item.id === selectedItem.id) {
-        return { 
-          ...item, 
-          ...data, 
-          lastUpdated: new Date().toISOString(),
-          updatedAt: new Date()
-        };
-      }
-      return item;
-    });
-    
-    setItems(updatedItems);
+  const handleUpdateBaseItem = async (data: any) => {
+    await updateBaseItem.mutateAsync(data);
     setDialogType('none');
     
     showNotification('success', 'Articolo aggiornato', {
@@ -168,16 +116,8 @@ export const WarehouseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   // Handle delete base item
-  const handleDeleteBaseItem = (itemId: string) => {
-    // Delete the item and all its variants
-    setItems(prev => prev.filter(item => item.id !== itemId));
-    
-    // Delete movements related to the variants of this item
-    const variantIds = items.find(item => item.id === itemId)?.variants.map(v => v.id) || [];
-    setMovements(prev => prev.filter(m => !variantIds.includes(m.variantId)));
-    
-    // Delete assignments related to the variants of this item
-    setAssignments(prev => prev.filter(a => !variantIds.includes(a.variantId)));
+  const handleDeleteBaseItem = async (itemId: string) => {
+    await deleteBaseItem.mutateAsync(itemId);
     
     setIsDeleteModalOpen(false);
     setDeleteTarget(null);
