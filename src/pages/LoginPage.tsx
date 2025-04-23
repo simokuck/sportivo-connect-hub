@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
