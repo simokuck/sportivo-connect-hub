@@ -1,7 +1,8 @@
 
+import React from 'react';
 import { Badge } from "@/components/ui/badge";
 
-export function getStatusBadge(status: string) {
+export function getStatusBadge(status: string): React.ReactNode {
   switch (status) {
     case 'active':
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Attivo</Badge>;
