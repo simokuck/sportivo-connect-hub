@@ -8,7 +8,7 @@ import { TeamGroup, PlayerRegistration, TeamCategory, Season } from '@/types/pla
 
 interface TeamGroupsListProps {
   teamsByCategory: Record<string, TeamGroup[]>;
-  categories: TeamCategory[];
+  categories: TeamCategory[]; // Updated from teamCategories to categories
   playerRegistrations: PlayerRegistration[];
   currentSeason: Season | null;
   onShowPlayers: (team: TeamGroup) => void;
@@ -21,7 +21,7 @@ interface TeamGroupsListProps {
 
 export const TeamGroupsList: React.FC<TeamGroupsListProps> = ({
   teamsByCategory,
-  categories,
+  categories, // Updated property name
   playerRegistrations,
   currentSeason,
   onShowPlayers,

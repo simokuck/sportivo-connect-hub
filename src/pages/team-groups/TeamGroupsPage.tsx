@@ -44,12 +44,14 @@ const TeamGroupsPage: React.FC = () => {
   const { toast } = useToast();
   const { 
     seasons, 
-    teamCategories, 
+    categories,  // Using categories instead of teamCategories
     teamGroups,
     playerRegistrations,
-    setSeasons, 
-    setTeamCategories, 
-    setTeamGroups 
+    createSeason, // Using context functions instead of direct state setters
+    createTeamCategory,
+    createTeamGroup,
+    archiveTeamGroup,
+    getCategoriesBySeason
   } = usePlayerManagement();
 
   const [seasonDialogOpen, setSeasonDialogOpen] = useState(false);
@@ -92,12 +94,8 @@ const TeamGroupsPage: React.FC = () => {
     return seasons.find(s => s.isActive) || null;
   };
 
-  const getCategoriesBySeason = (seasonId: string): TeamCategory[] => {
-    return teamCategories.filter(c => c.seasonId === seasonId);
-  };
-
   const getCategoryName = (id: string): string => {
-    const category = teamCategories.find(c => c.id === id);
+    const category = categories.find(c => c.id === id);
     return category ? category.name : "Categoria sconosciuta";
   };
 
@@ -139,91 +137,110 @@ const TeamGroupsPage: React.FC = () => {
   // Form submission handlers
   const handleSubmitSeason = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    seasonForm.handleSubmit(data => {
-      // Create new season with UUID
-      const newSeason: Season = {
-        id: uuidv4(),
-        ...data,
-        createdAt: new Date().toISOString(),
-      };
-
-      // If setting as active, deactivate other seasons
-      if (data.isActive) {
-        const updatedSeasons = seasons.map(s => ({
-          ...s,
-          isActive: false
-        }));
-        setSeasons([...updatedSeasons, newSeason]);
-      } else {
-        setSeasons([...seasons, newSeason]);
+    seasonForm.handleSubmit(async (data) => {
+      try {
+        // Create new season using context function instead of direct state manipulation
+        await createSeason({
+          name: data.name,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          isActive: data.isActive
+        });
+        
+        toast({
+          title: "Stagione Creata",
+          description: `La stagione ${data.name} è stata creata con successo.`,
+        });
+        
+        seasonForm.reset();
+        setSeasonDialogOpen(false);
+      } catch (error) {
+        console.error("Error creating season:", error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la creazione della stagione.",
+          variant: "destructive"
+        });
       }
-
-      toast({
-        title: "Stagione Creata",
-        description: `La stagione ${data.name} è stata creata con successo.`,
-      });
-      
-      seasonForm.reset();
-      setSeasonDialogOpen(false);
     })();
   };
 
   const handleSubmitCategory = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    categoryForm.handleSubmit(data => {
-      // Create new category with UUID
-      const newCategory: TeamCategory = {
-        id: uuidv4(),
-        ...data,
-      };
-
-      setTeamCategories([...teamCategories, newCategory]);
-      
-      toast({
-        title: "Categoria Creata",
-        description: `La categoria ${data.name} è stata creata con successo.`,
-      });
-      
-      categoryForm.reset();
-      setCategoryDialogOpen(false);
+    categoryForm.handleSubmit(async (data) => {
+      try {
+        // Create new category using context function
+        await createTeamCategory({
+          name: data.name,
+          ageMin: data.ageMin,
+          ageMax: data.ageMax,
+          seasonId: data.seasonId
+        });
+        
+        toast({
+          title: "Categoria Creata",
+          description: `La categoria ${data.name} è stata creata con successo.`,
+        });
+        
+        categoryForm.reset();
+        setCategoryDialogOpen(false);
+      } catch (error) {
+        console.error("Error creating category:", error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la creazione della categoria.",
+          variant: "destructive"
+        });
+      }
     })();
   };
 
   const handleSubmitTeam = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    teamForm.handleSubmit(data => {
-      // Create new team group with UUID
-      const newTeam: TeamGroup = {
-        id: uuidv4(),
-        ...data,
-        isArchived: false,
-        playersIds: [],
-        coachesIds: [],
-        createdAt: new Date().toISOString(),
-      };
-
-      setTeamGroups([...teamGroups, newTeam]);
-      
-      toast({
-        title: "Squadra Creata",
-        description: `La squadra ${data.name} è stata creata con successo.`,
-      });
-      
-      teamForm.reset();
-      setTeamDialogOpen(false);
+    teamForm.handleSubmit(async (data) => {
+      try {
+        // Create new team group using context function
+        await createTeamGroup({
+          name: data.name,
+          categoryId: data.categoryId,
+          seasonId: data.seasonId
+        });
+        
+        toast({
+          title: "Squadra Creata",
+          description: `La squadra ${data.name} è stata creata con successo.`,
+        });
+        
+        teamForm.reset();
+        setTeamDialogOpen(false);
+      } catch (error) {
+        console.error("Error creating team:", error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la creazione della squadra.",
+          variant: "destructive"
+        });
+      }
     })();
   };
 
-  const handleArchiveTeam = (id: string) => {
-    const updatedTeams = teamGroups.map(team =>
-      team.id === id ? { ...team, isArchived: true } : team
-    );
-    setTeamGroups(updatedTeams);
-    
-    toast({
-      title: "Squadra Archiviata",
-      description: "La squadra è stata archiviata con successo.",
-    });
+  const handleArchiveTeam = async (id: string) => {
+    try {
+      // Archive team using context function
+      await archiveTeamGroup(id);
+      
+      toast({
+        title: "Squadra Archiviata",
+        description: "La squadra è stata archiviata con successo.",
+      });
+    } catch (error) {
+      console.error("Error archiving team:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'archiviazione della squadra.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleShowPlayers = (team: TeamGroup) => {
@@ -273,7 +290,7 @@ const TeamGroupsPage: React.FC = () => {
 
       <TeamGroupsList 
         teamsByCategory={getTeamsByCategory()}
-        categories={teamCategories}
+        categories={categories}
         playerRegistrations={playerRegistrations}
         currentSeason={getCurrentSeason()}
         onShowPlayers={handleShowPlayers}
