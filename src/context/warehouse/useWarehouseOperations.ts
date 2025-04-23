@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useWarehouseData } from '@/hooks/useWarehouseData';
 import { useNotifications } from '@/context/NotificationContext';
@@ -41,7 +40,7 @@ export function useWarehouseOperations() {
         id: player.id,
         first_name: player.first_name,
         last_name: player.last_name,
-        email: player.email,
+        email: player.email || '',
         position: player.position,
         strong_foot: player.strong_foot,
         avatar_url: player.avatar_url,
