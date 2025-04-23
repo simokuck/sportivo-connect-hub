@@ -7,7 +7,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
   try {
     console.log('Fetching user profile for:', userId);
     
-    const { data: profile, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
@@ -19,8 +19,11 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       return null;
     }
 
+    // Fix: Create a new variable instead of reassigning a constant
+    let finalProfile = profileData;
+    
     // If profile doesn't exist, try to create it
-    if (!profile) {
+    if (!finalProfile) {
       console.log('Profile not found, attempting to create one');
       const { data: authUser } = await supabase.auth.getUser();
       if (!authUser?.user) {
@@ -45,7 +48,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
         return null;
       }
 
-      profile = newProfile;
+      finalProfile = newProfile;
     }
 
     // Fetch user role
@@ -66,17 +69,17 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
     const userRole = roleData?.roles?.name as UserRole || 'player';
     
     return {
-      id: profile.id,
-      name: `${profile.first_name} ${profile.last_name}`.trim() || 'Utente',
-      firstName: profile.first_name,
-      lastName: profile.last_name,
-      email: profile.email,
+      id: finalProfile.id,
+      name: `${finalProfile.first_name} ${finalProfile.last_name}`.trim() || 'Utente',
+      firstName: finalProfile.first_name,
+      lastName: finalProfile.last_name,
+      email: finalProfile.email,
       role: userRole,
-      avatar: profile.avatar,
-      birthDate: profile.birth_date,
-      address: profile.address,
-      city: profile.city,
-      biometricEnabled: profile.biometric_enabled
+      avatar: finalProfile.avatar,
+      birthDate: finalProfile.birth_date,
+      address: finalProfile.address,
+      city: finalProfile.city,
+      biometricEnabled: finalProfile.biometric_enabled
     };
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);

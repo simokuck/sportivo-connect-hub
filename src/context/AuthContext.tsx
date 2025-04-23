@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -104,7 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const newRole = await setUserRole(user.id, role);
-      setUser(prev => prev ? { ...prev, role: newRole } : null);
+      // Fix: Use direct object assignment instead of updater function
+      if (user) {
+        const updatedUser = { ...user, role: newRole };
+        setUser(updatedUser);
+      }
     } finally {
       setLoading(false);
     }
