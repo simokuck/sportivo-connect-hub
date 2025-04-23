@@ -1,11 +1,14 @@
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BaseItem, ItemVariant, InventoryMovement, ItemAssignment } from '@/types/warehouse';
 import { toast } from 'sonner';
+import { useCategories } from './warehouse/useCategories';
+import { useSuppliers } from './warehouse/useSuppliers';
 
 export function useWarehouseData() {
   const queryClient = useQueryClient();
+  const { categories } = useCategories();
+  const { suppliers } = useSuppliers();
 
   // Query degli articoli base con le loro varianti
   const { data: items = [] } = useQuery({
@@ -341,6 +344,8 @@ export function useWarehouseData() {
     items,
     movements,
     assignments,
+    categories,
+    suppliers,
     
     // Mutations
     createBaseItem,
@@ -354,4 +359,3 @@ export function useWarehouseData() {
     markAssignmentReturned
   };
 }
-
