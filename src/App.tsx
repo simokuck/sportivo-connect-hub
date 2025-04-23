@@ -25,8 +25,8 @@ function App() {
               <PlayerManagementProvider>
                 <Router>
                   <AppRoutes />
+                  <Toaster />
                 </Router>
-                <Toaster />
               </PlayerManagementProvider>
             </WarehouseProvider>
           </NotificationProvider>
