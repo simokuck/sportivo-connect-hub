@@ -1,4 +1,5 @@
 
+
 export interface BaseItem {
   id: string;
   name: string;
@@ -149,9 +150,10 @@ export interface Player {
   avatar_url?: string;
   createdAt?: Date;
   updatedAt?: Date;
-  // Add these properties for compatibility with src/types/index.ts Player interface
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+  // Required properties for compatibility with src/types/index.ts Player interface
+  name: string;
+  firstName: string;
+  lastName: string;
   avatar?: string;
 }
+

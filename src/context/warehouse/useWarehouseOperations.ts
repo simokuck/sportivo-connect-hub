@@ -45,7 +45,7 @@ export function useWarehouseOperations() {
         position: player.position,
         strong_foot: player.strong_foot,
         avatar_url: player.avatar_url,
-        // Add these properties for compatibility with src/types/index.ts Player
+        // Required properties for compatibility with src/types/index.ts Player interface
         name: `${player.first_name} ${player.last_name}`,
         firstName: player.first_name,
         lastName: player.last_name,
