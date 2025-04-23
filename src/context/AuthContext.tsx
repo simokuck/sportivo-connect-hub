@@ -45,20 +45,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('*, roles:user_roles(roles(name))')
+        .select('*, user_roles(role_id)')
         .eq('id', userId)
         .single();
 
       if (profileError) throw profileError;
 
-      // Assuming the first role is the primary role
-      const primaryRole = profileData.roles?.[0]?.roles?.name || 'player';
+      // Fetch role information if there's a role_id
+      let roleName = 'player'; // Default role
+      if (profileData.user_roles && profileData.user_roles.length > 0) {
+        const { data: roleData } = await supabase
+          .from('roles')
+          .select('name')
+          .eq('id', profileData.user_roles[0].role_id)
+          .single();
+          
+        if (roleData) {
+          roleName = roleData.name;
+        }
+      }
 
       const userProfile: User = {
         id: profileData.id,
@@ -66,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firstName: profileData.first_name,
         lastName: profileData.last_name,
         email: profileData.email,
-        role: primaryRole,
+        role: roleName,
         avatar: profileData.avatar,
         birthDate: profileData.birth_date,
         address: profileData.address,

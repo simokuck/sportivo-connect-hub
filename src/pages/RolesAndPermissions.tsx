@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Shield, ShieldAlert, Users, ChevronLeft } from "lucide-react";
@@ -19,20 +19,27 @@ const RolesAndPermissions = () => {
   const [showNewRoleDialog, setShowNewRoleDialog] = useState(false);
   const [usersCount, setUsersCount] = useState<{[roleId: string]: number}>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchUsersCount = async () => {
       try {
+        // Fetch all user roles and count them manually
         const { data, error } = await supabase
           .from('user_roles')
-          .select('role_id, count(user_id)', { count: 'exact' })
-          .groupBy('role_id');
+          .select('role_id');
 
         if (error) throw error;
 
-        const counts = data.reduce((acc, item) => {
-          acc[item.role_id] = item.count;
-          return acc;
-        }, {});
+        // Count occurrences of each role_id
+        const counts: {[roleId: string]: number} = {};
+        if (data) {
+          data.forEach(item => {
+            if (counts[item.role_id]) {
+              counts[item.role_id]++;
+            } else {
+              counts[item.role_id] = 1;
+            }
+          });
+        }
 
         setUsersCount(counts);
       } catch (error) {

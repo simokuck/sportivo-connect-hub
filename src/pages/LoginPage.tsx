@@ -5,14 +5,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, loading, user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect to dashboard if already logged in
@@ -27,11 +26,8 @@ const LoginPage = () => {
     try {
       await login(email, password);
     } catch (error) {
-      toast({
-        title: 'Errore di login',
-        description: 'Credenziali non valide.',
-        variant: 'destructive',
-      });
+      toast.error('Credenziali non valide. Riprova.');
+      console.error('Login error:', error);
     }
   };
 
