@@ -191,6 +191,6 @@ export async function setUserRole(userId: string, role: string): Promise<UserRol
 }
 
 function validateUserRole(role: string): UserRole {
-  const validRoles: UserRole[] = ['player', 'coach', 'admin', 'medical', 'developer'];
-  return validRoles.includes(role as UserRole) ? (role as UserRole) : 'player';
+  const validRoles: UserRole[] = ['player', 'coach', 'admin', 'medical', 'developer', 'pending'];
+  return validRoles.includes(role as UserRole) ? (role as UserRole) : 'pending';
 }
