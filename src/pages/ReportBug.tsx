@@ -18,7 +18,7 @@ const ReportBug = () => {
     }
     // Qui normalmente invieresti la segnalazione a backend o mail
     setIsSent(true);
-    toast({ title: "Grazie per la segnalazione!", description: "Il tuo feedback è stato inviato al team.", variant: "success" });
+    toast({ title: "Grazie per la segnalazione!", description: "Il tuo feedback è stato inviato al team.", variant: "default" });
     setMessage("");
   };
 
