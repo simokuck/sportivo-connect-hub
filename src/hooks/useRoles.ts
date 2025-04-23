@@ -18,7 +18,16 @@ export function useRoles() {
         .order('name');
       
       if (error) throw error;
-      return data as Role[];
+      
+      // Map database columns to our interface properties
+      return (data || []).map(role => ({
+        id: role.id,
+        name: role.name,
+        description: role.description || '',
+        isSystemRole: role.is_system_role || false,
+        createdAt: role.created_at,
+        updatedAt: role.updated_at
+      })) as Role[];
     }
   });
 
@@ -31,20 +40,44 @@ export function useRoles() {
         .order('name');
       
       if (error) throw error;
-      return data as Permission[];
+      
+      // Map database columns to our interface properties
+      return (data || []).map(permission => ({
+        id: permission.id,
+        name: permission.name,
+        description: permission.description || '',
+        code: permission.code,
+        createdAt: permission.created_at
+      })) as Permission[];
     }
   });
 
   const createRole = useMutation({
     mutationFn: async (role: Omit<Role, 'id' | 'createdAt' | 'updatedAt'>) => {
+      // Convert our interface properties to database column names
+      const dbRole = {
+        name: role.name,
+        description: role.description,
+        is_system_role: role.isSystemRole
+      };
+      
       const { data, error } = await supabase
         .from('roles')
-        .insert(role)
+        .insert(dbRole)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Map back to our interface
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        isSystemRole: data.is_system_role || false,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      } as Role;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
@@ -57,15 +90,31 @@ export function useRoles() {
 
   const updateRole = useMutation({
     mutationFn: async ({ id, ...role }: Partial<Role> & { id: string }) => {
+      // Convert our interface properties to database column names
+      const dbRole = {
+        name: role.name,
+        description: role.description,
+        is_system_role: role.isSystemRole
+      };
+      
       const { data, error } = await supabase
         .from('roles')
-        .update(role)
+        .update(dbRole)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Map back to our interface
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        isSystemRole: data.is_system_role || false,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      } as Role;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
@@ -106,7 +155,14 @@ export function useRoles() {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        id: data.id,
+        userId: data.user_id,
+        roleId: data.role_id,
+        assignedAt: data.assigned_at,
+        assignedBy: data.assigned_by
+      } as UserRole;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userRoles'] });
