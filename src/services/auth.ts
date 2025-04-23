@@ -10,7 +10,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       console.error('Error fetching user profile:', profileError);
@@ -18,34 +18,10 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
       return null;
     }
 
-    let finalProfile = profileData;
-    
-    if (!finalProfile) {
-      console.log('Profile not found, attempting to create one');
-      const { data: authUser } = await supabase.auth.getUser();
-      if (!authUser?.user) {
-        console.error('No auth user found');
-        return null;
-      }
-
-      const { data: newProfile, error: createError } = await supabase
-        .from('user_profiles')
-        .insert([{
-          id: userId,
-          email: authUser.user.email,
-          first_name: '',
-          last_name: ''
-        }])
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error creating profile:', createError);
-        toast.error('Errore nella creazione del profilo');
-        return null;
-      }
-
-      finalProfile = newProfile;
+    if (!profileData) {
+      console.error('Profile not found for user:', userId);
+      toast.error('Profilo utente non trovato');
+      return null;
     }
 
     // Fetch user role
@@ -66,17 +42,17 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
     const userRole = roleData?.roles?.name as UserRole || 'player';
     
     return {
-      id: finalProfile.id,
-      name: `${finalProfile.first_name} ${finalProfile.last_name}`.trim() || 'Utente',
-      firstName: finalProfile.first_name,
-      lastName: finalProfile.last_name,
-      email: finalProfile.email,
+      id: profileData.id,
+      name: `${profileData.first_name} ${profileData.last_name}`.trim() || 'Utente',
+      firstName: profileData.first_name,
+      lastName: profileData.last_name,
+      email: profileData.email,
       role: userRole,
-      avatar: finalProfile.avatar,
-      birthDate: finalProfile.birth_date,
-      address: finalProfile.address,
-      city: finalProfile.city,
-      biometricEnabled: finalProfile.biometric_enabled
+      avatar: profileData.avatar,
+      birthDate: profileData.birth_date,
+      address: profileData.address,
+      city: profileData.city,
+      biometricEnabled: profileData.biometric_enabled
     };
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);
@@ -130,45 +106,39 @@ export async function setUserRole(userId: string, role: string): Promise<UserRol
   try {
     console.log('Setting role to:', role);
     
-    const validRole = validateUserRole(role);
-    
-    const { data: roles, error } = await supabase
+    const { data: roleData, error: roleError } = await supabase
       .from('roles')
-      .select('id, name')
-      .eq('name', validRole)
+      .select('id')
+      .eq('name', role)
       .single();
 
-    if (error) {
-      console.error('Error checking role:', error);
-      toast.error('Errore durante la verifica del ruolo');
-      throw error;
-    }
-
-    if (!roles) {
-      toast.error('Ruolo non trovato');
+    if (roleError || !roleData) {
       throw new Error('Role not found');
     }
-    
-    const { data: userRole, error: userRoleError } = await supabase
+
+    const { error: updateError } = await supabase
       .from('user_roles')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('role_id', roles.id)
-      .maybeSingle();
+      .upsert({
+        user_id: userId,
+        role_id: roleData.id
+      });
 
-    if (userRoleError) {
-      console.error('Error checking user role:', userRoleError);
-      toast.error('Errore durante la verifica del ruolo utente');
-      throw userRoleError;
+    if (updateError) {
+      throw updateError;
     }
 
-    if (!userRole) {
-      toast.error('Ruolo non assegnato all\'utente');
-      throw new Error('Role not assigned to user');
+    // Update profile role
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .update({ role })
+      .eq('id', userId);
+
+    if (profileError) {
+      throw profileError;
     }
     
-    toast.success(`Ruolo cambiato a: ${validRole}`);
-    return validRole;
+    toast.success(`Ruolo cambiato a: ${role}`);
+    return role as UserRole;
   } catch (error: any) {
     console.error('Error setting role:', error);
     toast.error(`Errore durante il cambio di ruolo: ${error.message || 'Errore sconosciuto'}`);

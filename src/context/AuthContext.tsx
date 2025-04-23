@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { fetchUserProfile, loginUser, logoutUser, setUserRole } from '@/services/auth';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -22,19 +24,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const checkSession = async () => {
       try {
+        setLoading(true);
         console.log('Session check started');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error('Session check error:', sessionError);
-          setLoading(false);
           return;
         }
         
         if (session) {
           console.log('Session found, fetching user profile');
           const userProfile = await fetchUserProfile(session.user.id);
+          if (!userProfile) {
+            console.error('No profile found for authenticated user');
+            toast.error('Errore nel caricamento del profilo utente');
+            await supabase.auth.signOut();
+            navigate('/login');
+            return;
+          }
           setUser(userProfile);
+          if (window.location.pathname === '/login') {
+            navigate('/dashboard');
+          }
         } else {
           console.log('No session found');
           if (!window.location.pathname.includes('/login')) {
@@ -55,20 +67,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Auth state changed:', event, session?.user?.id);
         
         if (event === 'SIGNED_IN' && session) {
+          setLoading(true);
           console.log('User signed in, fetching profile');
           const userProfile = await fetchUserProfile(session.user.id);
+          if (!userProfile) {
+            console.error('No profile found after sign in');
+            toast.error('Errore nel caricamento del profilo utente');
+            await supabase.auth.signOut();
+            navigate('/login');
+            return;
+          }
           setUser(userProfile);
-          setLoading(false);
-          if (window.location.pathname.includes('/login')) {
-            console.log('Redirecting to dashboard from login');
+          if (window.location.pathname === '/login') {
             navigate('/dashboard');
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setUser(null);
-          setLoading(false);
           navigate('/login');
         }
+        setLoading(false);
       }
     );
 
@@ -104,10 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const newRole = await setUserRole(user.id, role);
-      if (user) {
-        const updatedUser = { ...user, role: newRole };
-        setUser(updatedUser);
-      }
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
     } finally {
       setLoading(false);
     }
