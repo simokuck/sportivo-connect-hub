@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
@@ -15,14 +14,15 @@ interface AuthContextType {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);  // Inizia come true per indicare il caricamento iniziale
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check initial session
+    console.log('Checking session...');
+    
     const checkSession = async () => {
       try {
-        console.log('Checking session...');
+        console.log('Session check started');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
@@ -69,12 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   const fetchUserProfile = async (userId: string) => {
-    setLoading(true);
     try {
       console.log('Fetching user profile for:', userId);
       
-      // Fetch the user profile
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
@@ -82,79 +79,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) {
         console.error('Error fetching user profile:', profileError);
-        toast.error('Errore durante il caricamento del profilo utente');
         setLoading(false);
         return;
       }
 
-      if (!profileData) {
-        console.error('User profile not found');
-        toast.error('Profilo utente non trovato');
-        setLoading(false);
-        return;
-      }
-
-      console.log('Profile data retrieved:', profileData);
-
-      // Query user roles in a single, simpler query
-      const { data: userRoleData, error: userRoleError } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select(`
           role_id,
-          roles:roles(name)
+          roles:roles (name)
         `)
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (userRoleError) {
-        console.error('Error fetching user role:', userRoleError);
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
+        setLoading(false);
+        return;
       }
 
-      // Default role
-      let roleName = 'player' as UserRole;
+      const userRole = roleData?.roles?.name as UserRole || 'player';
       
-      // If we have role data, use it
-      if (userRoleData && userRoleData.roles) {
-        roleName = validateUserRole(userRoleData.roles.name);
-        console.log('User role found:', roleName);
-      } else {
-        console.log('No role found, using default:', roleName);
-      }
-
       const userProfile: User = {
-        id: profileData.id,
-        name: `${profileData.first_name} ${profileData.last_name}`.trim(),
-        firstName: profileData.first_name,
-        lastName: profileData.last_name,
-        email: profileData.email,
-        role: roleName,
-        avatar: profileData.avatar,
-        birthDate: profileData.birth_date,
-        address: profileData.address,
-        city: profileData.city,
-        biometricEnabled: profileData.biometric_enabled
+        id: profile.id,
+        name: `${profile.first_name} ${profile.last_name}`.trim(),
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        email: profile.email,
+        role: userRole,
+        avatar: profile.avatar,
+        birthDate: profile.birth_date,
+        address: profile.address,
+        city: profile.city,
+        biometricEnabled: profile.biometric_enabled
       };
 
       console.log('User profile loaded:', userProfile);
       setUser(userProfile);
+      setLoading(false);
       
-      // If we're on the login page, redirect to dashboard
       if (window.location.pathname.includes('/login')) {
         console.log('Redirecting to dashboard from login');
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      toast.error('Errore durante il caricamento del profilo utente');
-    } finally {
-      setLoading(false);  // Assicuriamo che loading venga sempre impostato a false alla fine
+      console.error('Error in fetchUserProfile:', error);
+      setLoading(false);
     }
-  };
-
-  // Helper function to validate if a string is a valid UserRole
-  const validateUserRole = (role: string): UserRole => {
-    const validRoles: UserRole[] = ['player', 'coach', 'admin', 'medical', 'developer'];
-    return validRoles.includes(role as UserRole) ? (role as UserRole) : 'player';
   };
 
   const login = async (email: string, password: string) => {
@@ -177,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // More specific error messages
       if (error.message?.includes('Invalid login credentials')) {
         toast.error('Credenziali non valide');
       } else if (error.message?.includes('Email not confirmed')) {
@@ -185,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         toast.error(`Errore durante il login: ${error.message || 'Errore sconosciuto'}`);
       }
-      setLoading(false);  // Importante: imposta loading a false in caso di errore
+      setLoading(false);
       throw error;
     }
   };
@@ -213,10 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       console.log('Setting role to:', role);
       
-      // Validate the role before proceeding
       const validRole = validateUserRole(role);
       
-      // Semplifichiamo la query per verificare se l'utente ha il ruolo
       const { data: roles, error } = await supabase
         .from('roles')
         .select('id, name')
@@ -234,7 +202,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // Verifica se l'utente ha già il ruolo assegnato
       const { data: userRole, error: userRoleError } = await supabase
         .from('user_roles')
         .select('*')
@@ -261,6 +228,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const validateUserRole = (role: string): UserRole => {
+    const validRoles: UserRole[] = ['player', 'coach', 'admin', 'medical', 'developer'];
+    return validRoles.includes(role as UserRole) ? (role as UserRole) : 'player';
   };
 
   return (
