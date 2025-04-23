@@ -29,6 +29,7 @@ export const Navbar = ({ toggleSidebar }: NavbarProps) => {
     admin: 'Amministratore',
     medical: 'Staff Medico',
     developer: 'Sviluppatore',
+    pending: 'In Attesa di Approvazione'
   };
 
   const handleLogout = () => {

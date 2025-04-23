@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
 import { toast } from 'sonner';
@@ -150,10 +151,13 @@ export async function setUserRole(userId: string, role: string): Promise<UserRol
   try {
     console.log('Setting role to:', role);
     
+    // Validate the role first to ensure it's a valid UserRole
+    const validatedRole = validateUserRole(role);
+    
     const { data: roleData, error: roleError } = await supabase
       .from('roles')
       .select('id')
-      .eq('name', role)
+      .eq('name', validatedRole)
       .single();
 
     if (roleError || !roleData) {
@@ -174,15 +178,15 @@ export async function setUserRole(userId: string, role: string): Promise<UserRol
     // Update profile role
     const { error: profileError } = await supabase
       .from('user_profiles')
-      .update({ role })
+      .update({ role: validatedRole })
       .eq('id', userId);
 
     if (profileError) {
       throw profileError;
     }
     
-    toast.success(`Ruolo cambiato a: ${role}`);
-    return role as UserRole;
+    toast.success(`Ruolo cambiato a: ${validatedRole}`);
+    return validatedRole;
   } catch (error: any) {
     console.error('Error setting role:', error);
     toast.error(`Errore durante il cambio di ruolo: ${error.message || 'Errore sconosciuto'}`);
