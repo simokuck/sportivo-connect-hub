@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
@@ -25,6 +24,8 @@ import TeamGroups from '@/pages/TeamGroups';
 import PlayerHistory from '@/pages/PlayerHistory';
 import PlayerConsents from '@/pages/PlayerConsents';
 import Medical from '@/pages/Medical';
+import UserManagementOverview from '@/pages/UserManagementOverview';
+import ReportBug from '@/pages/ReportBug';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -35,6 +36,8 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<UserProfile />} />
         <Route path="teams" element={<Teams />} />
+        <Route path="user-management" element={<UserManagementOverview />} />
+        <Route path="report-bug" element={<ReportBug />} />
         <Route path="team-members" element={<TeamMembers />} />
         <Route path="player-registrations" element={<PlayerRegistrations />} />
         <Route path="team-groups" element={<TeamGroups />} />

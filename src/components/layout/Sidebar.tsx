@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -21,7 +20,8 @@ import {
   History,
   ClipboardList,
   FileCheck,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Bug
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,6 +57,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       roles: ['admin', 'coach', 'player', 'medical', 'developer'],
     },
     {
+      name: 'Utenze',
+      path: '/user-management',
+      icon: <Users className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'medical', 'developer'],
+    },
+    {
       name: 'Giocatori',
       icon: <UserRound className="w-5 h-5" />,
       roles: ['admin', 'coach', 'medical'],
@@ -84,12 +90,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           path: '/player-consents',
           icon: <FileCheck className="w-4 h-4" />,
           roles: ['admin'],
-        },
-        {
-          name: 'Membri Team',
-          path: '/team-members',
-          icon: <ClipboardList className="w-4 h-4" />,
-          roles: ['admin', 'coach', 'medical'],
         },
       ],
     },
@@ -147,9 +147,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       icon: <Code className="w-5 h-5" />,
       roles: ['developer'],
     },
+    {
+      name: 'Segnala Bug',
+      path: '/report-bug',
+      icon: <Bug className="w-5 h-5" />,
+      roles: ['admin', 'coach', 'player', 'medical', 'developer'],
+    },
   ];
 
-  // Demo role switcher per facilitare i test
   const demoRoles = [
     { id: '1', name: 'Marco Rossi', role: 'player' },
     { id: '2', name: 'Paolo Bianchi', role: 'coach' },
@@ -293,7 +298,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </Button>
       </div>
 
-      {/* Demo role switcher, solo per facilitare lo sviluppo e i test */}
       {process.env.NODE_ENV !== 'production' && !collapsed && (
         <div className="p-2 border-t">
           <div className="text-xs text-muted-foreground mb-2">Demo: Cambia Ruolo</div>
