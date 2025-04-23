@@ -25,50 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('Setting up auth listener...');
     let mounted = true;
     
-    const checkSession = async () => {
-      try {
-        if (mounted) setLoading(true);
-        console.log('Session check started');
-        
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session check error:', sessionError);
-          return;
-        }
-        
-        if (session) {
-          console.log('Session found, fetching user profile');
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (!userProfile) {
-            console.error('No profile found for authenticated user');
-            toast.error('Errore nel caricamento del profilo utente');
-            await supabase.auth.signOut();
-            navigate('/login');
-            return;
-          }
-          
-          if (mounted) {
-            setUser(userProfile);
-            if (window.location.pathname === '/') {
-              navigate('/dashboard');
-            }
-          }
-        } else {
-          console.log('No session found');
-          if (!window.location.pathname.includes('/login')) {
-            navigate('/login');
-          }
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    checkSession();
-
+    // Setup auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -106,6 +63,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // THEN check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
+        
+        if (error) {
+          console.error('Session check error:', error);
+          return;
+        }
+
+        if (session?.user) {
+          const userProfile = await fetchUserProfile(session.user.id);
+          if (userProfile && mounted) {
+            setUser(userProfile);
+            if (window.location.pathname === '/') {
+              navigate('/dashboard');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Refresh session every 4 minutes
     const refreshInterval = setInterval(() => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {

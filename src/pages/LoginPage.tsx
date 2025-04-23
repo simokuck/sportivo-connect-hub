@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +15,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if biometric authentication is supported
   useEffect(() => {
     const checkBiometricSupport = async () => {
       try {
@@ -34,7 +33,6 @@ const LoginPage = () => {
     checkBiometricSupport();
   }, []);
 
-  // Redirect to dashboard if already logged in, but avoid redirecting during login attempt
   useEffect(() => {
     if (user && !loginAttempted) {
       console.log('User already logged in, redirecting to dashboard');
@@ -44,15 +42,18 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
       setLoginAttempted(true);
       console.log('Login attempted with:', email);
       await login(email, password);
-      // Il reindirizzamento sarà gestito in AuthContext dopo un login riuscito
     } catch (error) {
       console.error('Login error in component:', error);
       setLoginAttempted(false);
-      // Toast message handled in the auth context
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,8 +111,12 @@ const LoginPage = () => {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-2">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Accesso in corso...' : 'Accedi'}
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || loading}
+              >
+                {isSubmitting ? 'Accesso in corso...' : 'Accedi'}
               </Button>
               
               {biometricSupported && (
