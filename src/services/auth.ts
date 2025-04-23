@@ -62,23 +62,14 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
 }
 
 export async function loginUser(email: string, password: string) {
-  try {
-    console.log('Attempting login for:', email);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  console.log('Attempting login for:', email);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error) {
-      console.error('Login error details:', error);
-      throw error;
-    }
-
-    console.log('Login successful, session:', data.session?.user.id);
-    toast.success('Login effettuato');
-  } catch (error: any) {
-    console.error('Login error:', error);
-    
+  if (error) {
+    console.error('Login error details:', error);
     if (error.message?.includes('Invalid login credentials')) {
       toast.error('Credenziali non valide');
     } else if (error.message?.includes('Email not confirmed')) {
@@ -88,6 +79,10 @@ export async function loginUser(email: string, password: string) {
     }
     throw error;
   }
+
+  console.log('Login successful, session:', data.session?.user.id);
+  toast.success('Login effettuato');
+  return data;
 }
 
 export async function logoutUser() {

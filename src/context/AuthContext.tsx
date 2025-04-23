@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,10 +20,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log('Checking session...');
+    let mounted = true;
     
     const checkSession = async () => {
       try {
-        setLoading(true);
+        if (mounted) setLoading(true);
         console.log('Session check started');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         
-        if (session) {
+        if (session && mounted) {
           console.log('Session found, fetching user profile');
           const userProfile = await fetchUserProfile(session.user.id);
           if (!userProfile) {
@@ -43,9 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             navigate('/login');
             return;
           }
-          setUser(userProfile);
-          if (window.location.pathname === '/login') {
-            navigate('/dashboard');
+          if (mounted) {
+            setUser(userProfile);
+            if (window.location.pathname === '/login') {
+              navigate('/dashboard');
+            }
           }
         } else {
           console.log('No session found');
@@ -56,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Session check error:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -64,40 +66,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        if (!mounted) return;
         
-        if (event === 'SIGNED_IN' && session) {
-          setLoading(true);
-          console.log('User signed in, fetching profile');
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (!userProfile) {
-            console.error('No profile found after sign in');
-            toast.error('Errore nel caricamento del profilo utente');
-            await supabase.auth.signOut();
-            navigate('/login');
-            return;
+        console.log('Auth state changed:', event, session?.user?.id);
+        setLoading(true);
+        
+        try {
+          if (event === 'SIGNED_IN' && session) {
+            console.log('User signed in, fetching profile');
+            const userProfile = await fetchUserProfile(session.user.id);
+            if (!userProfile) {
+              console.error('No profile found after sign in');
+              toast.error('Errore nel caricamento del profilo utente');
+              await supabase.auth.signOut();
+              navigate('/login');
+              return;
+            }
+            if (mounted) {
+              setUser(userProfile);
+              if (window.location.pathname === '/login') {
+                navigate('/dashboard');
+              }
+            }
+          } else if (event === 'SIGNED_OUT') {
+            console.log('User signed out');
+            if (mounted) {
+              setUser(null);
+              navigate('/login');
+            }
           }
-          setUser(userProfile);
-          if (window.location.pathname === '/login') {
-            navigate('/dashboard');
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-          setUser(null);
-          navigate('/login');
+        } catch (error) {
+          console.error('Auth state change error:', error);
+        } finally {
+          if (mounted) setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, setUser, setLoading]);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
     try {
+      setLoading(true);
       await loginUser(email, password);
     } catch (error) {
       setLoading(false);
@@ -106,11 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       await logoutUser();
       setUser(null);
       navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
       setLoading(false);
     }
