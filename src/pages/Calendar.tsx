@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, List } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CalendarProps {
   className?: string;
@@ -31,6 +33,9 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
   const [activeView, setActiveView] = useState<string>("advanced");
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
+
+  // Import event manipulation functions from useCalendarEvents
+  const { createEvent, updateEvent, deleteEvent } = useCalendarEvents();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -74,7 +79,23 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
         return;
       }
 
-      setEvents(data || []);
+      // Transform database events to match the Event type
+      const transformedEvents = (data || []).map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description || "",
+        // Map start_time to start and end_time to end
+        start: new Date(event.start_time).toISOString(),
+        end: new Date(event.end_time).toISOString(),
+        type: event.type as "training" | "match" | "medical" | "meeting",
+        location: event.location || "",
+        recipients: [], // Default empty array since it's required
+        teamId: event.team_id,
+        requiresMedical: event.requires_medical || false,
+        canEdit: event.can_edit ?? true,
+      }));
+
+      setEvents(transformedEvents);
     };
 
     fetchEvents();
@@ -107,53 +128,150 @@ const CalendarPage: React.FC<CalendarProps> = ({ className }) => {
     }
   }, [form]);
 
-  const handleCreateEvent = (data: EventFormValues) => {
-    const newEvent = createEvent(data);
-    setIsCreateDialogOpen(false);
-    notifyEventCreated(newEvent);
-    form.reset({
-      title: "",
-      description: "",
-      start: "",
-      end: "",
-      type: "training" as const,
-      location: "",
-      recipients: [],
-      requiresMedical: false,
-      lat: undefined,
-      lng: undefined,
-      teamId: undefined,
-    });
+  const handleCreateEvent = async (data: EventFormValues) => {
+    try {
+      // Create event in database
+      const { data: newEventData, error } = await supabase
+        .from('calendar_events')
+        .insert({
+          title: data.title,
+          description: data.description,
+          start_time: new Date(data.start).toISOString(),
+          end_time: new Date(data.end).toISOString(),
+          type: data.type,
+          location: data.location,
+          team_id: data.teamId,
+          requires_medical: data.requiresMedical
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Transform to Event type and add to state
+      const newEvent = {
+        id: newEventData.id,
+        title: newEventData.title,
+        description: newEventData.description || "",
+        start: new Date(newEventData.start_time).toISOString(),
+        end: new Date(newEventData.end_time).toISOString(),
+        type: newEventData.type as "training" | "match" | "medical" | "meeting",
+        location: newEventData.location || "",
+        recipients: [],
+        teamId: newEventData.team_id,
+        requiresMedical: newEventData.requires_medical || false,
+        canEdit: newEventData.can_edit ?? true
+      };
+
+      setEvents(prev => [...prev, newEvent]);
+      setIsCreateDialogOpen(false);
+      notifyEventCreated(newEvent);
+      toast.success("Evento creato con successo");
+
+      form.reset({
+        title: "",
+        description: "",
+        start: "",
+        end: "",
+        type: "training" as const,
+        location: "",
+        recipients: [],
+        requiresMedical: false,
+        lat: undefined,
+        lng: undefined,
+        teamId: undefined,
+      });
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error("Errore nella creazione dell'evento");
+    }
   };
 
-  const handleUpdateEvent = (data: EventFormValues) => {
+  const handleUpdateEvent = async (data: EventFormValues) => {
     if (!selectedEvent) return;
-    updateEvent(selectedEvent.id, data);
-    setIsEditDialogOpen(false);
-    notifyEventUpdated({...selectedEvent, ...data});
-    setSelectedEvent(null);
-    form.reset({
-      title: "",
-      description: "",
-      start: "",
-      end: "",
-      type: "training" as const,
-      location: "",
-      recipients: [],
-      requiresMedical: false,
-      lat: undefined,
-      lng: undefined,
-      teamId: undefined,
-    });
+    
+    try {
+      // Update event in database
+      const { error } = await supabase
+        .from('calendar_events')
+        .update({
+          title: data.title,
+          description: data.description,
+          start_time: new Date(data.start).toISOString(),
+          end_time: new Date(data.end).toISOString(),
+          type: data.type,
+          location: data.location,
+          team_id: data.teamId,
+          requires_medical: data.requiresMedical
+        })
+        .eq('id', selectedEvent.id);
+
+      if (error) throw error;
+
+      // Update in local state
+      const updatedEvent = {
+        ...selectedEvent,
+        title: data.title,
+        description: data.description || "",
+        start: new Date(data.start).toISOString(),
+        end: new Date(data.end).toISOString(),
+        type: data.type,
+        location: data.location || "",
+        teamId: data.teamId,
+        requiresMedical: data.requiresMedical || false
+      };
+
+      setEvents(prev => 
+        prev.map(event => event.id === selectedEvent.id ? updatedEvent : event)
+      );
+      
+      setIsEditDialogOpen(false);
+      notifyEventUpdated(updatedEvent);
+      setSelectedEvent(null);
+      toast.success("Evento aggiornato con successo");
+      
+      form.reset({
+        title: "",
+        description: "",
+        start: "",
+        end: "",
+        type: "training" as const,
+        location: "",
+        recipients: [],
+        requiresMedical: false,
+        lat: undefined,
+        lng: undefined,
+        teamId: undefined,
+      });
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast.error("Errore nell'aggiornamento dell'evento");
+    }
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
-    deleteEvent(selectedEvent.id);
-    notifyEventDeleted(selectedEvent);
-    setIsEditDialogOpen(false);
-    setSelectedEvent(null);
-    form.reset();
+    
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('id', selectedEvent.id);
+
+      if (error) throw error;
+      
+      // Remove from local state
+      setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
+      notifyEventDeleted(selectedEvent);
+      setIsEditDialogOpen(false);
+      setSelectedEvent(null);
+      toast.success("Evento eliminato con successo");
+      form.reset();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error("Errore nell'eliminazione dell'evento");
+    }
   };
 
   const handleEventSelect = (event: Event) => {
