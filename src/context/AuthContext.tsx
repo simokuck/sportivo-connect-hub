@@ -49,25 +49,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      // Fetch the user profile
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('*, user_roles(role_id)')
+        .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        throw profileError;
+      }
 
-      // Fetch role information if there's a role_id
-      let roleName = 'player' as UserRole; // Default role
-      if (profileData.user_roles && Array.isArray(profileData.user_roles) && profileData.user_roles.length > 0) {
-        const { data: roleData } = await supabase
+      if (!profileData) {
+        console.error('User profile not found');
+        toast.error('Profilo utente non trovato');
+        return;
+      }
+
+      // Fetch user role from user_roles table
+      const { data: userRoleData, error: userRoleError } = await supabase
+        .from('user_roles')
+        .select('role_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (userRoleError) {
+        console.error('Error fetching user role:', userRoleError);
+      }
+
+      // Default role
+      let roleName = 'player' as UserRole;
+      
+      // If we have a role_id, fetch the role name
+      if (userRoleData && userRoleData.role_id) {
+        const { data: roleData, error: roleError } = await supabase
           .from('roles')
           .select('name')
-          .eq('id', profileData.user_roles[0].role_id)
-          .single();
+          .eq('id', userRoleData.role_id)
+          .maybeSingle();
           
-        if (roleData) {
-          // Ensure the role name is a valid UserRole
+        if (roleError) {
+          console.error('Error fetching role:', roleError);
+        } else if (roleData) {
           roleName = validateUserRole(roleData.name);
         }
       }
@@ -86,7 +110,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         biometricEnabled: profileData.biometric_enabled
       };
 
+      console.log('User profile loaded:', userProfile);
       setUser(userProfile);
+      
+      // If we're on the login page, redirect to dashboard
+      if (window.location.pathname.includes('/login')) {
+        navigate('/');
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       toast.error('Errore durante il caricamento del profilo utente');
@@ -107,13 +137,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error details:', error);
+        throw error;
+      }
 
       toast.success('Login effettuato');
-      navigate('/');
-    } catch (error) {
+      // fetchUserProfile will be called by the onAuthStateChange listener
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Credenziali non valide');
+      
+      // More specific error messages
+      if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Credenziali non valide');
+      } else if (error.message?.includes('Email not confirmed')) {
+        toast.error('Email non confermata. Controlla la tua casella di posta.');
+      } else {
+        toast.error(`Errore durante il login: ${error.message || 'Errore sconosciuto'}`);
+      }
       throw error;
     } finally {
       setLoading(false);
@@ -124,10 +165,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      toast.success('Logout effettuato con successo');
       navigate('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout error:', error);
-      toast.error('Errore durante il logout');
+      toast.error(`Errore durante il logout: ${error.message || 'Errore sconosciuto'}`);
     }
   };
 
@@ -135,26 +177,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      // In a real app, you'd manage roles more securely
+      // Validate the role before proceeding
+      const validRole = validateUserRole(role);
+      
+      // In a real app, you'd check if the user has this role assigned
       const { data, error } = await supabase
         .from('user_roles')
-        .select('roles(name)')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('roles.name', role)
-        .single();
+        .eq('role_id', (await supabase.from('roles').select('id').eq('name', validRole).single()).data?.id)
+        .maybeSingle();
 
-      if (error || !data) {
-        toast.error('Ruolo non valido');
+      if (error) {
+        console.error('Error checking role:', error);
+        toast.error('Errore durante la verifica del ruolo');
         return;
       }
 
-      // Ensure we're using a valid UserRole type
-      const validRole = validateUserRole(role);
+      if (!data) {
+        toast.error('Ruolo non assegnato all\'utente');
+        return;
+      }
       
       setUser(prev => prev ? { ...prev, role: validRole } : null);
-    } catch (error) {
+      toast.success(`Ruolo cambiato a: ${validRole}`);
+    } catch (error: any) {
       console.error('Error setting role:', error);
-      toast.error('Errore durante il cambio di ruolo');
+      toast.error(`Errore durante il cambio di ruolo: ${error.message || 'Errore sconosciuto'}`);
     }
   };
 

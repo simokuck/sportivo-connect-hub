@@ -7,12 +7,31 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Fingerprint } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, loading, user } = useAuth();
   const navigate = useNavigate();
+  const [biometricSupported, setBiometricSupported] = useState(false);
+
+  // Check if biometric authentication is supported
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      try {
+        if (window.PublicKeyCredential && 
+            typeof window.PublicKeyCredential === 'function' && 
+            typeof window.navigator.credentials.get === 'function') {
+          setBiometricSupported(true);
+        }
+      } catch (error) {
+        console.error('Biometric support check failed:', error);
+      }
+    };
+    
+    checkBiometricSupport();
+  }, []);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -26,8 +45,20 @@ const LoginPage = () => {
     try {
       await login(email, password);
     } catch (error) {
-      toast.error('Credenziali non valide. Riprova.');
       console.error('Login error:', error);
+      // Toast message handled in the auth context
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    try {
+      toast.info('Autenticazione biometrica in corso...');
+      // Here you would implement the actual WebAuthn/FIDO2 authentication
+      // This is just a placeholder for demonstration
+      toast.error('Funzionalità biometrica in sviluppo');
+    } catch (error) {
+      console.error('Biometric auth error:', error);
+      toast.error('Autenticazione biometrica fallita');
     }
   };
 
@@ -69,10 +100,23 @@ const LoginPage = () => {
                 />
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-2">
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Accesso in corso...' : 'Accedi'}
               </Button>
+              
+              {biometricSupported && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                >
+                  <Fingerprint className="mr-2 h-4 w-4" />
+                  Accedi con riconoscimento biometrico
+                </Button>
+              )}
             </CardFooter>
           </form>
         </Card>

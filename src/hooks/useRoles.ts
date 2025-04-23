@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,6 +53,8 @@ export function useRoles() {
 
   const createRole = useMutation({
     mutationFn: async (role: Omit<Role, 'id' | 'createdAt' | 'updatedAt'>) => {
+      console.log('Creating role:', role);
+      
       // Convert our interface properties to database column names
       const dbRole = {
         name: role.name,
@@ -83,13 +84,16 @@ export function useRoles() {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Ruolo creato con successo');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error creating role:', error);
       toast.error(`Errore durante la creazione del ruolo: ${error.message}`);
     }
   });
 
   const updateRole = useMutation({
     mutationFn: async ({ id, ...role }: Partial<Role> & { id: string }) => {
+      console.log('Updating role:', id, role);
+      
       // Convert our interface properties to database column names
       const dbRole = {
         name: role.name,
@@ -120,13 +124,16 @@ export function useRoles() {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Ruolo aggiornato con successo');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error updating role:', error);
       toast.error(`Errore durante l'aggiornamento del ruolo: ${error.message}`);
     }
   });
 
   const deleteRole = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting role:', id);
+      
       const { error } = await supabase
         .from('roles')
         .delete()
@@ -138,13 +145,38 @@ export function useRoles() {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Ruolo eliminato con successo');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error deleting role:', error);
       toast.error(`Errore durante l'eliminazione del ruolo: ${error.message}`);
     }
   });
 
   const assignRoleToUser = useMutation({
     mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) => {
+      console.log('Assigning role to user:', userId, roleId);
+      
+      // First check if the assignment already exists
+      const { data: existingRole, error: checkError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('role_id', roleId)
+        .maybeSingle();
+      
+      if (checkError) throw checkError;
+      
+      // If it already exists, return it
+      if (existingRole) {
+        return {
+          id: existingRole.id,
+          userId: existingRole.user_id,
+          roleId: existingRole.role_id,
+          assignedAt: existingRole.assigned_at,
+          assignedBy: existingRole.assigned_by
+        };
+      }
+      
+      // Otherwise, create the new assignment
       const { data, error } = await supabase
         .from('user_roles')
         .insert({
@@ -162,19 +194,22 @@ export function useRoles() {
         roleId: data.role_id,
         assignedAt: data.assigned_at,
         assignedBy: data.assigned_by
-      } as UserRole;
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userRoles'] });
       toast.success('Ruolo assegnato con successo');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error assigning role:', error);
       toast.error(`Errore durante l'assegnazione del ruolo: ${error.message}`);
     }
   });
 
   const removeRoleFromUser = useMutation({
     mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) => {
+      console.log('Removing role from user:', userId, roleId);
+      
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -186,7 +221,8 @@ export function useRoles() {
       queryClient.invalidateQueries({ queryKey: ['userRoles'] });
       toast.success('Ruolo rimosso con successo');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error removing role:', error);
       toast.error(`Errore durante la rimozione del ruolo: ${error.message}`);
     }
   });
