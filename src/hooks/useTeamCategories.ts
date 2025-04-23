@@ -8,20 +8,21 @@ export function useTeamCategories() {
     queryKey: ['team-categories'],
     queryFn: async () => {
       try {
+        // For now, get unique categories from the teams table
         const { data, error } = await supabase
           .from('teams')
-          .select('*')
-          .eq('category', 'Juniores')
-          .order('name');
+          .select('category')
+          .order('category');
         
         if (error) throw error;
         
-        // For now, return the teams as categories until we have a separate table
-        return (data || []).map(team => ({
-          id: team.id,
-          name: team.category,
+        // Get unique categories and transform to TeamCategory format
+        const uniqueCategories = Array.from(new Set((data || []).map(team => team.category)));
+        return uniqueCategories.map(categoryName => ({
+          id: categoryName, // Using the name as ID for now
+          name: categoryName,
           seasonId: null,
-          createdAt: team.created_at
+          createdAt: new Date().toISOString()
         })) as TeamCategory[];
       } catch (error) {
         console.error('Error fetching team categories:', error);

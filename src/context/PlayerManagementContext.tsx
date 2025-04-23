@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 import { useTeamGroups } from '@/hooks/useTeamGroups';
 import { usePlayers } from '@/hooks/usePlayers';
@@ -18,7 +19,7 @@ interface PlayerManagementContextType {
   playerRegistrations: PlayerRegistration[];
   playerConsents: PlayerConsent[];
   playerHistory: PlayerTeamHistory[];
-  createTeamGroup: (team: Omit<TeamGroup, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  createTeamGroup: (team: { name: string, category: string }) => void;
   createTeamCategory: (category: Omit<TeamCategory, 'id' | 'createdAt' | 'updatedAt'>) => void;
   createSeason: (season: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>) => void;
   getPlayerHistory: (playerId: string) => PlayerTeamHistory[];
