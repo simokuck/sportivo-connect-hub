@@ -1,206 +1,192 @@
-import React, { createContext, useContext, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/types';
-import { useAuthState } from '@/hooks/useAuthState';
-import { fetchUserProfile, loginUser, logoutUser, setUserRole, updateUserProfile } from '@/services/auth';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User, UserRole } from '@/types';
+
+// Mock data for demonstration
+const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Marco Rossi',
+    firstName: 'Marco',
+    lastName: 'Rossi',
+    email: 'marco@example.com',
+    role: 'player',
+    avatar: '/assets/avatars/player1.jpg',
+    birthDate: '1995-06-15',
+    address: 'Via Roma 123',
+    city: 'Milano',
+    biometricEnabled: true
+  },
+  {
+    id: '2',
+    name: 'Paolo Bianchi',
+    firstName: 'Paolo',
+    lastName: 'Bianchi',
+    email: 'paolo@example.com',
+    role: 'coach',
+    avatar: '/assets/avatars/coach1.jpg',
+    birthDate: '1980-03-22',
+    address: 'Via Napoli 45',
+    city: 'Roma',
+    biometricEnabled: false
+  },
+  {
+    id: '3',
+    name: 'Giuseppe Verdi',
+    firstName: 'Giuseppe',
+    lastName: 'Verdi',
+    email: 'giuseppe@example.com',
+    role: 'admin',
+    avatar: '/assets/avatars/admin1.jpg',
+    birthDate: '1988-11-10',
+    address: 'Via Milano 78',
+    city: 'Torino',
+    biometricEnabled: false
+  },
+  {
+    id: '4',
+    name: 'Dott. Anna Ferrari',
+    firstName: 'Anna',
+    lastName: 'Ferrari',
+    email: 'anna@example.com',
+    role: 'medical',
+    avatar: '/assets/avatars/doctor1.jpg',
+    birthDate: '1975-09-05',
+    address: 'Via Torino 32',
+    city: 'Firenze',
+    biometricEnabled: true
+  },
+  {
+    id: '5',
+    name: 'Mario Neri',
+    firstName: 'Mario',
+    lastName: 'Neri',
+    email: 'mario@example.com',
+    role: 'developer',
+    avatar: '/assets/avatars/developer1.jpg',
+    birthDate: '1990-02-18',
+    address: 'Via Venezia 56',
+    city: 'Bologna',
+    biometricEnabled: true
+  }
+];
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setRole: (role: string) => void;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  setRole: (role: UserRole) => void; // For demo purposes
+  updateUserProfile: (data: Partial<User>) => void;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  toggleBiometric: (enabled: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, setUser, loading, setLoading } = useAuthState();
-  const navigate = useNavigate();
-  const refreshTimeout = useRef<NodeJS.Timeout>();
-  const mounted = useRef(true);
-
-  // Handle visibility change
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        // Check session when tab becomes visible
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session && user) {
-            // Session expired while tab was hidden
-            setUser(null);
-            navigate('/login');
-          }
-        } catch (error) {
-          console.error('Visibility change session check error:', error);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [navigate, setUser, user]);
-
-  useEffect(() => {
-    console.log('Setting up auth listener...');
-    mounted.current = true;
-    
-    // Setup auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted.current) return;
-        
-        console.log('Auth state changed:', event, session?.user?.id);
-        setLoading(true);
-        
-        try {
-          if (event === 'SIGNED_IN' && session) {
-            console.log('User signed in, fetching profile');
-            const userProfile = await fetchUserProfile(session.user.id);
-            if (!userProfile) {
-              console.error('No profile found after sign in');
-              toast.error('Errore nel caricamento del profilo utente');
-              await supabase.auth.signOut();
-              navigate('/login');
-              return;
-            }
-            if (mounted.current) {
-              setUser(userProfile);
-              navigate('/dashboard');
-            }
-          } else if (event === 'SIGNED_OUT') {
-            console.log('User signed out');
-            if (mounted.current) {
-              setUser(null);
-              navigate('/login');
-            }
-          }
-        } catch (error) {
-          console.error('Auth state change error:', error);
-        } finally {
-          if (mounted.current) setLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.id);
-        
-        if (error) {
-          console.error('Session check error:', error);
-          return;
-        }
-
-        if (session?.user && mounted.current) {
-          const userProfile = await fetchUserProfile(session.user.id);
-          if (userProfile && mounted.current) {
-            setUser(userProfile);
-            if (window.location.pathname === '/') {
-              navigate('/dashboard');
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      } finally {
-        if (mounted.current) setLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Refresh session every 4 minutes
-    const refreshInterval = setInterval(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          console.log('Refreshing session...');
-          supabase.auth.refreshSession();
-        }
-      });
-    }, 4 * 60 * 1000);
-
-    return () => {
-      mounted.current = false;
-      subscription.unsubscribe();
-      clearInterval(refreshInterval);
-      if (refreshTimeout.current) {
-        clearTimeout(refreshTimeout.current);
-      }
-    };
-  }, [navigate, setUser, setLoading]);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      await loginUser(email, password);
-    } catch (error) {
-      setLoading(false);
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setLoading(true);
-      await logoutUser();
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSetRole = async (role: string) => {
-    if (!user) return;
-
     setLoading(true);
     try {
-      const newRole = await setUserRole(user.id, role);
-      const updatedUser = { ...user, role: newRole };
-      setUser(updatedUser);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    try {
-      if (!user) return;
-      setLoading(true);
-      const updatedProfile = await updateUserProfile(user.id, data);
-      setUser(updatedProfile);
-      toast.success('Profilo aggiornato con successo');
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find user by email (mock implementation)
+      const foundUser = mockUsers.find(u => u.email === email);
+      
+      if (foundUser && password === 'password') { // Simple mock password check
+        setUser(foundUser);
+        localStorage.setItem('user', JSON.stringify(foundUser));
+      } else {
+        throw new Error('Invalid credentials');
+      }
     } catch (error) {
-      console.error('Profile update error:', error);
-      toast.error('Errore durante l\'aggiornamento del profilo');
+      console.error('Login error:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const contextValue: AuthContextType = {
-    user,
-    loading,
-    login,
-    logout,
-    setRole: handleSetRole,
-    updateProfile
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
+  // For demo purposes - to easily switch between roles
+  const setRole = (role: UserRole) => {
+    const demoUser = mockUsers.find(u => u.role === role);
+    if (demoUser) {
+      setUser(demoUser);
+      localStorage.setItem('user', JSON.stringify(demoUser));
+    }
+  };
+
+  // Update user profile
+  const updateUserProfile = (data: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Update in mock data (in a real app, this would be an API call)
+      const index = mockUsers.findIndex(u => u.id === user.id);
+      if (index !== -1) {
+        mockUsers[index] = updatedUser;
+      }
+    }
+  };
+
+  // Update password
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real app, we would verify the current password and update it
+      if (currentPassword !== 'password') {
+        throw new Error('Password attuale non corretta');
+      }
+      
+      // Password updated successfully (in a real app, this would update in the backend)
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
+  };
+
+  // Toggle biometric authentication
+  const toggleBiometric = (enabled: boolean) => {
+    if (user) {
+      const updatedUser = { ...user, biometricEnabled: enabled };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
+  // Check for stored user on initial load
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      logout, 
+      setRole, 
+      updateUserProfile, 
+      updatePassword, 
+      toggleBiometric 
+    }}>
       {children}
     </AuthContext.Provider>
   );

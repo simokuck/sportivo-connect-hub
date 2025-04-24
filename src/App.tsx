@@ -19,18 +19,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="sportivo-theme">
-        <Router>
-          <AuthProvider>
-            <NotificationProvider>
-              <WarehouseProvider>
-                <PlayerManagementProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <WarehouseProvider>
+              <PlayerManagementProvider>
+                <Router>
                   <AppRoutes />
                   <Toaster />
-                </PlayerManagementProvider>
-              </WarehouseProvider>
-            </NotificationProvider>
-          </AuthProvider>
-        </Router>
+                </Router>
+              </PlayerManagementProvider>
+            </WarehouseProvider>
+          </NotificationProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -1,4 +1,4 @@
-export type UserRole = 'player' | 'coach' | 'admin' | 'medical' | 'developer' | 'pending';
+export type UserRole = 'player' | 'coach' | 'admin' | 'medical' | 'developer';
 
 export type Player = {
   id: string;
@@ -95,7 +95,7 @@ export type Event = {
   requiresMedical?: boolean;
   lat?: number;
   lng?: number;
-  canEdit?: boolean; // Adding properties used in mock data
+  canEdit?: boolean; // Adding properties used in mockData
   attendees?: string[]; // Adding properties used in mockData
 };
 

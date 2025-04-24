@@ -6,7 +6,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Role } from '@/types/roles';
 
 interface EditRoleFormData {
   name: string;
@@ -17,25 +16,16 @@ interface EditRoleDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: EditRoleFormData) => void;
-  role?: Role;
+  initialData: {
+    name: string;
+    description: string;
+  };
 }
 
-const EditRoleDialog = ({ isOpen, onClose, onSave, role }: EditRoleDialogProps) => {
+const EditRoleDialog = ({ isOpen, onClose, onSave, initialData }: EditRoleDialogProps) => {
   const form = useForm<EditRoleFormData>({
-    defaultValues: {
-      name: role?.name || '',
-      description: role?.description || ''
-    }
+    defaultValues: initialData
   });
-
-  React.useEffect(() => {
-    if (role) {
-      form.reset({
-        name: role.name,
-        description: role.description
-      });
-    }
-  }, [role, form]);
 
   const onSubmit = (data: EditRoleFormData) => {
     onSave(data);
@@ -46,7 +36,7 @@ const EditRoleDialog = ({ isOpen, onClose, onSave, role }: EditRoleDialogProps) 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{role ? 'Modifica Ruolo' : 'Nuovo Ruolo'}</DialogTitle>
+          <DialogTitle>Modifica Ruolo</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -57,7 +47,7 @@ const EditRoleDialog = ({ isOpen, onClose, onSave, role }: EditRoleDialogProps) 
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={role?.isSystemRole} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -81,7 +71,7 @@ const EditRoleDialog = ({ isOpen, onClose, onSave, role }: EditRoleDialogProps) 
                 Annulla
               </Button>
               <Button type="submit">
-                {role ? 'Salva' : 'Crea'}
+                Salva
               </Button>
             </DialogFooter>
           </form>

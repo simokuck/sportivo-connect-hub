@@ -1,75 +1,50 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Select from 'react-select';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormValues } from '@/schemas/eventSchema';
 import { User, Users } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface RecipientOption {
   value: string;
   label: string;
-  type: 'user' | 'team';
+  type: 'user' | 'group';
 }
+
+const mockUsers: RecipientOption[] = [
+  { value: "user1", label: "Marco Rossi", type: "user" },
+  { value: "user2", label: "Giulia Bianchi", type: "user" },
+  { value: "user3", label: "Alessandro Verdi", type: "user" },
+  { value: "user4", label: "Francesca Neri", type: "user" },
+  { value: "user5", label: "Luca Gialli", type: "user" },
+];
+
+const mockGroups: RecipientOption[] = [
+  { value: "group1", label: "Allenatori", type: "group" },
+  { value: "group2", label: "Staff Medico", type: "group" },
+  { value: "group3", label: "Dirigenti", type: "group" },
+  { value: "team-1", label: "Team Prima Squadra", type: "group" },
+  { value: "team-2", label: "Team Juniores", type: "group" },
+];
+
+const groupedOptions = [
+  {
+    label: "Utenti",
+    options: mockUsers
+  },
+  {
+    label: "Gruppi",
+    options: mockGroups
+  }
+];
 
 interface RecipientPickerProps {
   form: UseFormReturn<EventFormValues>;
 }
 
 const RecipientPicker = ({ form }: RecipientPickerProps) => {
-  const [users, setUsers] = useState<RecipientOption[]>([]);
-  const [teams, setTeams] = useState<RecipientOption[]>([]);
   const selectedValues = form.watch("recipients") || [];
-
-  useEffect(() => {
-    const fetchRecipients = async () => {
-      // Fetch users with roles
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select(`
-          user_id,
-          roles:roles(name)
-        `);
-
-      // Get unique user IDs
-      const uniqueUserIds = [...new Set(userRoles?.map(ur => ur.user_id) || [])];
-
-      // Transform to options format
-      const userOptions: RecipientOption[] = uniqueUserIds.map(userId => ({
-        value: userId,
-        label: `User ${userId.slice(0, 8)}`, // You might want to fetch actual user names
-        type: 'user'
-      }));
-
-      // Fetch teams
-      const { data: teamsData } = await supabase
-        .from('teams')
-        .select('id, name');
-
-      const teamOptions: RecipientOption[] = (teamsData || []).map(team => ({
-        value: team.id,
-        label: team.name,
-        type: 'team'
-      }));
-
-      setUsers(userOptions);
-      setTeams(teamOptions);
-    };
-
-    fetchRecipients();
-  }, []);
-
-  const groupedOptions = [
-    {
-      label: "Utenti",
-      options: users
-    },
-    {
-      label: "Squadre",
-      options: teams
-    }
-  ];
 
   // Find full option objects for selected values
   const selectedOptions = groupedOptions

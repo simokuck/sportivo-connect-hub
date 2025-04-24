@@ -1,136 +1,93 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { Fingerprint } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loading, user } = useAuth();
-  const navigate = useNavigate();
   const [biometricSupported, setBiometricSupported] = useState(false);
-  const [loginAttempted, setLoginAttempted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [biometricDialog, setBiometricDialog] = useState(false);
+  const { login, loading, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
+  // Redirect to dashboard if already logged in
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setIsSubmitting(false);
-        setLoginAttempted(false);
-      }
-    };
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
+  // Check if biometric authentication is available in the browser
   useEffect(() => {
     const checkBiometricSupport = async () => {
       try {
-        if (window.PublicKeyCredential && 
-            typeof window.PublicKeyCredential === 'function' && 
-            typeof window.navigator.credentials.get === 'function') {
+        // This is a basic check for PublicKeyCredential API which is required for biometrics
+        if (window.PublicKeyCredential) {
           setBiometricSupported(true);
         }
       } catch (error) {
-        console.error('Biometric support check failed:', error);
+        console.error("Error checking biometric support:", error);
       }
     };
-    
+
     checkBiometricSupport();
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const checkAuth = async () => {
-      if (user && !loginAttempted && mounted) {
-        console.log('User already logged in, redirecting to dashboard');
-        navigate('/dashboard');
-      }
-    };
-
-    checkAuth();
-
-    return () => {
-      mounted = false;
-    };
-  }, [user, navigate, loginAttempted]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
-
     try {
-      setIsSubmitting(true);
-      setLoginAttempted(true);
-      console.log('Login attempted with:', email);
       await login(email, password);
+      toast({
+        title: 'Login effettuato',
+        description: 'Benvenuto su Sportivo Connect Hub',
+      });
+      navigate('/'); // Navigate to dashboard after successful login
     } catch (error) {
-      console.error('Login error in component:', error);
-      setLoginAttempted(false);
-    } finally {
-      if (document.visibilityState === 'visible') {
-        setIsSubmitting(false);
-      }
+      toast({
+        title: 'Errore di login',
+        description: 'Credenziali non valide. Prova con marco@example.com / password',
+        variant: 'destructive',
+      });
     }
   };
 
-  const resetForm = useCallback(() => {
-    setIsSubmitting(false);
-    setLoginAttempted(false);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      resetForm();
-    };
-  }, [resetForm]);
+  const handleDemoLogin = async (demoEmail: string) => {
+    try {
+      await login(demoEmail, 'password');
+      toast({
+        title: 'Login demo effettuato',
+        description: 'Accesso come ' + demoEmail,
+      });
+      navigate('/'); // Navigate to dashboard after successful demo login
+    } catch (error) {
+      toast({
+        title: 'Errore di login',
+        description: 'Qualcosa è andato storto',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleBiometricLogin = async () => {
-    try {
-      setLoginAttempted(true);
-      toast.info('Autenticazione biometrica in corso...');
-      // Here you would implement the actual WebAuthn/FIDO2 authentication
-      // This is just a placeholder for demonstration
-      toast.error('Funzionalità biometrica in sviluppo');
-      setLoginAttempted(false);
-    } catch (error) {
-      console.error('Biometric auth error:', error);
-      toast.error('Autenticazione biometrica fallita');
-      setLoginAttempted(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      toast.error('Inserisci la tua email per resettare la password');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) throw error;
-
-      toast.success('Se l\'email esiste, riceverai le istruzioni per il reset della password');
-    } catch (error: any) {
-      console.error('Password reset request error:', error);
-      toast.error(error.message || 'Errore durante la richiesta di reset password');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Show biometric dialog
+    setBiometricDialog(true);
+    
+    // Simulate successful biometric authentication after 2 seconds
+    setTimeout(() => {
+      setBiometricDialog(false);
+      
+      // For demo, log in as player (Marco)
+      handleDemoLogin('marco@example.com');
+    }, 2000);
   };
 
   return (
@@ -171,39 +128,78 @@ const LoginPage = () => {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting || loading}
-              >
-                {isSubmitting ? 'Accesso in corso...' : 'Accedi'}
+            <CardFooter className="flex flex-col space-y-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Accesso in corso...' : 'Accedi'}
               </Button>
               
               {biometricSupported && (
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full" 
+                  className="w-full"
                   onClick={handleBiometricLogin}
-                  disabled={loading}
                 >
-                  <Fingerprint className="mr-2 h-4 w-4" />
+                  <Fingerprint className="mr-2 h-5 w-5" />
                   Accedi con riconoscimento biometrico
                 </Button>
               )}
-              <Button
-                type="button"
-                variant="link"
-                className="w-full"
-                onClick={handleForgotPassword}
-                disabled={isSubmitting}
-              >
-                Password dimenticata?
-              </Button>
+
+              <div className="text-sm text-gray-500 mt-4">
+                <p className="mb-2">Demo: Scegli un ruolo per provare l'app</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleDemoLogin('marco@example.com')}
+                  >
+                    Giocatore
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleDemoLogin('paolo@example.com')}
+                  >
+                    Allenatore
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleDemoLogin('giuseppe@example.com')}
+                  >
+                    Amministrazione
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleDemoLogin('anna@example.com')}
+                  >
+                    Staff Medico
+                  </Button>
+                </div>
+              </div>
             </CardFooter>
           </form>
         </Card>
+
+        {/* Biometric authentication dialog */}
+        <Dialog open={biometricDialog} onOpenChange={setBiometricDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Riconoscimento biometrico</DialogTitle>
+              <DialogDescription>
+                Completa l'autenticazione biometrica sul tuo dispositivo
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-center p-6">
+              <Fingerprint className="h-16 w-16 text-sportivo-blue animate-pulse" />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

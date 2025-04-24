@@ -1,6 +1,4 @@
 
-// Warehouse-related type definitions
-
 export interface BaseItem {
   id: string;
   name: string;
@@ -86,6 +84,7 @@ export interface Category {
 
 export interface Supplier {
   id: string;
+  name: string;
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
@@ -136,22 +135,6 @@ export interface WarehouseItem extends BaseItem {
 }
 
 // InventoryMovement type used in contexts - make it the same as Movement to resolve the errors
-export interface InventoryMovement extends Movement {}
-
-// Player type that matches both what our components need and what the database provides
-export interface Player {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  position?: string;
-  strong_foot?: string;
-  avatar_url?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  // Required properties for compatibility with src/types/index.ts Player interface
-  name: string;
-  firstName: string;
-  lastName: string;
-  avatar?: string;
+export interface InventoryMovement extends Movement {
+  // Extends Movement with all the same properties
 }
