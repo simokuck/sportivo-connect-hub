@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
@@ -20,15 +20,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, setUser, loading, setLoading } = useAuthState();
   const navigate = useNavigate();
+  const refreshTimeout = useRef<NodeJS.Timeout>();
+  const mounted = useRef(true);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        // Check session when tab becomes visible
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session && user) {
+            // Session expired while tab was hidden
+            setUser(null);
+            navigate('/login');
+          }
+        } catch (error) {
+          console.error('Visibility change session check error:', error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [navigate, setUser, user]);
 
   useEffect(() => {
     console.log('Setting up auth listener...');
-    let mounted = true;
+    mounted.current = true;
     
     // Setup auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
+        if (!mounted.current) return;
         
         console.log('Auth state changed:', event, session?.user?.id);
         setLoading(true);
@@ -44,13 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               navigate('/login');
               return;
             }
-            if (mounted) {
+            if (mounted.current) {
               setUser(userProfile);
               navigate('/dashboard');
             }
           } else if (event === 'SIGNED_OUT') {
             console.log('User signed out');
-            if (mounted) {
+            if (mounted.current) {
               setUser(null);
               navigate('/login');
             }
@@ -58,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error('Auth state change error:', error);
         } finally {
-          if (mounted) setLoading(false);
+          if (mounted.current) setLoading(false);
         }
       }
     );
@@ -74,9 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        if (session?.user) {
+        if (session?.user && mounted.current) {
           const userProfile = await fetchUserProfile(session.user.id);
-          if (userProfile && mounted) {
+          if (userProfile && mounted.current) {
             setUser(userProfile);
             if (window.location.pathname === '/') {
               navigate('/dashboard');
@@ -86,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Session check error:', error);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted.current) setLoading(false);
       }
     };
 
@@ -103,9 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 4 * 60 * 1000);
 
     return () => {
-      mounted = false;
+      mounted.current = false;
       subscription.unsubscribe();
       clearInterval(refreshInterval);
+      if (refreshTimeout.current) {
+        clearTimeout(refreshTimeout.current);
+      }
     };
   }, [navigate, setUser, setLoading]);
 

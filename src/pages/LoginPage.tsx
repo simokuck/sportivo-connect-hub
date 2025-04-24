@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,20 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setIsSubmitting(false);
+        setLoginAttempted(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
     const checkBiometricSupport = async () => {
       try {
         if (window.PublicKeyCredential && 
@@ -35,10 +49,20 @@ const LoginPage = () => {
   }, []);
 
   useEffect(() => {
-    if (user && !loginAttempted) {
-      console.log('User already logged in, redirecting to dashboard');
-      navigate('/dashboard');
-    }
+    let mounted = true;
+
+    const checkAuth = async () => {
+      if (user && !loginAttempted && mounted) {
+        console.log('User already logged in, redirecting to dashboard');
+        navigate('/dashboard');
+      }
+    };
+
+    checkAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, [user, navigate, loginAttempted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,9 +78,22 @@ const LoginPage = () => {
       console.error('Login error in component:', error);
       setLoginAttempted(false);
     } finally {
-      setIsSubmitting(false);
+      if (document.visibilityState === 'visible') {
+        setIsSubmitting(false);
+      }
     }
   };
+
+  const resetForm = useCallback(() => {
+    setIsSubmitting(false);
+    setLoginAttempted(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      resetForm();
+    };
+  }, [resetForm]);
 
   const handleBiometricLogin = async () => {
     try {
