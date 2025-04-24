@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,6 +37,8 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isProcessingToken, setIsProcessingToken] = useState(true);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -45,6 +47,48 @@ const ResetPasswordPage = () => {
       confirmPassword: "",
     },
   });
+
+  // Handle the password reset token when the component mounts
+  useEffect(() => {
+    const handlePasswordRecovery = async () => {
+      setIsProcessingToken(true);
+      const hash = window.location.hash;
+      
+      try {
+        if (hash && hash.includes('type=recovery')) {
+          // Extract the token from the URL
+          // The URL will be like: #access_token=...&type=recovery&...
+          const accessToken = hash.split('&')[0].replace('#access_token=', '');
+          
+          if (!accessToken) {
+            throw new Error('Token di recupero non valido');
+          }
+          
+          // Set the session with the recovery token
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: accessToken,
+            type: 'recovery'
+          });
+
+          if (error) {
+            throw error;
+          }
+          
+          toast.success('Puoi ora impostare la tua nuova password');
+        } else {
+          throw new Error('Token di recupero non trovato nell\'URL');
+        }
+      } catch (error: any) {
+        console.error('Recovery error:', error);
+        setError(error.message || 'Errore durante il recupero password');
+        toast.error(error.message || 'Errore durante il recupero password');
+      } finally {
+        setIsProcessingToken(false);
+      }
+    };
+
+    handlePasswordRecovery();
+  }, []);
 
   const onSubmit = async (data: ResetPasswordForm) => {
     try {
@@ -64,6 +108,41 @@ const ResetPasswordPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (isProcessingToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sportivo-blue to-sportivo-green p-4">
+        <div className="text-center">
+          <Loader className="h-10 w-10 animate-spin mx-auto text-white mb-4" />
+          <p className="text-white text-lg">Verifica del token in corso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sportivo-blue to-sportivo-green p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Errore</CardTitle>
+            <CardDescription>
+              Si è verificato un errore durante il processo di reset password
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-red-500">{error}</p>
+            <Button 
+              className="w-full" 
+              onClick={() => navigate('/login')}
+            >
+              Torna al login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sportivo-blue to-sportivo-green p-4">
