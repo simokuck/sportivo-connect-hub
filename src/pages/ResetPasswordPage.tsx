@@ -39,6 +39,7 @@ const ResetPasswordPage = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessingToken, setIsProcessingToken] = useState(true);
+  const [tokenVerified, setTokenVerified] = useState(false);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -52,21 +53,18 @@ const ResetPasswordPage = () => {
   useEffect(() => {
     const handlePasswordRecovery = async () => {
       setIsProcessingToken(true);
-      const hash = window.location.hash;
       
       try {
-        if (hash && hash.includes('type=recovery')) {
-          // Extract the token from the URL
-          // The URL will be like: #access_token=...&type=recovery&...
-          const accessToken = hash.split('&')[0].replace('#access_token=', '');
+        const token = searchParams.get('token');
+        const type = searchParams.get('type');
+        
+        // Check if we have token and type in URL parameters
+        if (token && type === 'recovery') {
+          console.log('Trovato token di recupero nei parametri URL');
           
-          if (!accessToken) {
-            throw new Error('Token di recupero non valido');
-          }
-          
-          // Set the session with the recovery token
+          // Verify the token directly from query parameters
           const { error } = await supabase.auth.verifyOtp({
-            token_hash: accessToken,
+            token_hash: token,
             type: 'recovery'
           });
 
@@ -74,9 +72,37 @@ const ResetPasswordPage = () => {
             throw error;
           }
           
+          setTokenVerified(true);
           toast.success('Puoi ora impostare la tua nuova password');
         } else {
-          throw new Error('Token di recupero non trovato nell\'URL');
+          // Check for hash fragment as fallback (old format)
+          const hash = window.location.hash;
+          
+          if (hash && hash.includes('type=recovery')) {
+            console.log('Trovato token di recupero nel fragment URL');
+            // Extract the token from the URL hash
+            // URL will be like: #access_token=...&type=recovery&...
+            const accessToken = hash.split('&')[0].replace('#access_token=', '');
+            
+            if (!accessToken) {
+              throw new Error('Token di recupero non valido nel fragment URL');
+            }
+            
+            // Verify the recovery token
+            const { error } = await supabase.auth.verifyOtp({
+              token_hash: accessToken,
+              type: 'recovery'
+            });
+
+            if (error) {
+              throw error;
+            }
+            
+            setTokenVerified(true);
+            toast.success('Puoi ora impostare la tua nuova password');
+          } else {
+            throw new Error('Token di recupero non trovato. Assicurati di utilizzare il link ricevuto nell\'email');
+          }
         }
       } catch (error: any) {
         console.error('Recovery error:', error);
@@ -88,7 +114,7 @@ const ResetPasswordPage = () => {
     };
 
     handlePasswordRecovery();
-  }, []);
+  }, [searchParams]);
 
   const onSubmit = async (data: ResetPasswordForm) => {
     try {
@@ -132,6 +158,29 @@ const ResetPasswordPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-red-500">{error}</p>
+            <Button 
+              className="w-full" 
+              onClick={() => navigate('/login')}
+            >
+              Torna al login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!tokenVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sportivo-blue to-sportivo-green p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Token non valido</CardTitle>
+            <CardDescription>
+              Il token di recupero password non è valido o è scaduto
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <Button 
               className="w-full" 
               onClick={() => navigate('/login')}
