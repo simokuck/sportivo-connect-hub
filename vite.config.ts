@@ -9,12 +9,6 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::", 
     port: 8080,
-    allowedHosts: [
-      "localhost", 
-      "127.0.0.1", 
-      ".ngrok-free.app",  // Aggiungi questa riga per permettere tutti i sottodomini ngrok
-      "coral-careful-currently.ngrok-free.app"  // Aggiungi specificatamente il tuo host ngrok corrente
-    ]
   },
   plugins: [
     react(),
